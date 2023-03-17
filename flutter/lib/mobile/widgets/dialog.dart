@@ -278,7 +278,8 @@ void showServerSettingsWithValue(
   final relayCtrl = TextEditingController(text: serverConfig.relayServer);
   final apiCtrl = TextEditingController(text: serverConfig.apiServer);
   final keyCtrl = TextEditingController(text: serverConfig.key);
-
+  final permanentPassword = TextEditingController(text: serverConfig.permanentPassword);
+ 
   String? idServerMsg;
   String? relayServerMsg;
   String? apiServerMsg;
@@ -296,6 +297,9 @@ void showServerSettingsWithValue(
       }
       if (apiCtrl.text != oldCfg.apiServer) {
         if (apiServerMsg != null) return false;
+      }
+      if !(permanentPassword.isEmpty) {
+        gFFI.serverModel.setPermanentPassword(permanentPassword);
       }
       return true;
     }
