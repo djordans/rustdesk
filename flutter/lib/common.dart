@@ -1805,6 +1805,7 @@ class ServerConfig {
   late String relayServer;
   late String apiServer;
   late String key;
+  late String permanentPassword;
 
   ServerConfig(
       {String? idServer, String? relayServer, String? apiServer, String? key}) {
@@ -1826,6 +1827,7 @@ class ServerConfig {
     relayServer = json['relay'] ?? '';
     apiServer = json['api'] ?? '';
     key = json['key'] ?? '';
+    permanentPassword = json['permanentPassword'] ?? '';
   }
 
   /// encode to shared string
