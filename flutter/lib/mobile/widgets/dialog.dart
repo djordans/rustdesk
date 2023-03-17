@@ -298,7 +298,7 @@ void showServerSettingsWithValue(
       if (apiCtrl.text != oldCfg.apiServer) {
         if (apiServerMsg != null) return false;
       }
-      if !(permanentPassword.isEmpty) {
+      if (!permanentPassword.isEmpty) {
         gFFI.serverModel.setPermanentPassword(permanentPassword);
       }
       return true;
