@@ -201,16 +201,16 @@ class MyTheme {
         ),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      fillColor: grayBg,
-      filled: true,
-      isDense: true,
-      contentPadding: EdgeInsets.all(15),
-      border: UnderlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-    ),
+    inputDecorationTheme: isDesktop
+        ? InputDecorationTheme(
+            fillColor: grayBg,
+            filled: true,
+            isDense: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          )
+        : null,
     textTheme: const TextTheme(
         titleLarge: TextStyle(fontSize: 19, color: Colors.black87),
         titleSmall: TextStyle(fontSize: 14, color: Colors.black87),
@@ -295,16 +295,16 @@ class MyTheme {
         ),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      fillColor: Color(0xFF24252B),
-      filled: true,
-      isDense: true,
-      contentPadding: EdgeInsets.all(15),
-      border: UnderlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-    ),
+    inputDecorationTheme: isDesktop
+        ? InputDecorationTheme(
+            fillColor: Color(0xFF24252B),
+            filled: true,
+            isDense: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          )
+        : null,
     textTheme: const TextTheme(
         titleLarge: TextStyle(fontSize: 19),
         titleSmall: TextStyle(fontSize: 14),
@@ -839,7 +839,6 @@ class CustomAlertDialog extends StatelessWidget {
         ),
         actions: actions,
         actionsPadding: EdgeInsets.fromLTRB(padding, 0, padding, padding),
-        actionsAlignment: MainAxisAlignment.center,
       ),
     );
   }
