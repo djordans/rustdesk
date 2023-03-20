@@ -239,7 +239,7 @@ impl HwDecoderImage<'_> {
     // take dst_stride into account when you convert
     pub fn to_fmt(
         &self,
-        (fmt, dst_stride): (ImageFormat, usize),
+        (fmt, _dst_stride): (ImageFormat, usize),
         fmt_data: &mut Vec<u8>,
         i420: &mut Vec<u8>,
     ) -> ResultType<()> {
