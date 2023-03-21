@@ -843,6 +843,17 @@ impl Connection {
             pi.hostname = DEVICE_NAME.lock().unwrap().clone();
             pi.platform = "Android".into();
         }
+        let mut platform_additions = serde_json::Map::new();
+        #[cfg(target_os = "linux")]
+        {
+            if crate::platform::current_is_wayland() {
+                platform_additions.insert("is_wayland".into(), json!(true));
+            }
+        }
+        if !platform_additions.is_empty() {
+            pi.platform_additions = serde_json::to_string(&platform_additions).unwrap_or("".into());
+        }
+
         #[cfg(feature = "hwcodec")]
         {
             let (h264, h265) = scrap::codec::Encoder::supported_encoding();
