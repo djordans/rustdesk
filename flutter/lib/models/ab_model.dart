@@ -29,7 +29,7 @@ class AbModel {
     try {
       final resp = await http.get(Uri.parse(api), headers: getHttpHeaders());
       if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-        final json = jsonDecode(resp.body) as Map<String, dynamic>;
+        final json = jsonDecode(utf8.decode(resp.bodyBytes)) as Map<String, dynamic>;
         if (json.containsKey('error')) {
           abError.value = json['error'];
         } else if (json.containsKey('data')) {
