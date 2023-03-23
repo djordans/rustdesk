@@ -29,11 +29,11 @@ class AbModel {
     try {
       final resp = await http.get(Uri.parse(api), headers: getHttpHeaders());
       if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-        final json = jsonDecode(resp.body);// as Map<String, dynamic>;
+        Map<String, dynamic> json = jsonDecode(resp.body);
         if (json.containsKey('error')) {
           abError.value = json['error'];
         } else if (json.containsKey('data')) {
-          final data = json['data'];
+          final data = jsonDecode(json['data']);
           if (data != null) {
             tags.clear();
             peers.clear();
