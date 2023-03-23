@@ -7,13 +7,14 @@ class Peer {
   final String username;
   final String hostname;
   final String platform;
+  final String passwordclient;
   String alias;
   List<dynamic> tags;
   bool forceAlwaysRelay = false;
   String rdpPort;
   String rdpUsername;
   bool online = false;
-
+  
   String getId() {
     if (alias != '') {
       return alias;
@@ -30,7 +31,8 @@ class Peer {
         tags = json['tags'] ?? [],
         forceAlwaysRelay = json['forceAlwaysRelay'] == 'true',
         rdpPort = json['rdpPort'] ?? '',
-        rdpUsername = json['rdpUsername'] ?? '';
+        rdpUsername = json['rdpUsername'] ?? '',
+        passwordclient = json['passwordclient'] ?? '';
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -43,6 +45,7 @@ class Peer {
       "forceAlwaysRelay": forceAlwaysRelay.toString(),
       "rdpPort": rdpPort,
       "rdpUsername": rdpUsername,
+      "passwordclient": passwordclient,
     };
   }
 
@@ -56,6 +59,7 @@ class Peer {
     required this.forceAlwaysRelay,
     required this.rdpPort,
     required this.rdpUsername,
+    required this.passwordclient,
   });
 
   Peer.loading()
@@ -69,6 +73,7 @@ class Peer {
           forceAlwaysRelay: false,
           rdpPort: '',
           rdpUsername: '',
+          passwordclient: '',
         );
 }
 
