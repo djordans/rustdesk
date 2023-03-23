@@ -478,6 +478,7 @@ Future<bool?> loginDialog() async {
             if (resp.access_token != null) {
               await bind.mainSetLocalOption(
                   key: 'access_token', value: resp.access_token!);
+              gFFI.userModel.userName.value = username;
               close(true);
               return;
             }
