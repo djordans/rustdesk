@@ -1586,13 +1586,13 @@ connectMainDesktop(String id,
     {required bool isFileTransfer,
     required bool isTcpTunneling,
     required bool isRDP,
-    bool? forceRelay}) async {
+     bool? forceRelay, String? password}) async {
   if (isFileTransfer) {
     await rustDeskWinManager.newFileTransfer(id, forceRelay: forceRelay);
   } else if (isTcpTunneling || isRDP) {
     await rustDeskWinManager.newPortForward(id, isRDP, forceRelay: forceRelay);
   } else {
-    await rustDeskWinManager.newRemoteDesktop(id, forceRelay: forceRelay);
+    await rustDeskWinManager.newRemoteDesktop(id, forceRelay: forceRelay, password:password);
   }
 }
 
@@ -1603,7 +1603,7 @@ connectMainDesktop(String id,
 connect(BuildContext context, String id,
     {bool isFileTransfer = false,
     bool isTcpTunneling = false,
-    bool isRDP = false}) async {
+   bool isRDP = false, String? password}) async {
   if (id == '') return;
   id = id.replaceAll(' ', '');
   final oldId = id;
@@ -1626,6 +1626,7 @@ connect(BuildContext context, String id,
         'isTcpTunneling': isTcpTunneling,
         'isRDP': isRDP,
         "forceRelay": forceRelay,
+        "password": password,
       });
     }
   } else {
