@@ -193,7 +193,7 @@ class AbModel {
   String getPeerPassword(String id){
      final it = peers.where((p0) => p0.id == id);
      if (it.isNotEmpty) {
-        return it.first.passwordclient;
+        return it.first.password;
      }else{
         return '';
      }

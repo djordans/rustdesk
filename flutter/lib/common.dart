@@ -1574,8 +1574,9 @@ bool callUniLinksUriHandler(Uri uri) {
     final peerId = uri.path.substring("/new/".length);
     var param = uri.queryParameters;
     String? switch_uuid = param["switch_uuid"];
+    String? password = param["password"];
     Future.delayed(Duration.zero, () {
-      rustDeskWinManager.newRemoteDesktop(peerId, switch_uuid: switch_uuid);
+      rustDeskWinManager.newRemoteDesktop(peerId, switch_uuid: switch_uuid, password: password);
     });
     return true;
   }
@@ -1586,7 +1587,8 @@ connectMainDesktop(String id,
     {required bool isFileTransfer,
     required bool isTcpTunneling,
     required bool isRDP,
-     bool? forceRelay, String? password}) async {
+     bool? forceRelay, 
+     String? password}) async {
   if (isFileTransfer) {
     await rustDeskWinManager.newFileTransfer(id, forceRelay: forceRelay);
   } else if (isTcpTunneling || isRDP) {
@@ -1618,7 +1620,8 @@ connect(BuildContext context, String id,
           isFileTransfer: isFileTransfer,
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
-          forceRelay: forceRelay,password: password);
+          forceRelay: forceRelay,
+          password: password);
     } else {
       await rustDeskWinManager.call(WindowType.Main, kWindowConnect, {
         'id': id,

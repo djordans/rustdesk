@@ -384,6 +384,7 @@ class SessionList: Reactor.Component {
     
     event click $(#menu) (_, me) {
         var id = me.parent.parent.id;
+        me.parent.parent.password
         var platform = me.parent.parent.attributes["platform"];
         this.$(#rdp).style.set{
             display: (platform == "Windows" && is_win) ? "block" : "none",
