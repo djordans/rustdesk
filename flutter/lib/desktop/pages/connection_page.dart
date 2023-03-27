@@ -154,7 +154,7 @@ class _ConnectionPageState extends State<ConnectionPage>
   void onConnect({bool isFileTransfer = false}) {
     var id = _idController.id;
     var password = gFFI.abModel.getPeerPassword(id);
-    connect(context, id, isFileTransfer: isFileTransfer,password: password);
+    connect(context, id, isFileTransfer: isFileTransfer, password: password);
   }
 
   /// UI for the remote ID TextField.
