@@ -39,7 +39,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
   final _idController = IDTextEditingController();
 
   /// Update url. If it's not null, means an update is available.
-  var _updateUrl = '';
+  var _updateUrl = "${bind.mainGetApiServer()}/api/update/rustdesk";
 
   @override
   void initState() {
