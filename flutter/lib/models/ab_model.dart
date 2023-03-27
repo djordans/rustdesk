@@ -188,9 +188,10 @@ class AbModel {
       await pushAb();
     }
   }
+
   String getPeerPassword(String id){
      final it = peers.where((p0) => p0.id == id);
-     if (it.isEmpty) {
+     if (it.isNotEmpty) {
         return it.first.passwordclient;
      }else{
         return '';
