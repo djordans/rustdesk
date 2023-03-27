@@ -1618,7 +1618,7 @@ connect(BuildContext context, String id,
           isFileTransfer: isFileTransfer,
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
-          forceRelay: forceRelay);
+          forceRelay: forceRelay,password: password);
     } else {
       await rustDeskWinManager.call(WindowType.Main, kWindowConnect, {
         'id': id,
