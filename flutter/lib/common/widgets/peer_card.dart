@@ -58,8 +58,7 @@ class _PeerCardState extends State<_PeerCard>
   Widget _buildMobile() {
     final peer = super.widget.peer;
     final name =
-        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
-
+        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}${'|'}${peer.password}';
     return Card(
         margin: EdgeInsets.symmetric(horizontal: 2),
         child: GestureDetector(
@@ -155,7 +154,7 @@ class _PeerCardState extends State<_PeerCard>
   Widget _buildPeerTile(
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
     final name =
-        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
+        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}${'|'}${peer.password}';
     final greyStyle = TextStyle(
         fontSize: 11,
         color: Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6));
@@ -227,7 +226,7 @@ class _PeerCardState extends State<_PeerCard>
   Widget _buildPeerCard(
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
     final name =
-        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
+        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}${'|'}${peer.password}';
     return Card(
       color: Colors.transparent,
       elevation: 0,
@@ -379,6 +378,7 @@ abstract class BasePeerCard extends StatelessWidget {
           isFileTransfer: isFileTransfer,
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
+          password: peer.password,
         );
       },
       padding: menuPadding,
