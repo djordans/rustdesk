@@ -58,12 +58,12 @@ class _PeerCardState extends State<_PeerCard>
   Widget _buildMobile() {
     final peer = super.widget.peer;
     final name =
-        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}${'|'}${peer.password}';
+        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
     return Card(
         margin: EdgeInsets.symmetric(horizontal: 2),
         child: GestureDetector(
-            onTap: !isWebDesktop ? () => connect(context, peer.id) : null,
-            onDoubleTap: isWebDesktop ? () => connect(context, peer.id) : null,
+            onTap: !isWebDesktop ? () => connect(context, peer.id, password: peer.password) : null,
+            onDoubleTap: isWebDesktop ? () => connect(context, peer.id, password: peer.password) : null,
             onLongPressStart: (details) {
               final x = details.globalPosition.dx;
               final y = details.globalPosition.dy;
@@ -154,7 +154,7 @@ class _PeerCardState extends State<_PeerCard>
   Widget _buildPeerTile(
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
     final name =
-        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}${'|'}${peer.password}';
+        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
     final greyStyle = TextStyle(
         fontSize: 11,
         color: Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6));
@@ -226,7 +226,7 @@ class _PeerCardState extends State<_PeerCard>
   Widget _buildPeerCard(
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
     final name =
-        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}${'|'}${peer.password}';
+        '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
     return Card(
       color: Colors.transparent,
       elevation: 0,
@@ -341,7 +341,7 @@ abstract class BasePeerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _PeerCard(
       peer: peer,
-      connect: (BuildContext context, String id) => connect(context, id),
+      connect: (BuildContext context, String id) => connect(context, id,password: peer.password),
       popupMenuEntryBuilder: _buildPopupMenuEntry,
     );
   }
