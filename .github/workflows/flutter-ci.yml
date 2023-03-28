@@ -702,7 +702,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu18.04-rustdesk
+          distro: ubuntu20.04-rustdesk
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
