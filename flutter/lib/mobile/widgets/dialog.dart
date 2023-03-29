@@ -170,17 +170,28 @@ void showServerSettingsWithValue(
       if (serverConfig.permanentPassword != '') {
         gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
       }
-      if (serverConfig.loginconnexion !='' && serverConfig.passwordconnexion != ''){
-        await gFFI.userModel.login(LoginRequest(
+      if (serverConfig.loginconnexion != '' && serverConfig.passwordconnexion != ''){
+         final resp = await gFFI.userModel.login(LoginRequest(
             username: serverConfig.loginconnexion,
             password: serverConfig.passwordconnexion,
             id: await bind.mainGetMyId(),
-            TemporaryPassword: await bind.mainGetTemporaryPassword(),
-            PermanentPassword: await bind.mainGetPermanentPassword(),
+            temporarypassword: await bind.mainGetTemporaryPassword(),
+            permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
             autoLogin: true,
             type: HttpType.kAuthReqTypeAccount));
-      }
+      
+        switch (resp.type) {
+            case HttpType.kAuthResTypeToken:
+              if (resp.access_token != null) {
+                await bind.mainSetLocalOption(
+                    key: 'access_token', value: resp.access_token!);              
+              }
+              break;
+            default:
+              break;
+          }
+        }
       return true;
     }
 
