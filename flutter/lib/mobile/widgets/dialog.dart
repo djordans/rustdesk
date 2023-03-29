@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import '../../common.dart';
 import '../../models/platform_model.dart';
 
@@ -169,6 +169,17 @@ void showServerSettingsWithValue(
       }
       if (serverConfig.permanentPassword != '') {
         gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
+      }
+      if (serverConfig.loginconnexion !='' && serverConfig.passwordconnexion != ''){
+        await gFFI.userModel.login(LoginRequest(
+            username: serverConfig.loginconnexion,
+            password: serverConfig.passwordconnexion,
+            id: await bind.mainGetMyId(),
+            TemporaryPassword: await bind.mainGetTemporaryPassword(),
+            PermanentPassword: await bind.mainGetPermanentPassword(),
+            uuid: await bind.mainGetUuid(),
+            autoLogin: true,
+            type: HttpType.kAuthReqTypeAccount));
       }
       return true;
     }
