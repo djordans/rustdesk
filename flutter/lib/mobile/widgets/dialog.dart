@@ -182,17 +182,9 @@ void showServerSettingsWithValue(
             uniqueidentifier: await Device.uniqueIdentifier(),
             autoLogin: true,
             type: HttpType.kAuthReqTypeAccount));
-      
-        switch (resp.type) {
-            case HttpType.kAuthResTypeToken:
-              if (resp.access_token != null) {
-                await bind.mainSetLocalOption(
-                    key: 'access_token', value: resp.access_token!);              
-              }
-              break;
-            default:
-              break;
-          }
+            if (resp.access_token != null) {
+              await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);              
+            }
         }
       return true;
     }
