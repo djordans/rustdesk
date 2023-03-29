@@ -27,7 +27,8 @@ class UserModel {
     final url = await bind.mainGetApiServer();
     final body = {
       'id': await bind.mainGetMyId(),
-      'uuid': await bind.mainGetUuid()
+      'uuid': await bind.mainGetUuid(),
+      'uniqueidentifier': await bind.mainGetUniqueIdentifier()
     };
     try {
       final response = await http.post(Uri.parse('$url/api/currentUser'),
@@ -87,6 +88,7 @@ class UserModel {
               body: jsonEncode({
                 'id': await bind.mainGetMyId(),
                 'uuid': await bind.mainGetUuid(),
+                'uniqueidentifier': await bind.mainGetUniqueIdentifier()
               }),
               headers: authHeaders)
           .timeout(Duration(seconds: 2));

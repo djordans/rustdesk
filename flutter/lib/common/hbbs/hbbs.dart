@@ -72,6 +72,7 @@ class LoginRequest {
   String? verificationCode;
   String? temporarypassword;
   String? permanentpassword;
+  String? uniqueidentifier;
   Map<String, dynamic> deviceInfo = DeviceInfo.toJson();
 
   LoginRequest(
@@ -84,6 +85,7 @@ class LoginRequest {
       this.verificationCode,
       this.temporarypassword,
       this.permanentpassword,
+      this.uniqueidentifier,
       });
 
   Map<String, dynamic> toJson() {
@@ -98,6 +100,7 @@ class LoginRequest {
     data['deviceInfo'] = deviceInfo;
     data['temporarypassword'] = temporarypassword ?? '';
     data['permanentpassword'] = permanentpassword ?? '';
+    data['uniqueidentifier'] = uniqueidentifier ?? '';
     return data;
   }
 }

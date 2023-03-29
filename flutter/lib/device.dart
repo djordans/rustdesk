@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:crypto/crypto.dart';
+import "package:serial_number/serial_number.dart";
+
 
 // Device Manager
 class Device {
@@ -34,7 +36,9 @@ class Device {
     _uniqueId = uID;
     return biosID;
   }
-
+  static Future<String> uniqueIdentifierMobile() async {
+    return SerialNumber.serialNumber;
+  }
   /// windows `Win32_BaseBoard::SerialNumber`
   ///
   /// cmd: `wmic baseboard get SerialNumber`

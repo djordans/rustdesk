@@ -178,6 +178,7 @@ void showServerSettingsWithValue(
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
+            uniqueidentifier: await bind.mainGetUniqueIdentifier(),
             autoLogin: true,
             type: HttpType.kAuthReqTypeAccount));
       

@@ -429,6 +429,7 @@ Future<bool?> loginDialog() async {
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
+            uniqueidentifier: await bind.mainGetUniqueIdentifier(),
             autoLogin: autoLogin.value,
             type: HttpType.kAuthReqTypeAccount));
 
@@ -559,6 +560,7 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
+            uniqueidentifier: await bind.mainGetUniqueIdentifier(),
             autoLogin: autoLogin,
             type: HttpType.kAuthReqTypeEmailCode));
 
