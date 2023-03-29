@@ -556,8 +556,8 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
             verificationCode: code.text,
             username: user?.name,
             id: await bind.mainGetMyId(),
-            TemporaryPassword: await bind.mainGetTemporaryPassword(),
-            PermanentPassword: await bind.mainGetPermanentPassword(),
+            temporarypassword: await bind.mainGetTemporaryPassword(),
+            permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
             autoLogin: autoLogin,
             type: HttpType.kAuthReqTypeEmailCode));
