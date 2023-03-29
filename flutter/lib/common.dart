@@ -1625,20 +1625,10 @@ bool callUniLinksUriHandler(Uri uri) {
   debugPrint("uni links called: $uri");
   // new connection
   if (uri.authority == "connection" && uri.path.startsWith("/new/")) {
-    String peerId = uri.path.substring("/new/".length);
-    RegExp controlbase64 = RegExp(r'^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{4})$');
-    String? switch_uuid = "";
-    String? password = "";
-    if (controlbase64.hasMatch(peerId))
-    {
-      final decoded = utf8.decode(base64Url.decode(peerId)).split(':');
-      peerId = decoded[0];
-      password = decoded[1];
-    }else{
-      var param = uri.queryParameters;
-      switch_uuid = param["switch_uuid"];
-      password = param["password"];
-    }
+    final peerId = uri.path.substring("/new/".length);
+    var param = uri.queryParameters;
+    String? switch_uuid = param["switch_uuid"];
+    String? password = param["password"];
     Future.delayed(Duration.zero, () {
       rustDeskWinManager.newRemoteDesktop(peerId, switch_uuid: switch_uuid, password: password);
     });
