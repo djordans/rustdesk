@@ -1819,11 +1819,14 @@ class ServerConfig {
   late String passwordconnexion;
 
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword,String? loginconnexion, String? passwordconnexion}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
     this.key = key?.trim() ?? '';
+    this.permanentPassword = permanentPassword?.trim() ?? '';
+    this.loginconnexion = loginconnexion?.trim() ?? '';
+    this.passwordconnexion = passwordconnexion?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -1844,8 +1847,8 @@ class ServerConfig {
     apiServer = json['api'] ?? '';
     key = json['key'] ?? '';
     permanentPassword = json['permanentPassword'] ?? '';
-    loginconnexion = json['Username'] ?? '';
-    passwordconnexion = json['Password'] ?? '';
+    loginconnexion = json['loginconnexion'] ?? '';
+    passwordconnexion = json['passwordconnexion'] ?? '';
   }
 
   /// encode to shared string
@@ -1856,6 +1859,9 @@ class ServerConfig {
     config['relay'] = relayServer.trim();
     config['api'] = apiServer.trim();
     config['key'] = key.trim();
+    config['permanentPassword'] = permanentPassword.trim();
+    config['loginconnexion'] = loginconnexion.trim();
+    config['passwordconnexion'] = passwordconnexion.trim();
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
         .reversed
