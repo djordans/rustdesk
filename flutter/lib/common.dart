@@ -1845,7 +1845,7 @@ class ServerConfig {
     key = json['key'] ?? '';
     permanentPassword = json['permanentPassword'] ?? '';
     loginconnexion = json['Username'] ?? '';
-    passwordconnexion = json['Username'] ?? '';
+    passwordconnexion = json['Password'] ?? '';
   }
 
   /// encode to shared string
