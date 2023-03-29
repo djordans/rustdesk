@@ -58,13 +58,6 @@ class Device {
     );
   }
 
-  static Future<String> mainGetUniqueIdentifier({dynamic hint}) async {
-    if (isDesktop) {
-      return Device.uniqueIdentifier();
-    }else{
-      return bind.mainGetHostname();
-    }
-  }
   /// windows `Win32_Processor::UniqueId`
   ///
   /// cmd: `wmic baseboard get SerialNumber`
