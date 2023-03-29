@@ -5,7 +5,7 @@ import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import 'package:flutter_hbb/common/widgets/peer_tab_page.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-
+import "package:flutter_hbb/device.dart";
 import '../common.dart';
 import 'model.dart';
 import 'platform_model.dart';
@@ -28,7 +28,7 @@ class UserModel {
     final body = {
       'id': await bind.mainGetMyId(),
       'uuid': await bind.mainGetUuid(),
-      'uniqueidentifier': await bind.mainGetUniqueIdentifier()
+      'uniqueidentifier': await Device.mainGetUniqueIdentifier()
     };
     try {
       final response = await http.post(Uri.parse('$url/api/currentUser'),
@@ -88,7 +88,7 @@ class UserModel {
               body: jsonEncode({
                 'id': await bind.mainGetMyId(),
                 'uuid': await bind.mainGetUuid(),
-                'uniqueidentifier': await bind.mainGetUniqueIdentifier()
+                'uniqueidentifier': await Device.mainGetUniqueIdentifier()
               }),
               headers: authHeaders)
           .timeout(Duration(seconds: 2));

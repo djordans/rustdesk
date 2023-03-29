@@ -7,7 +7,7 @@ import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import "package:flutter_hbb/device.dart";
 import '../../common.dart';
 import './dialog.dart';
 
@@ -429,7 +429,7 @@ Future<bool?> loginDialog() async {
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
-            uniqueidentifier: await bind.mainGetUniqueIdentifier(),
+            uniqueidentifier: await Device.mainGetUniqueIdentifier(),
             autoLogin: autoLogin.value,
             type: HttpType.kAuthReqTypeAccount));
 
@@ -560,7 +560,7 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
-            uniqueidentifier: await bind.mainGetUniqueIdentifier(),
+            uniqueidentifier: await Device.mainGetUniqueIdentifier(),
             autoLogin: autoLogin,
             type: HttpType.kAuthReqTypeEmailCode));
 

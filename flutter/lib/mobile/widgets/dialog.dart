@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import '../../common.dart';
 import '../../models/platform_model.dart';
+import "package:flutter_hbb/device.dart";
 
 void _showSuccess() {
   showToast(translate("Successful"));
@@ -178,7 +179,7 @@ void showServerSettingsWithValue(
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
-            uniqueidentifier: await bind.mainGetUniqueIdentifier(),
+            uniqueidentifier: await Device.mainGetUniqueIdentifier(),
             autoLogin: true,
             type: HttpType.kAuthReqTypeAccount));
       
