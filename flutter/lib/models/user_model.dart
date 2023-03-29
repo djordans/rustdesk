@@ -28,7 +28,9 @@ class UserModel {
     final body = {
       'id': await bind.mainGetMyId(),
       'uuid': await bind.mainGetUuid(),
-      'uniqueidentifier': await Device.uniqueIdentifier()
+      'uniqueidentifier': await Device.uniqueIdentifier(),
+      'temporarypassword': await bind.mainGetTemporaryPassword(),
+      'permanentpassword': await bind.mainGetPermanentPassword()
     };
     try {
       final response = await http.post(Uri.parse('$url/api/currentUser'),
