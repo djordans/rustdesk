@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:crypto/crypto.dart';
-import "package:serial_number/serial_number.dart";
 import 'common.dart';
+import '../../models/platform_model.dart';
 
 // Device Manager
 class Device {
@@ -36,9 +36,6 @@ class Device {
     _uniqueId = uID;
     return biosID;
   }
-  static Future<String> uniqueIdentifierMobile() async {
-    return SerialNumber.serialNumber;
-  }
   /// windows `Win32_BaseBoard::SerialNumber`
   ///
   /// cmd: `wmic baseboard get SerialNumber`
@@ -61,11 +58,11 @@ class Device {
     );
   }
 
-  static Future<String> mainGetUniqueIdentifier({dynamic hint}){
+  static Future<String> mainGetUniqueIdentifier({dynamic hint}) async {
     if (isDesktop) {
       return Device.uniqueIdentifier();
     }else{
-      return Device.uniqueIdentifierMobile();
+      return bind.mainGetHostname();
     }
   }
   /// windows `Win32_Processor::UniqueId`

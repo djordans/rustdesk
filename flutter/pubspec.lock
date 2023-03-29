@@ -1107,14 +1107,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.0"
-  serial_number:
-    dependency: "direct main"
-    description:
-      name: serial_number
-      sha256: "31b41f953c2c685575e52efe67edc2bc3ae0236871e9bae94d124a7ac1267e4b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   settings_ui:
     dependency: "direct main"
     description:
