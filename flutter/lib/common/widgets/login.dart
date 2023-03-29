@@ -426,8 +426,8 @@ Future<bool?> loginDialog() async {
             username: username.text,
             password: password.text,
             id: await bind.mainGetMyId(),
-            TemporaryPassword: await bind.mainGetTemporaryPassword(),
-            PermanentPassword: await bind.mainGetPermanentPassword(),
+            temporarypassword: await bind.mainGetTemporaryPassword(),
+            permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
             autoLogin: autoLogin.value,
             type: HttpType.kAuthReqTypeAccount));
@@ -437,7 +437,6 @@ Future<bool?> loginDialog() async {
             if (resp.access_token != null) {
               await bind.mainSetLocalOption(
                   key: 'access_token', value: resp.access_token!);
-              gFFI.userModel.userName.value = username.text;
               close(true);
               return;
             }
