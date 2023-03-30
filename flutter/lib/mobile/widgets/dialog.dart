@@ -186,7 +186,7 @@ void showServerSettingsWithValue(
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
             uuid: await bind.mainGetUuid(),
-            uniqueidentifier: await Device.uniqueIdentifier(),
+            uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
             autoLogin: true,
             type: HttpType.kAuthReqTypeAccount));
             if (resp.access_token != null) {
