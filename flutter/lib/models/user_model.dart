@@ -28,7 +28,7 @@ class UserModel {
     final body = {
       'id': await bind.mainGetMyId(),
       'uuid': await bind.mainGetUuid(),
-      'uniqueidentifier': await Device.uniqueIdentifier(),
+      'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
       'temporarypassword': await bind.mainGetTemporaryPassword(),
       'permanentpassword': await bind.mainGetPermanentPassword()
     };
@@ -90,7 +90,7 @@ class UserModel {
               body: jsonEncode({
                 'id': await bind.mainGetMyId(),
                 'uuid': await bind.mainGetUuid(),
-                'uniqueidentifier': await Device.uniqueIdentifier()
+                'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname())
               }),
               headers: authHeaders)
           .timeout(Duration(seconds: 2));
