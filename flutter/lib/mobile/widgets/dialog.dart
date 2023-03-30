@@ -121,6 +121,7 @@ void setTemporaryPasswordLengthDialog(
       });
       bind.mainSetOption(key: "temporary-password-length", value: newValue);
       bind.mainUpdateTemporaryPassword();
+      gFFI.userModel.refreshCurrentUser();
       Future.delayed(Duration(milliseconds: 200), () {
         close();
         _showSuccess();
