@@ -231,7 +231,6 @@ class ServerModel with ChangeNotifier {
     if (update) {
       notifyListeners();
     }
-    gFFI.userModel.refreshCurrentUser();
   }
 
   toggleAudio() async {
