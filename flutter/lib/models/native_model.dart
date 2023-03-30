@@ -199,7 +199,7 @@ class PlatformFFI {
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
         AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        name = '${androidInfo.brand}-${androidInfo.model}';
+        name = '${androidInfo.brand}-${androidInfo.model}#${androidInfo.host}';
         id = androidInfo.id.hashCode.toString();
         androidVersion = androidInfo.version.sdkInt ?? 0;
       } else if (Platform.isIOS) {
