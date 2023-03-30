@@ -224,6 +224,11 @@ pub fn core_main() -> Option<Vec<String>> {
             // call connection manager to establish connections
             // meanwhile, return true to call flutter window to show control panel
             crate::ui_interface::start_option_status_sync();
+        } else if args[0] == "--access_token" {
+            // call connection manager to establish connections
+            // meanwhile, return true to call flutter window to show control panel
+            
+            crate::ui_interface::setAccessToken(args[1].to_owned());
         }
     }
     //_async_logger_holder.map(|x| x.flush());
