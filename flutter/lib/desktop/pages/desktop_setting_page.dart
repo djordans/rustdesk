@@ -994,7 +994,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         await bind.mainSetOption(key: 'relay-server', value: relayServer);
         await bind.mainSetOption(key: 'api-server', value: apiServer);
         await bind.mainSetOption(key: 'key', value: key);
-        await bind.mainSetOption(key: 'codeMagasin', value: codeMagasin);
+        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasin);
         return true;
       }
 
@@ -1080,7 +1080,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
             Obx(() => _LabeledTextField(context, 'API Server', apiController,
                 apiErrMsg.value, enabled, secure)),
             _LabeledTextField(context, 'Key', keyController, '', enabled, secure),
-            Obx(() => _LabeledTextField(context, 'CodeMagasin', codeMagasinController,
+            Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
                 apiErrMsg.value, enabled, secure)),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

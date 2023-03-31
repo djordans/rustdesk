@@ -267,7 +267,7 @@ void showServerSettingsWithValue(
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
                if (codeMagasinCtrl.text != oldCfg.codeMagasin) {
-                bind.mainSetOption(key: "codeMagasin", value: codeMagasinCtrl.text);
+                bind.mainSetLocalOption(key: "codeMagasin", value: codeMagasinCtrl.text);
               }
               if (serverConfig.permanentPassword != '') {
                 gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
@@ -276,18 +276,18 @@ void showServerSettingsWithValue(
                 final resp = await gFFI.userModel.login(LoginRequest(
                     username: serverConfig.loginconnexion,
                     password: serverConfig.passwordconnexion,
-                    codeMagasin: codeMagasinCtrl.text,
+                    codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
                     id: await bind.mainGetMyId(),
                     temporarypassword: await bind.mainGetTemporaryPassword(),
                     permanentpassword: await bind.mainGetPermanentPassword(),
                     uuid: await bind.mainGetUuid(),
-                    tokenDevice: await bind.mainGetOption(key: 'tokenDevice'),
+                    tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
                     uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
                     autoLogin: true,
                     type: HttpType.kAuthReqTypeAccount));
                     if (resp.access_token != null) {
                       await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
-                      await bind.mainSetOption(key: 'tokenDevice', value: resp.tokenDevice!);              
+                      await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
                     }
                 }
               close();

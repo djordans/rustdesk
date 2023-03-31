@@ -428,7 +428,7 @@ Future<bool?> loginDialog() async {
             id: await bind.mainGetMyId(),
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
-            tokenDevice: await bind.mainGetOption(key: 'tokenDevice'),
+            tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
             uuid: await bind.mainGetUuid(),
             uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
             autoLogin: autoLogin.value,
@@ -438,7 +438,7 @@ Future<bool?> loginDialog() async {
           case HttpType.kAuthResTypeToken:
             if (resp.access_token != null) {
               await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
-              await bind.mainSetOption(key: 'tokenDevice', value: resp.tokenDevice!);   
+              await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);   
               close(true);
               return;
             }
@@ -560,7 +560,7 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
             id: await bind.mainGetMyId(),
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
-            tokenDevice: await bind.mainGetOption(key: 'tokenDevice'),
+            tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
             uuid: await bind.mainGetUuid(),
             uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
             autoLogin: autoLogin,
@@ -570,7 +570,7 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
           case HttpType.kAuthResTypeToken:
             if (resp.access_token != null) {
               await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
-              await bind.mainSetOption(key: 'tokenDevice', value: resp.tokenDevice!);
+              await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);
               close(true);
               return;
             }

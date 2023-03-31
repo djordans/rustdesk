@@ -31,8 +31,8 @@ class UserModel {
       'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
       'temporarypassword': await bind.mainGetTemporaryPassword(),
       'permanentpassword': await bind.mainGetPermanentPassword(),
-      'tokenDevice': await bind.mainGetOption(key: 'tokenDevice'),
-      'codeMagasin': bind.mainGetOption(key: 'codeMagasin')
+      'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
+      'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin')
     };
     try {
       final response = await http.post(Uri.parse('$url/api/currentUser'),
@@ -52,10 +52,10 @@ class UserModel {
         throw error;
       }
       final tokenDevice = data['tokenDevice'];
-      final oldTokenDevice = await bind.mainGetOption(key: 'tokenDevice');
+      final oldTokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
       if (tokenDevice!=null){
         if (tokenDevice != oldTokenDevice){
-          await bind.mainSetOption(key: 'tokenDevice', value: tokenDevice!);
+          await bind.mainSetLocalOption(key: 'tokenDevice', value: tokenDevice!);
         }
       }
       final user = UserPayload.fromJson(data);
