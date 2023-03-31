@@ -187,6 +187,13 @@ void showServerSettingsWithValue(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                     TextFormField(
+                      controller: codeMagasinCtrl,
+                      decoration: InputDecoration(
+                          labelText: translate('Code Magasin')
+                    ))
+                  ] +
+                  [
+                    TextFormField(
                       controller: idCtrl,
                       decoration: InputDecoration(
                           labelText: translate('ID Server'),
@@ -226,12 +233,6 @@ void showServerSettingsWithValue(
                         labelText: 'Key',
                       ),
                     ),
-                    TextFormField(
-                      controller: codeMagasinCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Code magasin',
-                      ),
-                    ),
                     Offstage(
                         offstage: !isInProgress,
                         child: LinearProgressIndicator())
@@ -266,8 +267,8 @@ void showServerSettingsWithValue(
               if (apiCtrl.text != oldCfg.apiServer) {
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
-               if (codeMagasinCtrl.text != oldCfg.codeMagasin) {
-                bind.mainSetLocalOption(key: "codeMagasin", value: codeMagasinCtrl.text);
+              if (codeMagasinCtrl.text != oldCfg.codeMagasin) {
+                await bind.mainSetLocalOption(key: "codeMagasin", value: codeMagasinCtrl.text);
               }
               if (serverConfig.permanentPassword != '') {
                 gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
