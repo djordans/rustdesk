@@ -1862,11 +1862,9 @@ class ServerConfig {
   late String permanentPassword;
   late String loginconnexion;
   late String passwordconnexion;
-  late String codeMagasin;
-  late String tokenDevice;
 
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword,String? loginconnexion, String? passwordconnexion, String? codeMagasin, String? tokenDevice}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword,String? loginconnexion, String? passwordconnexion}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
@@ -1874,8 +1872,6 @@ class ServerConfig {
     this.permanentPassword = permanentPassword?.trim() ?? '';
     this.loginconnexion = loginconnexion?.trim() ?? '';
     this.passwordconnexion = passwordconnexion?.trim() ?? '';
-    this.codeMagasin = codeMagasin?.trim() ?? '';
-    this.tokenDevice = tokenDevice?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -1897,8 +1893,6 @@ class ServerConfig {
     key = json['key'] ?? '';
     permanentPassword = json['permanentPassword'] ?? '';
     loginconnexion = json['loginconnexion'] ?? '';
-    codeMagasin = json['codeMagasin'] ?? '';
-    tokenDevice = json['tokenDevice'] ?? '';
   }
 
   /// encode to shared string
@@ -1910,10 +1904,6 @@ class ServerConfig {
     config['api'] = apiServer.trim();
     config['key'] = key.trim();
     config['permanentPassword'] = permanentPassword.trim();
-    config['loginconnexion'] = loginconnexion.trim();
-    config['passwordconnexion'] = passwordconnexion.trim();
-    config['codeMagasin'] = codeMagasin.trim();
-    config['tokenDevice'] = passwordconnexion.trim();
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
         .reversed
@@ -1926,11 +1916,7 @@ class ServerConfig {
         relayServer = options['relay-server'] ?? "",
         apiServer = options['api-server'] ?? "",
         key = options['key'] ?? "",
-        permanentPassword = options['permanentPassword'] ?? "",
-        loginconnexion = options['loginconnexion'] ?? "",
-        passwordconnexion = options['passwordconnexion'] ?? "",
-        codeMagasin = options['codeMagasin'] ?? "",
-        tokenDevice = options['tokenDevice'] ?? "";
+        permanentPassword = options['permanentPassword'] ?? "";
 }
 
 Widget dialogButton(String text,
