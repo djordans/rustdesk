@@ -178,8 +178,6 @@ void showServerSettingsWithValue(
       if (apiCtrl.text != oldCfg.apiServer) {
         if (apiServerMsg != null) return false;
       }
-      codeMagasinMsg = await validateAsync(codeMagasinCtrl.text);
-      if (codeMagasinMsg != null) return false;
       return true;
     }
 
