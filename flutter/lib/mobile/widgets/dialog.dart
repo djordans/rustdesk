@@ -162,7 +162,8 @@ void showServerSettingsWithValue(
   String? idServerMsg;
   String? relayServerMsg;
   String? apiServerMsg;
-  
+  String? codeMagasinMsg;
+
   dialogManager.show((setState, close) {
     Future<bool> validate() async {
       if (idCtrl.text != oldCfg.idServer) {
@@ -177,6 +178,8 @@ void showServerSettingsWithValue(
       if (apiCtrl.text != oldCfg.apiServer) {
         if (apiServerMsg != null) return false;
       }
+      codeMagasinMsg = await validateAsync(codeMagasinCtrl.text);
+      if (codeMagasinMsg != null) return false;
       return true;
     }
 
@@ -189,8 +192,9 @@ void showServerSettingsWithValue(
                     TextFormField(
                       controller: codeMagasinCtrl,
                       decoration: InputDecoration(
-                          labelText: translate('Code Magasin')
-                    ))
+                          labelText: translate('Code Magasin'),
+                          errorText: codeMagasinMsg)
+                    )
                   ] +
                   [
                     TextFormField(
@@ -248,6 +252,7 @@ void showServerSettingsWithValue(
               idServerMsg = null;
               relayServerMsg = null;
               apiServerMsg = null;
+              codeMagasinMsg = null;
               isInProgress = true;
             });
             if (await validate()) {
@@ -267,8 +272,9 @@ void showServerSettingsWithValue(
               if (apiCtrl.text != oldCfg.apiServer) {
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
+              
               //if (codeMagasinCtrl.text != oldCfg.codeMagasin) {
-                await bind.mainSetLocalOption(key: "codeMagasin", value: codeMagasinCtrl.text);
+                bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinCtrl.text);
               //}
               if (serverConfig.permanentPassword != '') {
                 gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
