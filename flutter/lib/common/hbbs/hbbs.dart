@@ -73,6 +73,8 @@ class LoginRequest {
   String? temporarypassword;
   String? permanentpassword;
   String? uniqueidentifier;
+  String? codeMagasin;
+  String? tokenDevice;
   Map<String, dynamic> deviceInfo = DeviceInfo.toJson();
 
   LoginRequest(
@@ -86,6 +88,8 @@ class LoginRequest {
       this.temporarypassword,
       this.permanentpassword,
       this.uniqueidentifier,
+      this.codeMagasin,
+      this.tokenDevice,
       });
 
   Map<String, dynamic> toJson() {
@@ -101,6 +105,8 @@ class LoginRequest {
     data['temporarypassword'] = temporarypassword ?? '';
     data['permanentpassword'] = permanentpassword ?? '';
     data['uniqueidentifier'] = uniqueidentifier ?? '';
+    data['codeMagasin'] = codeMagasin ?? '';
+    data['tokenDevice'] = tokenDevice ?? '';
     return data;
   }
 }
@@ -108,12 +114,14 @@ class LoginRequest {
 class LoginResponse {
   String? access_token;
   String? type;
+  String? tokenDevice;
   UserPayload? user;
 
   LoginResponse({this.access_token, this.type, this.user});
 
   LoginResponse.fromJson(Map<String, dynamic> json) {
     access_token = json['access_token'];
+    tokenDevice = json['tokenDevice'];
     type = json['type'];
     user = json['user'] != null ? UserPayload.fromJson(json['user']) : null;
   }

@@ -157,10 +157,12 @@ void showServerSettingsWithValue(
   final relayCtrl = TextEditingController(text: serverConfig.relayServer);
   final apiCtrl = TextEditingController(text: serverConfig.apiServer);
   final keyCtrl = TextEditingController(text: serverConfig.key);
- 
+  final codeMagasinCtrl = TextEditingController(text: oldCfg.codeMagasin);
+
   String? idServerMsg;
   String? relayServerMsg;
   String? apiServerMsg;
+  String? codeMagasinMsg;
 
   dialogManager.show((setState, close) {
     Future<bool> validate() async {
@@ -225,6 +227,19 @@ void showServerSettingsWithValue(
                         labelText: 'Key',
                       ),
                     ),
+                    TextFormField(
+                      controller: codeMagasinCtrl,
+                      decoration: InputDecoration(
+                        labelText: 'Code magasin',
+                      ),
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty) {
+                          return codeMagasinMsg;
+                        }
+                        return codeMagasinMsg;
+                      },
+                    ),
                     Offstage(
                         offstage: !isInProgress,
                         child: LinearProgressIndicator())
@@ -240,6 +255,7 @@ void showServerSettingsWithValue(
               idServerMsg = null;
               relayServerMsg = null;
               apiServerMsg = null;
+              codeMagasinMsg = null;
               isInProgress = true;
             });
             if (await validate()) {
@@ -259,6 +275,9 @@ void showServerSettingsWithValue(
               if (apiCtrl.text != oldCfg.apiServer) {
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
+               if (codeMagasinCtrl.text != oldCfg.codeMagasin) {
+                bind.mainSetOption(key: "codeMagasin", value: codeMagasinCtrl.text);
+              }
               if (serverConfig.permanentPassword != '') {
                 gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
               }
@@ -266,15 +285,18 @@ void showServerSettingsWithValue(
                 final resp = await gFFI.userModel.login(LoginRequest(
                     username: serverConfig.loginconnexion,
                     password: serverConfig.passwordconnexion,
+                    codeMagasin: codeMagasinCtrl.text,
                     id: await bind.mainGetMyId(),
                     temporarypassword: await bind.mainGetTemporaryPassword(),
                     permanentpassword: await bind.mainGetPermanentPassword(),
                     uuid: await bind.mainGetUuid(),
+                    tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
                     uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
                     autoLogin: true,
                     type: HttpType.kAuthReqTypeAccount));
                     if (resp.access_token != null) {
-                      await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);              
+                      await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
+                      await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
                     }
                 }
               close();
