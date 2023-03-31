@@ -952,15 +952,14 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       var relayController = TextEditingController(text: old('relay-server'));
       var apiController = TextEditingController(text: old('api-server'));
       var keyController = TextEditingController(text: old('key'));
-      var codeMagasinController = TextEditingController(text: old('codeMagasin'));
+      var codeMagasinController = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
       set(String idServer, String relayServer, String apiServer,
-          String key,String codeMagasin) async {
+          String key) async {
         idServer = idServer.trim();
         relayServer = relayServer.trim();
         apiServer = apiServer.trim();
         key = key.trim();
-        codeMagasin = codeMagasin.trim();
         if (idServer.isNotEmpty) {
           idErrMsg.value =
               translate(await bind.mainTestIfValidServer(server: idServer));
@@ -994,13 +993,13 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         await bind.mainSetOption(key: 'relay-server', value: relayServer);
         await bind.mainSetOption(key: 'api-server', value: apiServer);
         await bind.mainSetOption(key: 'key', value: key);
-        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasin);
+        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinController.text);
         return true;
       }
 
       submit() async {
         bool result = await set(idController.text, relayController.text,
-            apiController.text, keyController.text,codeMagasinController.text);
+            apiController.text, keyController.text);
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1020,9 +1019,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 relayController.text = sc.relayServer;
                 apiController.text = sc.apiServer;
                 keyController.text = sc.key;
-                codeMagasinController.text = sc.codeMagasin;
                 Future<bool> success =
-                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.codeMagasin);
+                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key);
                 success.then((value) {
                   if (value) {
                     showToast(
@@ -1048,8 +1046,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 idServer: idController.text,
                 relayServer: relayController.text,
                 apiServer: apiController.text,
-                key: keyController.text,
-                codeMagasin: codeMagasinController.text)
+                key: keyController.text)
             .encode();
         debugPrint("ServerConfig export: $text");
 
