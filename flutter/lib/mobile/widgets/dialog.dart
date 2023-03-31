@@ -278,22 +278,28 @@ void showServerSettingsWithValue(
                 gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
               }
               if (serverConfig.loginconnexion != '' && serverConfig.passwordconnexion != ''){
-                final resp = await gFFI.userModel.login(LoginRequest(
-                    username: serverConfig.loginconnexion,
-                    password: serverConfig.passwordconnexion,
-                    id: await bind.mainGetMyId(),
-                    temporarypassword: await bind.mainGetTemporaryPassword(),
-                    permanentpassword: await bind.mainGetPermanentPassword(),
-                    uuid: await bind.mainGetUuid(),
-                    codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
-                    tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
-                    uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
-                    autoLogin: true,
-                    type: HttpType.kAuthReqTypeAccount));
-                    if (resp.access_token != null) {
-                      await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
-                      await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
-                    }
+                  try {
+                    final resp = await gFFI.userModel.login(LoginRequest(
+                        username: serverConfig.loginconnexion,
+                        password: serverConfig.passwordconnexion,
+                        id: await bind.mainGetMyId(),
+                        temporarypassword: await bind.mainGetTemporaryPassword(),
+                        permanentpassword: await bind.mainGetPermanentPassword(),
+                        codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
+                        tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
+                        uuid: await bind.mainGetUuid(),
+                        uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
+                        autoLogin: true,
+                        type: HttpType.kAuthReqTypeAccount));
+                        if (resp.access_token != null) {
+                          await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
+                          await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
+                        }
+                  }on RequestException catch (err) {
+                    showToast(translate(err.cause));
+                  } catch (err) {
+                    showToast(translate(err.toString()));
+                  }
                 }
               close();
               showToast(translate('Successful'));
