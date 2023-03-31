@@ -295,12 +295,13 @@ void showServerSettingsWithValue(
                           await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
                           await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
                         }
+                    }
                   }on RequestException catch (err) {
                     showToast(translate(err.cause));
                   } catch (err) {
                     showToast(translate(err.toString()));
                   }
-                }
+                
               close();
               showToast(translate('Successful'));
             }
