@@ -270,15 +270,15 @@ void showServerSettingsWithValue(
               if (apiCtrl.text != oldCfg.apiServer) {
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
-              
-              if (codeMagasinCtrl.text != '') {
-                bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinCtrl.text);
-              }
-              if (serverConfig.permanentPassword != '') {
-                gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
-              }
-              if (serverConfig.loginconnexion != '' && serverConfig.passwordconnexion != ''){
-                  try {
+              try {
+                  if (codeMagasinCtrl.text != '') {
+                    bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinCtrl.text);
+                  }
+                  if (serverConfig.permanentPassword != '') {
+                    gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
+                  }
+                  if (serverConfig.loginconnexion != '' && serverConfig.passwordconnexion != ''){
+                  
                     final resp = await gFFI.userModel.login(LoginRequest(
                         username: serverConfig.loginconnexion,
                         password: serverConfig.passwordconnexion,
