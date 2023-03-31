@@ -175,12 +175,12 @@ class MyTheme {
 
   static const Color grayBg = Color(0xFFEFEFF2);
   static const Color accent = Color.fromARGB(255, 195, 162, 105);
-  static const Color accent50 = Color(0x770071FF);
-  static const Color accent80 = Color(0xAA0071FF);
+  static const Color accent50 = Color.fromARGB(255, 195, 162, 105);
+  static const Color accent80 = Color.fromARGB(255, 195, 162, 105);
   static const Color canvasColor = Color(0xFF212121);
-  static const Color border = Color(0xFFCCCCCC);
+  static const Color border = Color(0xFFC3C3C3);
   static const Color idColor = Color.fromARGB(255, 195, 162, 105);
-  static const Color darkGray = Color.fromARGB(255, 148, 148, 148);
+  static const Color darkGray = Color.fromARGB(255, 195, 195, 195);
   static const Color cmIdColor = Color(0xFF21790B);
   static const Color dark = Colors.black87;
   static const Color button = Color.fromARGB(255, 195, 162, 105);

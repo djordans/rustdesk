@@ -162,8 +162,7 @@ void showServerSettingsWithValue(
   String? idServerMsg;
   String? relayServerMsg;
   String? apiServerMsg;
-  String? codeMagasinMsg;
-
+  
   dialogManager.show((setState, close) {
     Future<bool> validate() async {
       if (idCtrl.text != oldCfg.idServer) {
@@ -232,13 +231,6 @@ void showServerSettingsWithValue(
                       decoration: InputDecoration(
                         labelText: 'Code magasin',
                       ),
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (v) {
-                        if (v != null && v.isNotEmpty) {
-                          return codeMagasinMsg;
-                        }
-                        return codeMagasinMsg;
-                      },
                     ),
                     Offstage(
                         offstage: !isInProgress,
@@ -255,7 +247,6 @@ void showServerSettingsWithValue(
               idServerMsg = null;
               relayServerMsg = null;
               apiServerMsg = null;
-              codeMagasinMsg = null;
               isInProgress = true;
             });
             if (await validate()) {
@@ -290,13 +281,13 @@ void showServerSettingsWithValue(
                     temporarypassword: await bind.mainGetTemporaryPassword(),
                     permanentpassword: await bind.mainGetPermanentPassword(),
                     uuid: await bind.mainGetUuid(),
-                    tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
+                    tokenDevice: await bind.mainGetOption(key: 'tokenDevice'),
                     uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
                     autoLogin: true,
                     type: HttpType.kAuthReqTypeAccount));
                     if (resp.access_token != null) {
                       await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
-                      await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
+                      await bind.mainSetOption(key: 'tokenDevice', value: resp.tokenDevice!);              
                     }
                 }
               close();
