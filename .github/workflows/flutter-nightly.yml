@@ -87,18 +87,14 @@ jobs:
           Push-Location flutter ; flutter pub get ; Pop-Location
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
 
-      - name: Restore from cache and install vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          setupOnly: true
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static
-        shell: bash
-
+          cd C:\
+          git clone https://github.com/Kingtous/rustdesk_thirdpary_lib --depth=1 
+          
       - name: Build rustdesk
+        env:
+          VCPKG_ROOT: C:\rustdesk_thirdpary_lib\vcpkg
         run: python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
 
       - name: Sign rustdesk files
@@ -154,7 +150,7 @@ jobs:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
     # Temporarily disable this action due to additional test is needed.
-    if: false 
+    # if: false 
     strategy:
       fail-fast: false
       matrix:
@@ -175,14 +171,10 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable-${{ matrix.job.target }}
+          toolchain: nightly-${{ matrix.job.target }}
           target: ${{ matrix.job.target }}
           override: true
           profile: minimal # minimal component installation (ie, no documentation)
-      
-      - name: Set Rust toolchain to the target
-        run: |
-          rustup default stable-${{ matrix.job.target }}
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -196,14 +188,18 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx:x86-windows-static libyuv:x86-windows-static opus:x86-windows-static
-        shell: bash
+          cd C:\
+          git clone https://github.com/Kingtous/rustdesk_thirdpary_lib --depth=1 
 
       - name: Build rustdesk
         id: build
         shell: bash
+        env:
+          VCPKG_ROOT: C:\rustdesk_thirdpary_lib\vcpkg
         run: |
           python3 res/inline-sciter.py
+          # Patch sciter x86
+          sed -i 's/branch = "dyn"/branch = "dyn_x86"/g' ./Cargo.toml
           # Replace the link for the ico.
           rm res/icon.ico && cp flutter/windows/runner/resources/app_icon.ico res/icon.ico
           cargo build --features inline --release --bins
@@ -1003,7 +999,7 @@ jobs:
           done
 
       - name: Publish debian package
-        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1176,7 +1172,7 @@ jobs:
           done
 
       - name: Publish debian package
-        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1199,7 +1195,7 @@ jobs:
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
 
       - name: Publish appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1273,7 +1269,7 @@ jobs:
       #       res/rustdesk*.zst
 
       - name: Publish fedora28/centos8 package
-        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1396,7 +1392,7 @@ jobs:
           done
 
       - name: Publish debian package
-        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1452,7 +1448,7 @@ jobs:
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
 
       - name: Publish archlinux package
-        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1461,7 +1457,7 @@ jobs:
             res/rustdesk*.zst
 
       - name: Build appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
         shell: bash
         run: |
           # set-up appimage-builder
@@ -1475,7 +1471,7 @@ jobs:
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
 
       - name: Publish appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -1484,7 +1480,7 @@ jobs:
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
       - name: Publish fedora28/centos8 package
-        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
