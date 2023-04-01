@@ -325,7 +325,7 @@ class MyTheme {
         style:
             MenuStyle(backgroundColor: MaterialStatePropertyAll(Colors.white))),
     colorScheme: ColorScheme.light(
-        primary: Colors.blue, secondary: accent, background: grayBg),
+        primary: Color.fromARGB(255, 195, 162, 105), secondary: accent, background: grayBg),
   ).copyWith(
     extensions: <ThemeExtension<dynamic>>[
       ColorThemeExtension.light,
@@ -415,7 +415,7 @@ class MyTheme {
         style: MenuStyle(
             backgroundColor: MaterialStatePropertyAll(Color(0xFF121212)))),
     colorScheme: ColorScheme.dark(
-      primary: Colors.blue,
+      primary: Color.fromARGB(255, 195, 162, 105),
       secondary: accent,
       background: Color(0xFF24252B),
     ),
@@ -1860,18 +1860,16 @@ class ServerConfig {
   late String apiServer;
   late String key;
   late String permanentPassword;
-  late String loginconnexion;
-  late String passwordconnexion;
+  late String access_token;
 
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword,String? loginconnexion, String? passwordconnexion}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
     this.key = key?.trim() ?? '';
     this.permanentPassword = permanentPassword?.trim() ?? '';
-    this.loginconnexion = loginconnexion?.trim() ?? '';
-    this.passwordconnexion = passwordconnexion?.trim() ?? '';
+    this.access_token = access_token?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -1892,7 +1890,7 @@ class ServerConfig {
     apiServer = json['api'] ?? '';
     key = json['key'] ?? '';
     permanentPassword = json['permanentPassword'] ?? '';
-    loginconnexion = json['loginconnexion'] ?? '';
+    access_token = json['access_token'] ?? '';
   }
 
   /// encode to shared string
@@ -1904,6 +1902,7 @@ class ServerConfig {
     config['api'] = apiServer.trim();
     config['key'] = key.trim();
     config['permanentPassword'] = permanentPassword.trim();
+    config['access_token'] = access_token.trim();
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
         .reversed
@@ -1916,7 +1915,8 @@ class ServerConfig {
         relayServer = options['relay-server'] ?? "",
         apiServer = options['api-server'] ?? "",
         key = options['key'] ?? "",
-        permanentPassword = options['permanentPassword'] ?? "";
+        permanentPassword = options['permanentPassword'] ?? "",
+        access_token = options['access_token'] ?? "";
 }
 
 Widget dialogButton(String text,

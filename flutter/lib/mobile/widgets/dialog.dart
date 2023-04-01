@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_hbb/common/hbbs/hbbs.dart';
+//import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import '../../common.dart';
 import '../../models/platform_model.dart';
-import "package:flutter_hbb/device.dart";
+//import "package:flutter_hbb/device.dart";
 
 void _showSuccess() {
   showToast(translate("Successful"));
@@ -270,40 +270,18 @@ void showServerSettingsWithValue(
               if (apiCtrl.text != oldCfg.apiServer) {
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
-              try {
-                  if (codeMagasinCtrl.text != '') {
-                    bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinCtrl.text);
-                  }
-                  if (serverConfig.permanentPassword != '') {
-                    gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
-                  }
-                  if (serverConfig.loginconnexion != '' && serverConfig.passwordconnexion != ''){
-                  
-                    final resp = await gFFI.userModel.login(LoginRequest(
-                        username: serverConfig.loginconnexion,
-                        password: serverConfig.passwordconnexion,
-                        id: await bind.mainGetMyId(),
-                        temporarypassword: await bind.mainGetTemporaryPassword(),
-                        permanentpassword: await bind.mainGetPermanentPassword(),
-                        codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
-                        tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
-                        uuid: await bind.mainGetUuid(),
-                        uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
-                        autoLogin: true,
-                        type: HttpType.kAuthReqTypeAccount));
-                        if (resp.access_token != null) {
-                          await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
-                          await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);              
-                        }
-                    }
-                  }on RequestException catch (err) {
-                    showToast(translate(err.cause));
-                  } catch (err) {
-                    showToast(translate(err.toString()));
-                  }
-                
+              if (codeMagasinCtrl.text != '') {
+                bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinCtrl.text);
+              }
+              if (serverConfig.permanentPassword != '') {
+                gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
+              }
+              if(serverConfig.access_token != '') {
+                await bind.mainSetLocalOption(key: 'access_token', value: serverConfig.access_token);
+              }
               close();
               showToast(translate('Successful'));
+              gFFI.userModel.refreshCurrentUser();
             }
             setState(() {
               isInProgress = false;
