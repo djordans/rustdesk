@@ -1049,7 +1049,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 idServer: idController.text,
                 relayServer: relayController.text,
                 apiServer: apiController.text,
-                key: keyController.text)
+                key: keyController.text,
+                access_token: bind.mainGetLocalOption(key: 'access_token') )
             .encode();
         debugPrint("ServerConfig export: $text");
 
