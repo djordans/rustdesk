@@ -1295,6 +1295,7 @@ class _DisplayState extends State<_Display> {
     } catch (e) {
       debugPrint("failed to parse supported hwdecodings, err=$e");
     }
+    
     return _Card(title: 'Default Codec', children: [
       _Radio(context,
           value: 'auto',
@@ -1311,6 +1312,7 @@ class _DisplayState extends State<_Display> {
           groupValue: groupValue,
           label: 'VP9',
           onChanged: onChanged),
+      ...hwRadios,
           ...hwRadios,
     ]);
   }

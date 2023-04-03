@@ -467,7 +467,7 @@ enum ImageQuality {
   Best = 4;
 }
 
-message VideoCodecState {
+message SupportedDecoding {
   enum PreferCodec {
     Auto = 0;
     VP9 = 1;

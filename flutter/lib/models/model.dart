@@ -1631,7 +1631,8 @@ class FFI {
   }
 
   /// Login with [password], choose if the client should [remember] it.
-  void login(String osUsername, String osPassword, String id, String password, bool remember) {
+  void login(String osUsername, String osPassword, String id, String password,
+      bool remember) {
     bind.sessionLogin(
         id: id,
         osUsername: osUsername,

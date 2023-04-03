@@ -29,10 +29,10 @@ use hbb_common::tokio::{
     time::{self, Duration, Instant, Interval},
 };
 use hbb_common::{allow_err, fs, get_time, log, message_proto::*, Stream};
+use scrap::CodecFormat;
 
 use crate::client::{
-    new_voice_call_request, Client, CodecFormat, MediaData, MediaSender, QualityStatus, MILLI1,
-    SEC30,
+    new_voice_call_request, Client, MediaData, MediaSender, QualityStatus, MILLI1, SEC30,
 };
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::common::{self, update_clipboard};
@@ -360,9 +360,9 @@ impl<T: InvokeUiSession> Remote<T> {
                 allow_err!(peer.send(&msg).await);
                 return false;
             }
-            Data::Login((password, remember)) => {
+            Data::Login((os_username, os_password, password, remember)) => {
                 self.handler
-                    .handle_login_from_ui(password, remember, peer)
+                    .handle_login_from_ui(os_username, os_password, password, remember, peer)
                     .await;
             }
             Data::ToggleClipboardFile => {
@@ -817,11 +817,10 @@ impl<T: InvokeUiSession> Remote<T> {
     }
 
     fn contains_key_frame(vf: &VideoFrame) -> bool {
+        use video_frame::Union::*;
         match &vf.union {
             Some(vf) => match vf {
-                video_frame::Union::Vp9s(f) => f.frames.iter().any(|e| e.key),
-                video_frame::Union::H264s(f) => f.frames.iter().any(|e| e.key),
-                video_frame::Union::H265s(f) => f.frames.iter().any(|e| e.key),
+                Vp8s(f) | Vp9s(f) | H264s(f) | H265s(f) => f.frames.iter().any(|e| e.key),
                 _ => false,
             },
             None => false,
@@ -1256,6 +1255,7 @@ impl<T: InvokeUiSession> Remote<T> {
                 },
                 Some(message::Union::MessageBox(msgbox)) => {
                     let mut link = msgbox.link;
+                    // Links from the remote side must be verified.
                     if !link.starts_with("rustdesk://") {
                         if let Some(v) = hbb_common::config::HELPER_URL.get(&link as &str) {
                             link = v.to_string();

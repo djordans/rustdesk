@@ -487,7 +487,7 @@ _connectDialog(
   TextEditingController? osPasswordController,
   TextEditingController? passwordController,
 }) async {
-   var rememberPassword = false;
+  var rememberPassword = false;
   if (passwordController != null) {
     rememberPassword = await bind.sessionGetRemember(id: id) ?? false;
   }
@@ -522,7 +522,8 @@ _connectDialog(
       dialogManager.showLoading(translate('Logging in...'),
           onCancel: closeConnection);
     }
-descWidget(String text) {
+    
+    descWidget(String text) {
       return Column(
         children: [
           Align(

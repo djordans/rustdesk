@@ -548,7 +548,7 @@ class _RemotePageState extends State<RemotePage> {
       more.add(PopupMenuItem<String>(
           child: Text(translate('Refresh')), value: 'refresh'));
     }
-   if (gFFI.ffiModel.pi.is_headless) {
+    if (gFFI.ffiModel.pi.is_headless) {
       more.add(
         PopupMenuItem<String>(
             child: Row(
@@ -667,6 +667,16 @@ class _RemotePageState extends State<RemotePage> {
             bind.sessionInputString(id: widget.id, value: data.text ?? "");
           }
         }();
+      } else if (value == 'enter_os_password') {
+        // FIXME:
+        // null means no session of id
+        // empty string means no password
+        var password = await bind.sessionGetOption(id: id, arg: 'os-password');
+        if (password != null) {
+          bind.sessionInputOsPassword(id: widget.id, value: password);
+        } else {
+          showSetOSPassword(id, true, gFFI.dialogManager);
+        }
       } else if (value == 'enter_os_account') {
         showSetOSAccount(id, gFFI.dialogManager);
       } else if (value == 'reset_canvas') {
@@ -1058,8 +1068,9 @@ void showOptions(
       if (codecs[0]) {
         radios.add(getRadio('VP8', 'vp8', codec, setCodec));
       }
+      radios.add(getRadio('VP9', 'vp9', codec, setCodec));
       if (codecs[1]) {
-         radios.add(getRadio('H264', 'h264', codec, setCodec));
+        radios.add(getRadio('H264', 'h264', codec, setCodec));
       }
       if (codecs[2]) {
         radios.add(getRadio('H265', 'h265', codec, setCodec));

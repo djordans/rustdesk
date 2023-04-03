@@ -662,7 +662,7 @@ class _ControlMenu extends StatelessWidget {
         onPressed: () => showRequestElevationDialog(id, ffi.dialogManager));
   }
 
- osAccount() {
+  osAccount() {
     return _MenuItemButton(
         child: Text(translate('OS Account')),
         trailingIcon: Transform.scale(scale: 0.8, child: Icon(Icons.edit)),
@@ -1293,7 +1293,7 @@ class _DisplayMenuState extends State<_DisplayMenu> {
 
   codec() {
     return futureBuilder(future: () async {
-       final alternativeCodecs =
+      final alternativeCodecs =
           await bind.sessionAlternativeCodecs(id: widget.id);
       final codecPreference =
           await bind.sessionGetOption(id: widget.id, arg: 'codec-preference') ??
@@ -1317,7 +1317,6 @@ class _DisplayMenuState extends State<_DisplayMenu> {
       }
       final visible =
           codecs.length == 3 && (codecs[0] || codecs[1] || codecs[2]);
-
       if (!visible) return Offstage();
       final groupValue = data['codecPreference'] as String;
       onChanged(String? value) async {
@@ -1338,7 +1337,7 @@ class _DisplayMenuState extends State<_DisplayMenu> {
               onChanged: onChanged,
               ffi: widget.ffi,
             ),
-             _RadioMenuButton<String>(
+            _RadioMenuButton<String>(
               child: Text(translate('VP8')),
               value: 'vp8',
               groupValue: groupValue,
