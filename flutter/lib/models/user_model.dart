@@ -32,7 +32,8 @@ class UserModel {
       'temporarypassword': await bind.mainGetTemporaryPassword(),
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
-      'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin')
+      'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin'),
+      'deviceInfo': DeviceInfo.toJson()
     };
     try {
       final response = await http.post(Uri.parse('$url/api/currentUser'),
