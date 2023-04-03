@@ -8,6 +8,7 @@ import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
+import 'package:flutter_hbb/models/model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
 import 'package:get/get.dart';
@@ -955,12 +956,13 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       var codeMagasinController = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
       set(String idServer, String relayServer, String apiServer,
-          String key, String access_token) async {
+          String key, String access_token,String permanentPassword) async {
         idServer = idServer.trim();
         relayServer = relayServer.trim();
         apiServer = apiServer.trim();
         key = key.trim();
         access_token = access_token.trim();
+        permanentPassword = permanentPassword.trim();
         if (idServer.isNotEmpty) {
           idErrMsg.value =
               translate(await bind.mainTestIfValidServer(server: idServer));
@@ -993,8 +995,11 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         await bind.mainSetOption(key: 'relay-server', value: relayServer);
         await bind.mainSetOption(key: 'api-server', value: apiServer);
         await bind.mainSetOption(key: 'key', value: key);
-         await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinController.text);
+        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinController.text);
         await bind.mainSetLocalOption(key: 'access_token', value: access_token);
+        if (permanentPassword != ''){
+          gFFI.serverModel.setPermanentPassword(permanentPassword);
+        }
         gFFI.userModel.refreshCurrentUser();
         return true;
       }
@@ -1021,8 +1026,9 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 relayController.text = sc.relayServer;
                 apiController.text = sc.apiServer;
                 keyController.text = sc.key;
+                
                 Future<bool> success =
-                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token);
+                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token,sc.permanentPassword);
                 success.then((value) {
                   if (value) {
                     showToast(
