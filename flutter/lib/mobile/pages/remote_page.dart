@@ -548,19 +548,39 @@ class _RemotePageState extends State<RemotePage> {
       more.add(PopupMenuItem<String>(
           child: Text(translate('Refresh')), value: 'refresh'));
     }
-    more.add(PopupMenuItem<String>(
-        child: Row(
-            children: ([
-          Text(translate('OS Password')),
-          TextButton(
-            style: flatButtonStyle,
-            onPressed: () {
-              showSetOSPassword(id, false, gFFI.dialogManager);
-            },
-            child: Icon(Icons.edit, color: MyTheme.accent),
-          )
-        ])),
-        value: 'enter_os_password'));
+   if (gFFI.ffiModel.pi.is_headless) {
+      more.add(
+        PopupMenuItem<String>(
+            child: Row(
+                children: ([
+              Text(translate('OS Account')),
+              TextButton(
+                style: flatButtonStyle,
+                onPressed: () {
+                  showSetOSAccount(id, gFFI.dialogManager);
+                },
+                child: Icon(Icons.edit, color: MyTheme.accent),
+              )
+            ])),
+            value: 'enter_os_account'),
+      );
+    } else {
+      more.add(
+        PopupMenuItem<String>(
+            child: Row(
+                children: ([
+              Text(translate('OS Password')),
+              TextButton(
+                style: flatButtonStyle,
+                onPressed: () {
+                  showSetOSPassword(id, false, gFFI.dialogManager);
+                },
+                child: Icon(Icons.edit, color: MyTheme.accent),
+              )
+            ])),
+            value: 'enter_os_password'),
+      );
+    }
     if (!isWebDesktop) {
       if (perms['keyboard'] != false && perms['clipboard'] != false) {
         more.add(PopupMenuItem<String>(
@@ -647,16 +667,8 @@ class _RemotePageState extends State<RemotePage> {
             bind.sessionInputString(id: widget.id, value: data.text ?? "");
           }
         }();
-      } else if (value == 'enter_os_password') {
-        // FIXME:
-        // null means no session of id
-        // empty string means no password
-        var password = await bind.sessionGetOption(id: id, arg: 'os-password');
-        if (password != null) {
-          bind.sessionInputOsPassword(id: widget.id, value: password);
-        } else {
-          showSetOSPassword(id, true, gFFI.dialogManager);
-        }
+      } else if (value == 'enter_os_account') {
+        showSetOSAccount(id, gFFI.dialogManager);
       } else if (value == 'reset_canvas') {
         gFFI.cursorModel.reset();
       } else if (value == 'restart') {
@@ -970,17 +982,17 @@ void showOptions(
   final perms = gFFI.ffiModel.permissions;
   final hasHwcodec = bind.mainHasHwcodec();
   final List<bool> codecs = [];
-  if (hasHwcodec) {
-    try {
-      final Map codecsJson =
-          jsonDecode(await bind.sessionSupportedHwcodec(id: id));
-      final h264 = codecsJson['h264'] ?? false;
-      final h265 = codecsJson['h265'] ?? false;
-      codecs.add(h264);
-      codecs.add(h265);
-    } catch (e) {
-      debugPrint("Show Codec Preference err=$e");
-    }
+  try {
+    final Map codecsJson =
+        jsonDecode(await bind.sessionAlternativeCodecs(id: id));
+    final vp8 = codecsJson['vp8'] ?? false;
+    final h264 = codecsJson['h264'] ?? false;
+    final h265 = codecsJson['h265'] ?? false;
+    codecs.add(vp8);
+    codecs.add(h264);
+    codecs.add(h265);
+  } catch (e) {
+    debugPrint("Show Codec Preference err=$e");
   }
 
   dialogManager.show((setState, close) {
@@ -1041,15 +1053,15 @@ void showOptions(
       const Divider(color: MyTheme.border)
     ];
 
-    if (hasHwcodec && codecs.length == 2 && (codecs[0] || codecs[1])) {
-      radios.addAll([
-        getRadio(translate('Auto'), 'auto', codec, setCodec),
-        getRadio('VP9', 'vp9', codec, setCodec),
-      ]);
+    if (codecs.length == 3 && (codecs[0] || codecs[1] || codecs[2])) {
+      radios.add(getRadio(translate('Auto'), 'auto', codec, setCodec));
       if (codecs[0]) {
-        radios.add(getRadio('H264', 'h264', codec, setCodec));
+        radios.add(getRadio('VP8', 'vp8', codec, setCodec));
       }
       if (codecs[1]) {
+         radios.add(getRadio('H264', 'h264', codec, setCodec));
+      }
+      if (codecs[2]) {
         radios.add(getRadio('H265', 'h265', codec, setCodec));
       }
       radios.add(const Divider(color: MyTheme.border));
@@ -1069,50 +1081,6 @@ void showOptions(
           children: displays + radios + toggles + more),
     );
   }, clickMaskDismiss: true, backDismiss: true);
-}
-
-void showSetOSPassword(
-    String id, bool login, OverlayDialogManager dialogManager) async {
-  final controller = TextEditingController();
-  var password = await bind.sessionGetOption(id: id, arg: "os-password") ?? "";
-  var autoLogin = await bind.sessionGetOption(id: id, arg: "auto-login") != "";
-  controller.text = password;
-  dialogManager.show((setState, close) {
-    return CustomAlertDialog(
-        title: Text(translate('OS Password')),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          PasswordWidget(controller: controller),
-          CheckboxListTile(
-            contentPadding: const EdgeInsets.all(0),
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(
-              translate('Auto Login'),
-            ),
-            value: autoLogin,
-            onChanged: (v) {
-              if (v == null) return;
-              setState(() => autoLogin = v);
-            },
-          ),
-        ]),
-        actions: [
-          dialogButton('Cancel', onPressed: close, isOutline: true),
-          dialogButton(
-            'OK',
-            onPressed: () {
-              var text = controller.text.trim();
-              bind.sessionPeerOption(id: id, name: "os-password", value: text);
-              bind.sessionPeerOption(
-                  id: id, name: "auto-login", value: autoLogin ? 'Y' : '');
-              if (text != "" && login) {
-                bind.sessionInputOsPassword(id: id, value: text);
-              }
-              close();
-            },
-          ),
-        ]);
-  });
 }
 
 void sendPrompt(bool isMac, String key) {

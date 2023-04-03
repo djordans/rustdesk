@@ -639,7 +639,7 @@ class _ControlMenu extends StatelessWidget {
         ffi: ffi,
         menuChildren: [
           requestElevation(),
-          osPassword(),
+          ffi.ffiModel.pi.is_headless ? osAccount() : osPassword(),
           transferFile(context),
           tcpTunneling(context),
           note(),
@@ -662,78 +662,20 @@ class _ControlMenu extends StatelessWidget {
         onPressed: () => showRequestElevationDialog(id, ffi.dialogManager));
   }
 
+ osAccount() {
+    return _MenuItemButton(
+        child: Text(translate('OS Account')),
+        trailingIcon: Transform.scale(scale: 0.8, child: Icon(Icons.edit)),
+        ffi: ffi,
+        onPressed: () => showSetOSAccount(id, ffi.dialogManager));
+  }
+
   osPassword() {
     return _MenuItemButton(
         child: Text(translate('OS Password')),
         trailingIcon: Transform.scale(scale: 0.8, child: Icon(Icons.edit)),
         ffi: ffi,
-        onPressed: () => _showSetOSPassword(id, false, ffi.dialogManager));
-  }
-
-  _showSetOSPassword(
-      String id, bool login, OverlayDialogManager dialogManager) async {
-    final controller = TextEditingController();
-    var password =
-        await bind.sessionGetOption(id: id, arg: 'os-password') ?? '';
-    var autoLogin =
-        await bind.sessionGetOption(id: id, arg: 'auto-login') != '';
-    controller.text = password;
-    dialogManager.show((setState, close) {
-      submit() {
-        var text = controller.text.trim();
-        bind.sessionPeerOption(id: id, name: 'os-password', value: text);
-        bind.sessionPeerOption(
-            id: id, name: 'auto-login', value: autoLogin ? 'Y' : '');
-        if (text != '' && login) {
-          bind.sessionInputOsPassword(id: id, value: text);
-        }
-        close();
-      }
-
-      return CustomAlertDialog(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.password_rounded, color: MyTheme.accent),
-            Text(translate('OS Password')).paddingOnly(left: 10),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PasswordWidget(controller: controller),
-            CheckboxListTile(
-              contentPadding: const EdgeInsets.all(0),
-              dense: true,
-              controlAffinity: ListTileControlAffinity.leading,
-              title: Text(
-                translate('Auto Login'),
-              ),
-              value: autoLogin,
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() => autoLogin = v);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          dialogButton(
-            "Cancel",
-            icon: Icon(Icons.close_rounded),
-            onPressed: close,
-            isOutline: true,
-          ),
-          dialogButton(
-            "OK",
-            icon: Icon(Icons.done_rounded),
-            onPressed: submit,
-          ),
-        ],
-        onSubmit: submit,
-        onCancel: close,
-      );
-    });
+        onPressed: () => showSetOSPassword(id, false, ffi.dialogManager));
   }
 
   transferFile(BuildContext context) {
@@ -1351,29 +1293,31 @@ class _DisplayMenuState extends State<_DisplayMenu> {
 
   codec() {
     return futureBuilder(future: () async {
-      final supportedHwcodec =
-          await bind.sessionSupportedHwcodec(id: widget.id);
+       final alternativeCodecs =
+          await bind.sessionAlternativeCodecs(id: widget.id);
       final codecPreference =
           await bind.sessionGetOption(id: widget.id, arg: 'codec-preference') ??
               '';
       return {
-        'supportedHwcodec': supportedHwcodec,
+        'alternativeCodecs': alternativeCodecs,
         'codecPreference': codecPreference
       };
     }(), hasData: (data) {
       final List<bool> codecs = [];
       try {
-        final Map codecsJson = jsonDecode(data['supportedHwcodec']);
+        final Map codecsJson = jsonDecode(data['alternativeCodecs']);
+        final vp8 = codecsJson['vp8'] ?? false;
         final h264 = codecsJson['h264'] ?? false;
         final h265 = codecsJson['h265'] ?? false;
+        codecs.add(vp8);
         codecs.add(h264);
         codecs.add(h265);
       } catch (e) {
         debugPrint("Show Codec Preference err=$e");
       }
-      final visible = bind.mainHasHwcodec() &&
-          codecs.length == 2 &&
-          (codecs[0] || codecs[1]);
+      final visible =
+          codecs.length == 3 && (codecs[0] || codecs[1] || codecs[2]);
+
       if (!visible) return Offstage();
       final groupValue = data['codecPreference'] as String;
       onChanged(String? value) async {
@@ -1394,6 +1338,13 @@ class _DisplayMenuState extends State<_DisplayMenu> {
               onChanged: onChanged,
               ffi: widget.ffi,
             ),
+             _RadioMenuButton<String>(
+              child: Text(translate('VP8')),
+              value: 'vp8',
+              groupValue: groupValue,
+              onChanged: codecs[0] ? onChanged : null,
+              ffi: widget.ffi,
+            ),
             _RadioMenuButton<String>(
               child: Text(translate('VP9')),
               value: 'vp9',
@@ -1405,14 +1356,14 @@ class _DisplayMenuState extends State<_DisplayMenu> {
               child: Text(translate('H264')),
               value: 'h264',
               groupValue: groupValue,
-              onChanged: codecs[0] ? onChanged : null,
+              onChanged: codecs[1] ? onChanged : null,
               ffi: widget.ffi,
             ),
             _RadioMenuButton<String>(
               child: Text(translate('H265')),
               value: 'h265',
               groupValue: groupValue,
-              onChanged: codecs[1] ? onChanged : null,
+              onChanged: codecs[2] ? onChanged : null,
               ffi: widget.ffi,
             ),
           ]);
