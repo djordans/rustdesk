@@ -1006,7 +1006,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
 
       submit() async {
         bool result = await set(idController.text, relayController.text,
-            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'));
+            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'),await bind.mainGetPermanentPassword());
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
