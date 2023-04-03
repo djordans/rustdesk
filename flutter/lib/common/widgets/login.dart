@@ -60,7 +60,7 @@ class ButtonOP extends StatelessWidget {
         width: 200,
         child: Obx(() => ElevatedButton(
             style: ElevatedButton.styleFrom(
-              primary: curOP.value.isEmpty || curOP.value == op
+              backgroundColor: curOP.value.isEmpty || curOP.value == op
                   ? primaryColor
                   : Colors.grey,
             ).copyWith(elevation: ButtonStyleButton.allOrNull(0.0)),

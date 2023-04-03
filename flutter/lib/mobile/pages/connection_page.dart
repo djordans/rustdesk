@@ -84,7 +84,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
   /// Connects to the selected peer.
   void onConnect() {
     var id = _idController.id;
-    connect(context, id);
+    String password = gFFI.abModel.getPeerPassword(id);
+    connect(context, id, password: password);
   }
 
   /// UI for software update.

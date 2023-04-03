@@ -990,7 +990,7 @@ void showOptions(
     displays.add(const Divider(color: MyTheme.border));
   }
   final perms = gFFI.ffiModel.permissions;
-  final hasHwcodec = bind.mainHasHwcodec();
+  //final hasHwcodec = bind.mainHasHwcodec();
   final List<bool> codecs = [];
   try {
     final Map codecsJson =

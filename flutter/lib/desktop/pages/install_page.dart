@@ -236,7 +236,7 @@ class _InstallPageBodyState extends State<_InstallPageBody>
                   Obx(() => ElevatedButton(
                       onPressed: btnEnabled.value ? install : null,
                       style: ElevatedButton.styleFrom(
-                          primary: MyTheme.button,
+                          backgroundColor: MyTheme.button,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.all(
                                 Radius.circular(button_radius)),

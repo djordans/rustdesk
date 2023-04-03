@@ -342,7 +342,7 @@ abstract class BasePeerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _PeerCard(
       peer: peer,
-      connect: (BuildContext context, String id) => connect(context, id),
+      connect: (BuildContext context, String id) => connect(context, id, password: peer.password),
       popupMenuEntryBuilder: _buildPopupMenuEntry,
     );
   }
@@ -366,7 +366,7 @@ abstract class BasePeerCard extends StatelessWidget {
       BuildContext context, String id, String title,
       {bool isFileTransfer = false,
       bool isTcpTunneling = false,
-      bool isRDP = false}) {
+      bool isRDP = false, String password = ''}) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
         title,
@@ -379,6 +379,7 @@ abstract class BasePeerCard extends StatelessWidget {
           isFileTransfer: isFileTransfer,
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
+          password: password,
         );
       },
       padding: menuPadding,
