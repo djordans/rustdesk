@@ -29,7 +29,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu18.04
+          distro: ubuntu20.04
           githubToken: ${{ github.token }}
           setup: |
             ls -l "/opt/artifacts"
