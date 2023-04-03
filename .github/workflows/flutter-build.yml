@@ -393,7 +393,7 @@ jobs:
           - {
               arch: x86_64,
               target: armv7-linux-androideabi,
-              os: ubuntu-20.04,
+              os: ubuntu-18.04,
               extra-build-features: "",
               openssl-arch: android-arm
             }
@@ -708,7 +708,7 @@ jobs:
           - {
               arch: aarch64,
               target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04,
+              os: ubuntu-20.04, # just for naming package, not running host
               use-cross: true,
               extra-build-features: "",
             }
@@ -1280,7 +1280,7 @@ jobs:
           - {
               arch: x86_64,
               target: x86_64-unknown-linux-gnu,
-              os: ubuntu-20.04,
+              os: ubuntu-18.04,
               extra-build-features: "",
             }
           - {
