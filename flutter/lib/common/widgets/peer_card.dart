@@ -63,8 +63,8 @@ class _PeerCardState extends State<_PeerCard>
     return Card(
         margin: EdgeInsets.symmetric(horizontal: 2),
         child: GestureDetector(
-            onTap: !isWebDesktop ? () => connect(context, peer.id) : null,
-            onDoubleTap: isWebDesktop ? () => connect(context, peer.id) : null,
+            onTap: !isWebDesktop ? () => connect(context, peer.id, password: peer.password) : null,
+            onDoubleTap: isWebDesktop ? () => connect(context, peer.id, password: peer.password) : null,
             onLongPressStart: (details) {
               final x = details.globalPosition.dx;
               final y = details.globalPosition.dy;

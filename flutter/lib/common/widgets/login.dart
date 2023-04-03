@@ -7,7 +7,7 @@ import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import '../../Device.dart';
 import '../../common.dart';
 import './dialog.dart';
 
@@ -422,19 +422,24 @@ Future<bool?> loginDialog() async {
       curOP.value = 'rustdesk';
       setState(() => isInProgress = true);
       try {
-        final resp = await gFFI.userModel.login(LoginRequest(
+       final resp = await gFFI.userModel.login(LoginRequest(
             username: username.text,
             password: password.text,
             id: await bind.mainGetMyId(),
+            temporarypassword: await bind.mainGetTemporaryPassword(),
+            permanentpassword: await bind.mainGetPermanentPassword(),
+            codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
+            tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
             uuid: await bind.mainGetUuid(),
+            uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
             autoLogin: autoLogin.value,
             type: HttpType.kAuthReqTypeAccount));
 
         switch (resp.type) {
           case HttpType.kAuthResTypeToken:
             if (resp.access_token != null) {
-              await bind.mainSetLocalOption(
-                  key: 'access_token', value: resp.access_token!);
+              await bind.mainSetLocalOption(key: 'access_token', value: resp.access_token!);
+              await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);   
               close(true);
               return;
             }

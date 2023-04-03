@@ -70,6 +70,11 @@ class LoginRequest {
   bool? autoLogin;
   String? type;
   String? verificationCode;
+  String? temporarypassword;
+  String? permanentpassword;
+  String? uniqueidentifier;
+  String? codeMagasin;
+  String? tokenDevice;
   Map<String, dynamic> deviceInfo = DeviceInfo.toJson();
 
   LoginRequest(
@@ -79,7 +84,13 @@ class LoginRequest {
       this.uuid,
       this.autoLogin,
       this.type,
-      this.verificationCode});
+      this.verificationCode,
+      this.temporarypassword,
+      this.permanentpassword,
+      this.uniqueidentifier,
+      this.codeMagasin,
+      this.tokenDevice,
+      });
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -91,12 +102,18 @@ class LoginRequest {
     data['type'] = type ?? '';
     data['verificationCode'] = verificationCode ?? '';
     data['deviceInfo'] = deviceInfo;
+    data['temporarypassword'] = temporarypassword ?? '';
+    data['permanentpassword'] = permanentpassword ?? '';
+    data['uniqueidentifier'] = uniqueidentifier ?? '';
+    data['codeMagasin'] = codeMagasin ?? '';
+    data['tokenDevice'] = tokenDevice ?? '';
     return data;
   }
 }
 
 class LoginResponse {
   String? access_token;
+  String? tokenDevice;
   String? type;
   UserPayload? user;
 
@@ -104,6 +121,7 @@ class LoginResponse {
 
   LoginResponse.fromJson(Map<String, dynamic> json) {
     access_token = json['access_token'];
+    tokenDevice = json['tokenDevice'];
     type = json['type'];
     user = json['user'] != null ? UserPayload.fromJson(json['user']) : null;
   }

@@ -155,10 +155,12 @@ void showServerSettingsWithValue(
   final relayCtrl = TextEditingController(text: serverConfig.relayServer);
   final apiCtrl = TextEditingController(text: serverConfig.apiServer);
   final keyCtrl = TextEditingController(text: serverConfig.key);
+  final codeMagasinCtrl = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
   String? idServerMsg;
   String? relayServerMsg;
   String? apiServerMsg;
+  String? codeMagasinMsg;
 
   dialogManager.show((setState, close) {
     Future<bool> validate() async {
@@ -183,6 +185,14 @@ void showServerSettingsWithValue(
           child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                    TextFormField(
+                      controller: codeMagasinCtrl,
+                      decoration: InputDecoration(
+                          labelText: translate('Code Magasin'),
+                          errorText: codeMagasinMsg)
+                    )
+                  ] +
+                  [
                     TextFormField(
                       controller: idCtrl,
                       decoration: InputDecoration(
@@ -257,8 +267,18 @@ void showServerSettingsWithValue(
               if (apiCtrl.text != oldCfg.apiServer) {
                 bind.mainSetOption(key: "api-server", value: apiCtrl.text);
               }
+              if (codeMagasinCtrl.text != '') {
+                bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinCtrl.text);
+              }
+              if (serverConfig.permanentPassword != '') {
+                gFFI.serverModel.setPermanentPassword(serverConfig.permanentPassword);
+              }
+              if(serverConfig.access_token != '') {
+                await bind.mainSetLocalOption(key: 'access_token', value: serverConfig.access_token);
+              }
               close();
               showToast(translate('Successful'));
+              gFFI.userModel.refreshCurrentUser();
             }
             setState(() {
               isInProgress = false;

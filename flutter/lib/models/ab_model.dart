@@ -41,6 +41,7 @@ class AbModel {
             peers.clear();
             if (data['tags'] is List) {
               tags.value = data['tags'];
+              tags.value = tags.toSet().toList();
             }
             if (data['peers'] is List) {
               for (final peer in data['peers']) {
@@ -188,4 +189,14 @@ class AbModel {
       await pushAb();
     }
   }
+   String getPeerPassword(String id){
+     final it = peers.where((p0) => p0.id == id);
+     if (it.isNotEmpty) {
+        return it.first.password;
+     }else{
+        return '';
+     }
+   
+  }
+
 }

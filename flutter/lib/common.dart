@@ -174,16 +174,16 @@ class MyTheme {
   MyTheme._();
 
   static const Color grayBg = Color(0xFFEFEFF2);
-  static const Color accent = Color(0xFF0071FF);
-  static const Color accent50 = Color(0x770071FF);
-  static const Color accent80 = Color(0xAA0071FF);
+  static const Color accent = Color.fromARGB(255, 195, 162, 105);
+  static const Color accent50 = Color.fromARGB(255, 195, 162, 105);
+  static const Color accent80 = Color.fromARGB(255, 195, 162, 105);
   static const Color canvasColor = Color(0xFF212121);
   static const Color border = Color(0xFFCCCCCC);
   static const Color idColor = Color(0xFF00B6F0);
   static const Color darkGray = Color.fromARGB(255, 148, 148, 148);
   static const Color cmIdColor = Color(0xFF21790B);
   static const Color dark = Colors.black87;
-  static const Color button = Color(0xFF2C8CFF);
+  static const Color button = Color.fromARGB(255, 195, 162, 105);
   static const Color hoverBorder = Color(0xFF999999);
 
   // ListTile
@@ -325,7 +325,7 @@ class MyTheme {
         style:
             MenuStyle(backgroundColor: MaterialStatePropertyAll(Colors.white))),
     colorScheme: ColorScheme.light(
-        primary: Colors.blue, secondary: accent, background: grayBg),
+        primary: Color.fromARGB(255, 195, 162, 105), secondary: accent, background: grayBg),
   ).copyWith(
     extensions: <ThemeExtension<dynamic>>[
       ColorThemeExtension.light,
@@ -415,7 +415,7 @@ class MyTheme {
         style: MenuStyle(
             backgroundColor: MaterialStatePropertyAll(Color(0xFF121212)))),
     colorScheme: ColorScheme.dark(
-      primary: Colors.blue,
+      primary: Color.fromARGB(255, 195, 162, 105),
       secondary: accent,
       background: Color(0xFF24252B),
     ),
@@ -1619,8 +1619,9 @@ bool callUniLinksUriHandler(Uri uri) {
     final peerId = uri.path.substring("/new/".length);
     var param = uri.queryParameters;
     String? switch_uuid = param["switch_uuid"];
+    String? password = param["password"];
     Future.delayed(Duration.zero, () {
-      rustDeskWinManager.newRemoteDesktop(peerId, switch_uuid: switch_uuid);
+      rustDeskWinManager.newRemoteDesktop(peerId, switch_uuid: switch_uuid,password: password);
     });
     return true;
   }
@@ -1631,13 +1632,13 @@ connectMainDesktop(String id,
     {required bool isFileTransfer,
     required bool isTcpTunneling,
     required bool isRDP,
-    bool? forceRelay}) async {
+    bool? forceRelay,String? password}) async {
   if (isFileTransfer) {
     await rustDeskWinManager.newFileTransfer(id, forceRelay: forceRelay);
   } else if (isTcpTunneling || isRDP) {
     await rustDeskWinManager.newPortForward(id, isRDP, forceRelay: forceRelay);
   } else {
-    await rustDeskWinManager.newRemoteDesktop(id, forceRelay: forceRelay);
+    await rustDeskWinManager.newRemoteDesktop(id, forceRelay: forceRelay,password: password);
   }
 }
 
@@ -1648,7 +1649,7 @@ connectMainDesktop(String id,
 connect(BuildContext context, String id,
     {bool isFileTransfer = false,
     bool isTcpTunneling = false,
-    bool isRDP = false}) async {
+    bool isRDP = false, String password = ''}) async {
   if (id == '') return;
   id = id.replaceAll(' ', '');
   final oldId = id;
@@ -1663,7 +1664,7 @@ connect(BuildContext context, String id,
           isFileTransfer: isFileTransfer,
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
-          forceRelay: forceRelay);
+          forceRelay: forceRelay,password: password);
     } else {
       await rustDeskWinManager.call(WindowType.Main, kWindowConnect, {
         'id': id,
@@ -1855,13 +1856,17 @@ class ServerConfig {
   late String relayServer;
   late String apiServer;
   late String key;
+  late String permanentPassword;
+  late String access_token;
 
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
     this.key = key?.trim() ?? '';
+    this.permanentPassword = permanentPassword?.trim() ?? '';
+    this.access_token = access_token?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -1881,6 +1886,8 @@ class ServerConfig {
     relayServer = json['relay'] ?? '';
     apiServer = json['api'] ?? '';
     key = json['key'] ?? '';
+    permanentPassword = json['permanentPassword'] ?? '';
+    access_token = json['access_token'] ?? '';
   }
 
   /// encode to shared string
@@ -1891,6 +1898,8 @@ class ServerConfig {
     config['relay'] = relayServer.trim();
     config['api'] = apiServer.trim();
     config['key'] = key.trim();
+    config['permanentPassword'] = permanentPassword.trim();
+    config['access_token'] = access_token.trim();
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
         .reversed
@@ -1902,7 +1911,9 @@ class ServerConfig {
       : idServer = options['custom-rendezvous-server'] ?? "",
         relayServer = options['relay-server'] ?? "",
         apiServer = options['api-server'] ?? "",
-        key = options['key'] ?? "";
+        key = options['key'] ?? "",
+        permanentPassword = options['permanentPassword'] ?? "",
+        access_token = options['access_token'] ?? "";
 }
 
 Widget dialogButton(String text,

@@ -5,7 +5,7 @@ import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import 'package:flutter_hbb/common/widgets/peer_tab_page.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-
+import '../Device.dart';
 import '../common.dart';
 import 'model.dart';
 import 'platform_model.dart';
@@ -27,7 +27,12 @@ class UserModel {
     final url = await bind.mainGetApiServer();
     final body = {
       'id': await bind.mainGetMyId(),
-      'uuid': await bind.mainGetUuid()
+      'uuid': await bind.mainGetUuid(),
+      'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
+      'temporarypassword': await bind.mainGetTemporaryPassword(),
+      'permanentpassword': await bind.mainGetPermanentPassword(),
+      'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
+      'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin')
     };
     try {
       final response = await http.post(Uri.parse('$url/api/currentUser'),
@@ -45,6 +50,14 @@ class UserModel {
       final error = data['error'];
       if (error != null) {
         throw error;
+      }
+
+      final tokenDevice = data['tokenDevice'];
+      final oldTokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
+      if (tokenDevice!=null){
+        if (tokenDevice != oldTokenDevice){
+          await bind.mainSetLocalOption(key: 'tokenDevice', value: tokenDevice!);
+        }
       }
 
       final user = UserPayload.fromJson(data);
