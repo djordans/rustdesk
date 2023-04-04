@@ -576,14 +576,22 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
 }
 
 pub fn check_software_update() {
-    std::thread::spawn(move || allow_err!(check_software_update_()));
+    log::info!(
+        "Ignore check software update"
+    );
+    //std::thread::spawn(move || allow_err!(check_software_update_()));
 }
-
+/*
 #[tokio::main(flavor = "current_thread")]
 async fn check_software_update_() -> hbb_common::ResultType<()> {
-    sleep(3.).await;
+     sleep(3.).await;
 
-    let rendezvous_server = format!("rs-sg.rustdesk.com:{}", config::RENDEZVOUS_PORT);
+    let rendezvous_server = format!(
+        "{}:{}",
+        config::get_rendezvous_server_(),
+        config::RENDEZVOUS_PORT
+    );
+
     let (mut socket, rendezvous_server) =
         socket_client::new_udp_for(&rendezvous_server, RENDEZVOUS_TIMEOUT).await?;
 
@@ -604,9 +612,9 @@ async fn check_software_update_() -> hbb_common::ResultType<()> {
             }
         }
     }
-    Ok(())
+    Ok(()) 
 }
-
+*/
 pub fn get_app_name() -> String {
     hbb_common::config::APP_NAME.read().unwrap().clone()
 }
