@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
     _pages.clear();
     _pages.add(ConnectionPage());
     if (isAndroid) {
-      _pages.addAll([ChatPage(), ServerPage()]);
+      _pages.add(ServerPage());//_pages.addAll([ChatPage(), ServerPage()]);
     }
     _pages.add(SettingsPage());
   }
