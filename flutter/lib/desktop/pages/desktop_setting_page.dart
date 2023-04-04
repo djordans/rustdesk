@@ -1383,7 +1383,7 @@ class _AccountState extends State<_Account> {
 
   Widget accountAction() {
     return Obx(() => _Button(
-        gFFI.userModel.userName.value.isEmpty ? 'Login' : 'Logout (${gFFI.userModel.userName.value})' ,
+        gFFI.userModel.userName.value.isEmpty ? translate("Login") : '${translate("Logout")} (${gFFI.userModel.userName.value})' ,
         () => {
               gFFI.userModel.userName.value.isEmpty
                   ? loginDialog()
