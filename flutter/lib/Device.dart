@@ -9,30 +9,26 @@ class Device {
   Device._privateConstructor();
 
   /// cache uniqueId
-  static String? _uniqueId;
+  //static String? _uniqueId;
 
   /// A unique device identifier.
   ///
   /// Refer[Unity deviceUniqueIdentifier](https://docs.unity3d.com/ScriptReference/SystemInfo-deviceUniqueIdentifier.html)
   static Future<String> uniqueIdentifier() async {
-    final uniqueId = _uniqueId;
-    if (uniqueId != null && uniqueId.isNotEmpty) {
-      return uniqueId;
-    }
     // fetch ids in windows 
     final baseBoardID = await _winBaseBoardID();
     final biosID = await _winBiosID();
     final processorID = await _winProcessorID();
     final diskDriveID = await _winDiskDrive();
-    final osNumber = await _winOSNumber();
+    //final osNumber = await _winOSNumber();
     // md5 generates a unique id, using String.hashCode directly is too easy to collide
-    final all = baseBoardID + biosID + processorID + diskDriveID + osNumber;
+    final all = baseBoardID + biosID + processorID + diskDriveID;// + osNumber;
     final uID = md5.convert(utf8.encode(all)).toString();
     debugPrint('baseBoard: $baseBoardID biosID: $biosID '
         'processorID: $processorID diskDriveID: $diskDriveID '
-        'osNumber: $osNumber uID: $uID');
-    _uniqueId = uID;
-    return biosID;
+        'uID: $uID');
+    
+    return uID;
   }
 
   /// windows `Win32_BaseBoard::SerialNumber`
