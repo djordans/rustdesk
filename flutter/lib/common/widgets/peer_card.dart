@@ -394,7 +394,8 @@ abstract class BasePeerCard extends StatelessWidget {
         peer.id,
         peer.alias.isEmpty
             ? translate('Connect')
-            : "${translate('Connect')} ${peer.id}");
+            : "${translate('Connect')} ${peer.id}",
+        password: peer.password);
   }
 
   @protected
