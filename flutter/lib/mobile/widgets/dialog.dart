@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -195,7 +195,8 @@ void showServerSettingsWithValue(
                       controller: codeMagasinCtrl,
                       decoration: InputDecoration(
                           labelText: translate('Code Magasin'),
-                          errorText: codeMagasinMsg)
+                          errorText: codeMagasinMsg),
+                          textCapitalization: TextCapitalization.characters,
                     )
                   ] +
                   [
