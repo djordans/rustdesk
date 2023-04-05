@@ -1006,7 +1006,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         await bind.mainSetOption(key: 'relay-server', value: relayServer);
         await bind.mainSetOption(key: 'api-server', value: apiServer);
         await bind.mainSetOption(key: 'key', value: key);
-        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasinController.text);
+        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasin);
         await bind.mainSetLocalOption(key: 'access_token', value: access_token);
         if (permanentPassword != ''){
           gFFI.serverModel.setPermanentPassword(permanentPassword);
@@ -1016,8 +1016,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       }
 
       submit() async {
-        bool result = await set(idController.text, relayController.text,
-            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'),await bind.mainGetPermanentPassword(), codeMagasinController.text);
+        bool result = await set(idController.text, relayController.text, apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'), await bind.mainGetPermanentPassword(), codeMagasinController.text);
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1039,7 +1038,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 keyController.text = sc.key;
                 codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
                 Future<bool> success =
-                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token,sc.permanentPassword,bind.mainGetLocalOption(key: 'codeMagasin'));
+                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'));
                 success.then((value) {
                   if (value) {
                     showToast(
@@ -1093,15 +1092,15 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         Column(
           children: [
             Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
-                codeMagasinErrMsg.value, enabled, secure)),
+                codeMagasinErrMsg.value, enabled, secure, TextCapitalization.characters)),
             Obx(() => _LabeledTextField(context, 'ID Server', idController,
-                idErrMsg.value, enabled, secure)),
+                idErrMsg.value, enabled, secure, TextCapitalization.none)),
             Obx(() => _LabeledTextField(context, 'Relay Server',
-                relayController, relayErrMsg.value, enabled, secure)),
+                relayController, relayErrMsg.value, enabled, secure, TextCapitalization.none)),
             Obx(() => _LabeledTextField(context, 'API Server', apiController,
-                apiErrMsg.value, enabled, secure)),
+                apiErrMsg.value, enabled, secure, TextCapitalization.none)),
             _LabeledTextField(
-                context, 'Key', keyController, '', enabled, secure),
+                context, 'Key', keyController, '', enabled, secure, TextCapitalization.none),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [_Button('Apply', submit, enabled: enabled)],
@@ -1725,7 +1724,7 @@ _LabeledTextField(
     TextEditingController controller,
     String errorText,
     bool enabled,
-    bool secure) {
+    bool secure, TextCapitalization textCapitalization) {
   return Row(
     children: [
       ConstrainedBox(
@@ -1743,6 +1742,7 @@ _LabeledTextField(
             obscureText: secure,
             decoration: InputDecoration(
                 errorText: errorText.isNotEmpty ? errorText : null),
+            textCapitalization: textCapitalization,
             style: TextStyle(
               color: _disabledTextColor(context, enabled),
             )),
