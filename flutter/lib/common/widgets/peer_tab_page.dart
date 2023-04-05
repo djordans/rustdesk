@@ -101,7 +101,7 @@ class _PeerTabPageState extends State<PeerTabPage>
           height: 28,
           child: Container(
             padding: isDesktop ? null : EdgeInsets.symmetric(horizontal: 2),
-            constraints: isDesktop ? null : kMobilePageConstraints,
+            constraints: isDesktop ? null : BoxConstraints(maxWidth: MediaQuery.of(context).size.width),// kMobilePageConstraints,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [

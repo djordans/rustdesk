@@ -175,7 +175,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
     );
     return Align(
         alignment: Alignment.center,
-        child: Container(constraints: kMobilePageConstraints, child: w));
+        child: Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width), child: w));
+        //child: Container(constraints: kMobilePageConstraints, child: w));
   }
 
   @override
