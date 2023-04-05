@@ -255,7 +255,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                             size: 22,
                           ).marginOnly(right: 8, top: 4),
                         ),
-                        onTap: () => bind.mainUpdateTemporaryPassword(),
+                        onTap: () {
+                          bind.mainUpdateTemporaryPassword();
+                          gFFI.userModel.refreshCurrentUser();
+                        } ,
                         onHover: (value) => refreshHover.value = value,
                       ),
                       InkWell(

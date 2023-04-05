@@ -285,7 +285,10 @@ class ServerInfo extends StatelessWidget {
                       IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: const Icon(Icons.refresh),
-                          onPressed: () => bind.mainUpdateTemporaryPassword()),
+                          onPressed: () {
+                            bind.mainUpdateTemporaryPassword();
+                            gFFI.userModel.refreshCurrentUser();
+                          }),
                       IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: Icon(Icons.copy_outlined),

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../common.dart';
 import '../../models/platform_model.dart';
+import 'package:http/http.dart' as http;
 
 void _showSuccess() {
   showToast(translate("Successful"));
@@ -176,6 +178,10 @@ void showServerSettingsWithValue(
       if (apiCtrl.text != oldCfg.apiServer) {
         if (apiServerMsg != null) return false;
       }
+      if (codeMagasinCtrl.text != bind.mainGetLocalOption(key: 'codeMagasin')){
+        codeMagasinMsg = await validatestore(codeMagasinCtrl.text);
+        if (codeMagasinMsg != null) return false;
+      }
       return true;
     }
 
@@ -248,6 +254,7 @@ void showServerSettingsWithValue(
               idServerMsg = null;
               relayServerMsg = null;
               apiServerMsg = null;
+              codeMagasinMsg = null;
               isInProgress = true;
             });
             if (await validate()) {
@@ -297,4 +304,19 @@ Future<String?> validateAsync(String value) async {
   }
   final res = await bind.mainTestIfValidServer(server: value);
   return res.isEmpty ? null : res;
+}
+
+Future<String?> validatestore(String value) async {
+  value = value.trim();
+  if (value.isEmpty){
+    return "Magasin obligatoire";
+  }
+  final api = "${await bind.mainGetApiServer()}/api/checkstore/$value";
+  var authHeaders = getHttpHeaders();
+  authHeaders['Content-Type'] = "application/json";
+  final resp = await http.get(Uri.parse(api), headers: authHeaders);
+  if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+      return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
+  }
+  return "Magasin obligatoire";
 }
