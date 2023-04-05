@@ -1165,7 +1165,7 @@ class _DisplayState extends State<_Display> {
       await bind.mainSetUserDefaultOption(key: key, value: value);
       setState(() {});
     }
-
+    
     final groupValue = bind.mainGetUserDefaultOption(key: key);
     return _Card(title: 'Default Scroll Style', children: [
       _Radio(context,
