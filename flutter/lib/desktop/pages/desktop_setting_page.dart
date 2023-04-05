@@ -990,8 +990,11 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         }
         if (codeMagasin.isNotEmpty){
           String? codemagasinerr = await validatestore(codeMagasin);
-          codemagasinerr != null ? codeMagasinErrMsg.value = codemagasinerr : codeMagasinErrMsg == null;
-          if (codeMagasinErrMsg != null) return false;
+          if (codemagasinerr != null)
+          {
+            codeMagasinErrMsg.value = codemagasinerr;
+            return false;
+          }
         }
         final old = await bind.mainGetOption(key: 'custom-rendezvous-server');
         if (old.isNotEmpty && old != idServer) {
