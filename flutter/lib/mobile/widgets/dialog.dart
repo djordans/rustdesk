@@ -307,17 +307,4 @@ Future<String?> validateAsync(String value) async {
   return res.isEmpty ? null : res;
 }
 
-Future<String?> validatestore(String value) async {
-  value = value.trim();
-  if (value.isEmpty){
-    return "Magasin obligatoire";
-  }
-  final api = "${await bind.mainGetApiServer()}/api/checkstore/$value";
-  var authHeaders = getHttpHeaders();
-  authHeaders['Content-Type'] = "application/json";
-  final resp = await http.get(Uri.parse(api), headers: authHeaders);
-  if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-      return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
-  }
-  return "Magasin obligatoire";
-}
+

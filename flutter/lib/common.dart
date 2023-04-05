@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:ffi' hide Size;
 import 'dart:io';
 import 'dart:math';
-
+import 'package:http/http.dart' as http;
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:ffi/ffi.dart';
@@ -1859,7 +1859,6 @@ class ServerConfig {
   late String key;
   late String permanentPassword;
   late String access_token;
-
   ServerConfig(
       {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token}) {
     this.idServer = idServer?.trim() ?? '';
@@ -2064,3 +2063,18 @@ Widget futureBuilder(
         }
       });
 }
+
+Future<String?> validatestore(String value) async {
+    value = value.trim();
+    if (value.isEmpty){
+      return "Magasin obligatoire";
+    }
+    final api = "${await bind.mainGetApiServer()}/api/checkstore/$value";
+    var authHeaders = getHttpHeaders();
+    authHeaders['Content-Type'] = "application/json";
+    final resp = await http.get(Uri.parse(api), headers: authHeaders);
+    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+        return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
+    }
+    return "Magasin obligatoire";
+  }

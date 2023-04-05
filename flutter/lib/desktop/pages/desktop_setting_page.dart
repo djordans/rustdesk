@@ -948,6 +948,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       RxString idErrMsg = ''.obs;
       RxString relayErrMsg = ''.obs;
       RxString apiErrMsg = ''.obs;
+      String? codeMagasinErrMsg;
       var idController =
           TextEditingController(text: old('custom-rendezvous-server'));
       var relayController = TextEditingController(text: old('relay-server'));
@@ -956,13 +957,15 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       var codeMagasinController = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
       set(String idServer, String relayServer, String apiServer,
-          String key, String access_token,String permanentPassword) async {
+          String key, String access_token,String permanentPassword,String codeMagasin) async {
         idServer = idServer.trim();
         relayServer = relayServer.trim();
         apiServer = apiServer.trim();
         key = key.trim();
         access_token = access_token.trim();
         permanentPassword = permanentPassword.trim();
+        codeMagasin = codeMagasin.trim();
+
         if (idServer.isNotEmpty) {
           idErrMsg.value =
               translate(await bind.mainTestIfValidServer(server: idServer));
@@ -985,6 +988,10 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
             return false;
           }
         }
+        if (codeMagasin.isNotEmpty){
+          codeMagasinErrMsg = await validatestore(codeMagasin);
+          if (codeMagasinErrMsg != null) return false;
+        }
         final old = await bind.mainGetOption(key: 'custom-rendezvous-server');
         if (old.isNotEmpty && old != idServer) {
           await gFFI.userModel.logOut();
@@ -1006,7 +1013,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
 
       submit() async {
         bool result = await set(idController.text, relayController.text,
-            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'),await bind.mainGetPermanentPassword());
+            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'),await bind.mainGetPermanentPassword(),codeMagasinController.text);
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1026,9 +1033,9 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 relayController.text = sc.relayServer;
                 apiController.text = sc.apiServer;
                 keyController.text = sc.key;
-                
+                codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
                 Future<bool> success =
-                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token,sc.permanentPassword);
+                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token,sc.permanentPassword,bind.mainGetLocalOption(key: 'codeMagasin'));
                 success.then((value) {
                   if (value) {
                     showToast(
@@ -1082,7 +1089,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         Column(
           children: [
             Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
-                idErrMsg.value, enabled, secure)),
+                codeMagasinErrMsg.toString(), enabled, secure)),
             Obx(() => _LabeledTextField(context, 'ID Server', idController,
                 idErrMsg.value, enabled, secure)),
             Obx(() => _LabeledTextField(context, 'Relay Server',
