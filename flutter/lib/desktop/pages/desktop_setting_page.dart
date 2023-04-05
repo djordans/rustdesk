@@ -948,7 +948,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       RxString idErrMsg = ''.obs;
       RxString relayErrMsg = ''.obs;
       RxString apiErrMsg = ''.obs;
-      String? codeMagasinErrMsg;
+      RxString codeMagasinErrMsg = ''.obs;
       var idController =
           TextEditingController(text: old('custom-rendezvous-server'));
       var relayController = TextEditingController(text: old('relay-server'));
@@ -989,7 +989,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           }
         }
         if (codeMagasin.isNotEmpty){
-          codeMagasinErrMsg = await validatestore(codeMagasin);
+          String? codemagasinerr = await validatestore(codeMagasin);
+          codemagasinerr != null ? codeMagasinErrMsg.value = codemagasinerr : codeMagasinErrMsg == null;
           if (codeMagasinErrMsg != null) return false;
         }
         final old = await bind.mainGetOption(key: 'custom-rendezvous-server');
@@ -1013,7 +1014,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
 
       submit() async {
         bool result = await set(idController.text, relayController.text,
-            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'),await bind.mainGetPermanentPassword(),codeMagasinController.text);
+            apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'),await bind.mainGetPermanentPassword(), codeMagasinController.text);
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1089,7 +1090,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         Column(
           children: [
             Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
-                codeMagasinErrMsg.toString(), enabled, secure)),
+                codeMagasinErrMsg.value, enabled, secure)),
             Obx(() => _LabeledTextField(context, 'ID Server', idController,
                 idErrMsg.value, enabled, secure)),
             Obx(() => _LabeledTextField(context, 'Relay Server',
