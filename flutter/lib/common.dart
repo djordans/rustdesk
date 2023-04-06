@@ -1259,16 +1259,21 @@ Future<bool> matchPeer(String searchText, Peer peer) async {
   if (peer.id.toLowerCase().contains(searchText)) {
     return true;
   }
-  if (peer.hostname.toLowerCase().contains(searchText) ||
-      peer.username.toLowerCase().contains(searchText)|| 
-      peer.alias.toLowerCase().contains(searchText)) {
+  if (peer.hostname.toLowerCase().contains(searchText)){
     return true;
   }
-  final alias = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
+  if(peer.username.toLowerCase().contains(searchText)){
+    return true;
+  } 
+  if(peer.alias.toLowerCase().contains(searchText)) {
+    return true;
+  }
+  return false;
+  /*final alias = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
   if (alias.isEmpty) {
     return false;
-  }
-  return alias.toLowerCase().contains(searchText);
+  }*/
+  //return alias.toLowerCase().contains(searchText);
 }
 
 /// Get the image for the current [platform].
