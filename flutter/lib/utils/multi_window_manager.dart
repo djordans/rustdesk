@@ -84,11 +84,12 @@ class RustDeskMultiWindowManager {
     }
   }
 
-  Future<dynamic> newFileTransfer(String remoteId, {bool? forceRelay}) async {
+  Future<dynamic> newFileTransfer(String remoteId, {bool? forceRelay, String? password}) async {
     var msg = jsonEncode({
       "type": WindowType.FileTransfer.index,
       "id": remoteId,
       "forceRelay": forceRelay,
+      "password": password,
     });
 
     try {
@@ -117,12 +118,13 @@ class RustDeskMultiWindowManager {
   }
 
   Future<dynamic> newPortForward(String remoteId, bool isRDP,
-      {bool? forceRelay}) async {
+      {bool? forceRelay,String? password}) async {
     final msg = jsonEncode({
       "type": WindowType.PortForward.index,
       "id": remoteId,
       "isRDP": isRDP,
       "forceRelay": forceRelay,
+      "password": password,
     });
 
     try {
