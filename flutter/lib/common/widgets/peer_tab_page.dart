@@ -118,6 +118,17 @@ class _PeerTabPageState extends State<PeerTabPage>
                   offstage: _hideSort,
                   child: PeerSortDropdown().marginOnly(left: 8),
                 ),
+                IconButton(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 2),
+                  onPressed: () {
+                    gFFI.abModel.pullAb();
+                  },
+                  icon: Icon(
+                    Icons.refresh_rounded,
+                  ),
+                  tooltip: translate("Refresh address book"),
+                ),
               ],
             ),
           ),

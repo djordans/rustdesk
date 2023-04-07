@@ -183,7 +183,7 @@ class _PeersViewState extends State<_PeersView> with WindowListener {
               cards.add(isDesktop
                   ? Obx(
                       () => SizedBox(
-                        width: 220,
+                        width: 300,
                         height:
                             peerCardUiType.value == PeerUiType.grid ? 140 : 42,
                         child: visibilityChild,

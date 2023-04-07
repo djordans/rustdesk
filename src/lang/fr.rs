@@ -133,6 +133,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Insert", "Envoyer"),
         ("Insert Lock", "Verrouiller l'ordinateur distant"),
         ("Refresh", "Rafraîchir l'écran"),
+        ("Refresh address book","Actualiser les contacts"),
         ("ID does not exist", "L'ID n'existe pas"),
         ("Failed to connect to rendezvous server", "Échec de la connexion au serveur rendezvous"),
         ("Please try later", "Veuillez essayer plus tard"),
