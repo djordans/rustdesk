@@ -24,6 +24,7 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 pub use file_trait::FileManager;
+#[cfg(not(feature = "flutter"))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use hbb_common::tokio::sync::mpsc::UnboundedSender;
 use hbb_common::{
@@ -58,10 +59,10 @@ use crate::{
 };
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-use crate::{
-    common::{check_clipboard, ClipboardContext, CLIPBOARD_INTERVAL},
-    ui_session_interface::SessionPermissionConfig,
-};
+use crate::common::{check_clipboard, ClipboardContext, CLIPBOARD_INTERVAL};
+#[cfg(not(feature = "flutter"))]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+use crate::ui_session_interface::SessionPermissionConfig;
 
 pub use super::lang::*;
 
@@ -92,6 +93,12 @@ lazy_static::lazy_static! {
     static ref ENIGO: Arc<Mutex<enigo::Enigo>> = Arc::new(Mutex::new(enigo::Enigo::new()));
     static ref OLD_CLIPBOARD_TEXT: Arc<Mutex<String>> = Default::default();
     static ref TEXT_CLIPBOARD_STATE: Arc<Mutex<TextClipboardState>> = Arc::new(Mutex::new(TextClipboardState::new()));
+}
+
+#[inline]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub fn get_old_clipboard_text() -> &'static Arc<Mutex<String>> {
+    &OLD_CLIPBOARD_TEXT
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -634,8 +641,13 @@ impl Client {
         TEXT_CLIPBOARD_STATE.lock().unwrap().running = false;
     }
 
+    // `try_start_clipboard` is called by all session when connection is established. (When handling peer info).
+    // This function only create one thread with a loop, the loop is shared by all sessions.
+    // After all sessions are end, the loop exists.
+    // 
+    // If clipboard update is detected, the text will be sent to all sessions by `send_text_clipboard_msg`.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    fn try_start_clipboard(_conf_tx: Option<(SessionPermissionConfig, UnboundedSender<Data>)>) {
+    fn try_start_clipboard(_ctx: Option<ClientClipboardContext>) {
         let mut clipboard_lock = TEXT_CLIPBOARD_STATE.lock().unwrap();
         if clipboard_lock.running {
             return;
@@ -662,9 +674,9 @@ impl Client {
                             #[cfg(feature = "flutter")]
                             crate::flutter::send_text_clipboard_msg(msg);
                             #[cfg(not(feature = "flutter"))]
-                            if let Some((cfg, tx)) = &_conf_tx {
-                                if cfg.is_text_clipboard_required() {
-                                    let _ = tx.send(Data::Message(msg));
+                            if let Some(ctx) = &_ctx {
+                                if ctx.cfg.is_text_clipboard_required() {
+                                    let _ = ctx.tx.send(Data::Message(msg));
                                 }
                             }
                         }
@@ -678,6 +690,7 @@ impl Client {
         }
     }
 
+    #[inline]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn get_current_text_clipboard_msg() -> Option<Message> {
         let txt = &*OLD_CLIPBOARD_TEXT.lock().unwrap();
@@ -2422,4 +2435,15 @@ fn decode_id_pk(signed: &[u8], key: &sign::PublicKey) -> ResultType<(String, [u8
     } else {
         bail!("Wrong public length");
     }
+}
+
+#[cfg(feature = "flutter")]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub(crate) struct ClientClipboardContext;
+
+#[cfg(not(feature = "flutter"))]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub(crate) struct ClientClipboardContext {
+    pub cfg: SessionPermissionConfig,
+    pub tx: UnboundedSender<Data>,
 }

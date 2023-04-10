@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 use std::num::NonZeroI64;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-use std::sync::Mutex;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc,
@@ -51,8 +49,6 @@ pub struct Remote<T: InvokeUiSession> {
     // Stop sending local audio to remote client.
     stop_voice_call_sender: Option<std::sync::mpsc::Sender<()>>,
     voice_call_request_timestamp: Option<NonZeroI64>,
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    old_clipboard: Arc<Mutex<String>>,
     read_jobs: Vec<fs::TransferJob>,
     write_jobs: Vec<fs::TransferJob>,
     remove_jobs: HashMap<i32, RemoveJob>,
@@ -87,8 +83,6 @@ impl<T: InvokeUiSession> Remote<T> {
             audio_sender,
             receiver,
             sender,
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
-            old_clipboard: Default::default(),
             read_jobs: Vec::new(),
             write_jobs: Vec::new(),
             remove_jobs: Default::default(),
@@ -852,7 +846,6 @@ impl<T: InvokeUiSession> Remote<T> {
         if len < debounce || decode_fps == 0 {
             return;
         }
-        let mut refresh = false;
         // First setting , or the length of the queue still increases after setting, or exceed the size of the last setting again
         if ctl.set_times < 10 // enough
             && (ctl.set_times == 0
@@ -875,14 +868,14 @@ impl<T: InvokeUiSession> Remote<T> {
             ctl.last_queue_size = len;
             ctl.set_times += 1;
             ctl.last_set_instant = Instant::now();
-            refresh = true;
         }
         // send refresh
         if ctl.refresh_times < 10 // enough
-            && (refresh
-                || (len > self.video_queue.len() / 2
-                    && ctl.last_refresh_instant.elapsed().as_secs() > 30))
+            && (len > self.video_queue.capacity() / 2
+                    && (ctl.refresh_times == 0 || ctl.last_refresh_instant.elapsed().as_secs() > 30))
         {
+            // Refresh causes client set_display, left frames cause flickering.
+            while let Some(_) = self.video_queue.pop() {}
             self.handler.refresh_video();
             ctl.refresh_times += 1;
             ctl.last_refresh_instant = Instant::now();
@@ -932,32 +925,30 @@ impl<T: InvokeUiSession> Remote<T> {
                         self.handler.handle_peer_info(pi);
                         self.check_clipboard_file_context();
                         if !(self.handler.is_file_transfer() || self.handler.is_port_forward()) {
-                            #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                            let sender = self.sender.clone();
-                            #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                            let permission_config = self.handler.get_permission_config();
-
                             #[cfg(feature = "flutter")]
                             #[cfg(not(any(target_os = "android", target_os = "ios")))]
                             Client::try_start_clipboard(None);
                             #[cfg(not(feature = "flutter"))]
                             #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                            Client::try_start_clipboard(Some((
-                                permission_config.clone(),
-                                sender.clone(),
-                            )));
+                            Client::try_start_clipboard(Some(
+                                crate::client::ClientClipboardContext {
+                                    cfg: self.handler.get_permission_config(),
+                                    tx: self.sender.clone(),
+                                },
+                            ));
 
                             #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                            tokio::spawn(async move {
-                                // due to clipboard service interval time
-                                sleep(common::CLIPBOARD_INTERVAL as f32 / 1_000.).await;
-                                if permission_config.is_text_clipboard_required() {
-                                    if let Some(msg_out) = Client::get_current_text_clipboard_msg()
-                                    {
+                            if let Some(msg_out) = Client::get_current_text_clipboard_msg() {
+                                let sender = self.sender.clone();
+                                let permission_config = self.handler.get_permission_config();
+                                tokio::spawn(async move {
+                                    // due to clipboard service interval time
+                                    sleep(common::CLIPBOARD_INTERVAL as f32 / 1_000.).await;
+                                    if permission_config.is_text_clipboard_required() {
                                         sender.send(Data::Message(msg_out)).ok();
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
 
                         if self.handler.is_file_transfer() {
@@ -978,7 +969,7 @@ impl<T: InvokeUiSession> Remote<T> {
                 Some(message::Union::Clipboard(cb)) => {
                     if !self.handler.lc.read().unwrap().disable_clipboard.v {
                         #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                        update_clipboard(cb, Some(&self.old_clipboard));
+                        update_clipboard(cb, Some(&crate::client::get_old_clipboard_text()));
                         #[cfg(any(target_os = "android", target_os = "ios"))]
                         {
                             let content = if cb.compress {

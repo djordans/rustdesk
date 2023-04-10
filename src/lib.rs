@@ -3,8 +3,6 @@
 pub mod platform;
 mod keyboard;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-pub use keyboard::keycode_to_rdev_key;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub use platform::{get_cursor, get_cursor_data, get_cursor_pos, start_os_service};
 #[cfg(not(any(target_os = "ios")))]
 /// cbindgen:ignore
@@ -44,6 +42,11 @@ mod lang;
 mod license;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod port_forward;
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+mod plugins;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+mod api;
 
 mod tray;
 
