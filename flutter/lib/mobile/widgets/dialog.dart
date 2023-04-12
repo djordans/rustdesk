@@ -180,6 +180,10 @@ void showServerSettingsWithValue(
       }
       if (codeMagasinCtrl.text != bind.mainGetLocalOption(key: 'codeMagasin')){
         codeMagasinMsg = await validatestore(codeMagasinCtrl.text);
+         if (codeMagasinMsg == 'false'){
+          bind.mainSetLocalOption(key: 'codeMagasin',value: '');
+          codeMagasinCtrl.text = '';
+        }
         if (codeMagasinMsg != null) return false;
       }
       return true;
