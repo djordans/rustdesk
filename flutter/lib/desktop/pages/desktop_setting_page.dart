@@ -990,6 +990,10 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         }
         if (codeMagasin.isNotEmpty){
           String? codemagasinerr = await validatestore(codeMagasin);
+          if (codemagasinerr == 'false'){
+            bind.mainSetLocalOption(key: 'codeMagasin',value: '');
+            codeMagasinController.text = '';
+          }
           if (codemagasinerr != null)
           {
             codeMagasinErrMsg.value = codemagasinerr;
