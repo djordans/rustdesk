@@ -990,6 +990,10 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         }
         if (codeMagasin.isNotEmpty){
           String? codemagasinerr = await validatestore(codeMagasin);
+          if (codemagasinerr == 'false'){
+            bind.mainSetLocalOption(key: 'codeMagasin',value: '');
+            codeMagasinController.text = '';
+          }
           if (codemagasinerr != null)
           {
             codeMagasinErrMsg.value = codemagasinerr;
@@ -1025,41 +1029,80 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         }
       }
 
-      import() {
-        Clipboard.getData(Clipboard.kTextPlain).then((value) {
-          final text = value?.text;
-          if (text != null && text.isNotEmpty) {
-            try {
-              final sc = ServerConfig.decode(text);
-              if (sc.idServer.isNotEmpty) {
-                idController.text = sc.idServer;
-                relayController.text = sc.relayServer;
-                apiController.text = sc.apiServer;
-                keyController.text = sc.key;
-                codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
-                Future<bool> success =
-                    set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'));
-                success.then((value) {
-                  if (value) {
-                    showToast(
-                        translate('Import server configuration successfully'));
-                  } else {
-                    showToast(translate('Invalid server configuration'));
-                  }
-                });
-              } else {
+      import() async {
+        FilePickerResult? result = await FilePicker.platform.pickFiles();
+        if (result != null) {
+          File file = File(result.files.single.path.toString());
+          final text = file.readAsStringSync();
+            if (text.isNotEmpty) {
+              try {
+                final sc = ServerConfig.decode(text);
+                if (sc.idServer.isNotEmpty) {
+                  idController.text = sc.idServer;
+                  relayController.text = sc.relayServer;
+                  apiController.text = sc.apiServer;
+                  keyController.text = sc.key;
+                  codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
+                  Future<bool> success =
+                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'));
+                  success.then((value) {
+                    if (value) {
+                      showToast(
+                          translate('Import server configuration successfully'));
+                    } else {
+                      showToast(translate('Invalid server configuration'));
+                    }
+                  });
+                } else {
+                  showToast(translate('Invalid server configuration'));
+                }
+              } catch (e) {
                 showToast(translate('Invalid server configuration'));
               }
-            } catch (e) {
-              showToast(translate('Invalid server configuration'));
+            } else {
+              showToast(translate('file is empty'));
             }
-          } else {
-            showToast(translate('Clipboard is empty'));
-          }
+        } else {
+  // User canceled the picker
+          Clipboard.getData(Clipboard.kTextPlain).then((value) {
+            final text = value?.text;
+            if (text != null && text.isNotEmpty) {
+              try {
+                final sc = ServerConfig.decode(text);
+                if (sc.idServer.isNotEmpty) {
+                  idController.text = sc.idServer;
+                  relayController.text = sc.relayServer;
+                  apiController.text = sc.apiServer;
+                  keyController.text = sc.key;
+                  codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
+                  Future<bool> success =
+                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'));
+                  success.then((value) {
+                    if (value) {
+                      showToast(
+                          translate('Import server configuration successfully'));
+                    } else {
+                      showToast(translate('Invalid server configuration'));
+                    }
+                  });
+                } else {
+                  showToast(translate('Invalid server configuration'));
+                }
+              } catch (e) {
+                showToast(translate('Invalid server configuration'));
+              }
+            } else {
+              showToast(translate('Clipboard is empty'));
+            }
         });
+      }
       }
 
       export() async {
+        String? outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Please select an output file:',
+          fileName: 'rustdeskconfig.txt',
+        );
         final text = ServerConfig(
                 idServer: idController.text,
                 relayServer: relayController.text,
@@ -1070,8 +1113,12 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 )
             .encode();
         debugPrint("ServerConfig export: $text");
-
-        Clipboard.setData(ClipboardData(text: text));
+        if (outputFile == null) {
+          Clipboard.setData(ClipboardData(text: text));
+        }else{
+           File file = File(outputFile.toString());
+           file.writeAsStringSync(text);
+        }
         showToast(translate('Export server configuration successfully'));
       }
 
