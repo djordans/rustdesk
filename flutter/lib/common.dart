@@ -2072,6 +2072,10 @@ Widget futureBuilder(
 }
 
 Future<String?> validatestore(String value) async {
+    final url = await bind.mainGetApiServer();
+    if (url.isEmpty){
+      return 'false';
+    }
     value = value.trim();
     if (value.isEmpty){
       return "Magasin obligatoire";
