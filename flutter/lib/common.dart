@@ -2060,7 +2060,7 @@ Future<String?> validatestore(String value) async {
     if (value.isEmpty){
       return "Magasin obligatoire";
     }
-    final api = "${await bind.mainGetApiServer()}/api/checkstore/$value";
+    final api = "$url/api/checkstore/$value";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
     final resp = await http.get(Uri.parse(api), headers: authHeaders);
@@ -2068,4 +2068,23 @@ Future<String?> validatestore(String value) async {
         return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
     }
     return "Magasin obligatoire";
+  }
+
+  Future<String> GetUpdate() async {
+    final urlapi = await bind.mainGetApiServer();
+    if (urlapi.isEmpty){
+      return '';
+    }
+    final plateform = Platform.operatingSystem;
+    final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
+    final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice/";
+    var authHeaders = getHttpHeaders();
+    authHeaders['Content-Type'] = "application/json";
+    final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
+    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+        return resp.body;
+    } else {
+      return '';      
+    }
+    
   }

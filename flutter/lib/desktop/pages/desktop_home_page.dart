@@ -315,11 +315,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   Future<Widget> buildHelpCards() async {
     if (updateUrl.isNotEmpty) {
+      final urlapi = await bind.mainGetApiServer();
       return buildInstallCard(
           "Status",
-          "There is a newer version of ${bind.mainGetAppNameSync()} ${bind.mainGetNewVersion()} available.",
+          "There is a newer version available.",
           "Click to download", () async {
-        final Uri url = Uri.parse('https://rustdesk.com');
+        final Uri url = Uri.parse('$urlapi$updateUrl');
         await launchUrl(url);
       });
     }
@@ -468,7 +469,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     super.initState();
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
-      final url = await bind.mainGetSoftwareUpdateUrl();
+      final url = await GetUpdate();//bind.mainGetSoftwareUpdateUrl();
       if (updateUrl != url) {
         updateUrl = url;
         setState(() {});

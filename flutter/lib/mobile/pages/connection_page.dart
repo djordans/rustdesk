@@ -56,7 +56,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
     }
     if (isAndroid) {
       Timer(const Duration(seconds: 5), () async {
-        _updateUrl = await bind.mainGetSoftwareUpdateUrl();
+        _updateUrl = await GetUpdate();//await bind.mainGetSoftwareUpdateUrl();
         if (_updateUrl.isNotEmpty) setState(() {});
       });
     }
