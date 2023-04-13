@@ -19,7 +19,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_size/window_size.dart' as window_size;
-
+import 'package:path_provider/path_provider.dart';
 import '../widgets/button.dart';
 
 class DesktopHomePage extends StatefulWidget {
@@ -316,12 +316,14 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Future<Widget> buildHelpCards() async {
     if (updateUrl.isNotEmpty) {
       final urlapi = await bind.mainGetApiServer();
+
       return buildInstallCard(
           "Status",
-          "There is a newer version available.",
+          '$urlapi/api$updateUrl',//"There is a newer version available.",
           "Click to download", () async {
-        final Uri url = Uri.parse('$urlapi$updateUrl');
-        await launchUrl(url);
+        //final Uri url = Uri.parse('$urlapi$updateUrl');
+        AutoUpgrade('$urlapi/api$updateUrl');
+        //await launchUrl(url);
       });
     }
     if (systemError.isNotEmpty) {
@@ -333,7 +335,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             "", "install_tip", "Install", bind.mainGotoInstall);
       } else if (bind.mainIsInstalledLowerVersion()) {
         return buildInstallCard("Status", "Your installation is lower version.",
-            "Click to upgrade", bind.mainUpdateMe);
+            "Click to upgrade", () => bind.mainUpdateMe(path:''));
       }
     } else if (Platform.isMacOS) {
       if (!bind.mainIsCanScreenRecording(prompt: false)) {

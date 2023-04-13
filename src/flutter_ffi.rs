@@ -1290,8 +1290,8 @@ pub fn main_get_new_version() -> SyncReturn<String> {
     SyncReturn(get_new_version())
 }
 
-pub fn main_update_me() -> SyncReturn<bool> {
-    update_me("".to_owned());
+pub fn main_update_me(path: String) -> SyncReturn<bool> {
+    update_me(path);
     SyncReturn(true)
 }
 

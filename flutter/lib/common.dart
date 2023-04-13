@@ -26,6 +26,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:win32/win32.dart' as win32;
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
+import 'package:path_provider/path_provider.dart';
 
 import '../consts.dart';
 import 'common/widgets/overlay.dart';
@@ -2087,4 +2088,26 @@ Future<String?> validatestore(String value) async {
       return '';      
     }
     
+  }
+
+  AutoUpgrade(String url) async {
+    final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+    Uri uri = Uri.parse(url);
+    String executable = uri.pathSegments[uri.pathSegments.length-1];
+    String filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
+
+    if (url.isEmpty){
+      return '';
+    }
+    
+    var authHeaders = getHttpHeaders();
+    authHeaders['Content-Type'] = "application/octet-stream";
+    final resp = await http.get(Uri.parse(url), headers: authHeaders);
+    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+         File file = File(filename);
+         file.writeAsBytesSync(resp.bodyBytes);
+         bind.mainUpdateMe(path: filename);
+    } else {
+      return '';      
+    }
   }
