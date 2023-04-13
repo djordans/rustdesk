@@ -302,7 +302,7 @@ class _GeneralState extends State<_General> {
 
   Widget audio(BuildContext context) {
     String getDefault() {
-      if (Platform.isWindows) return 'System Sound';
+      if (Platform.isWindows) return translate('System Sound');
       return '';
     }
 
@@ -323,7 +323,7 @@ class _GeneralState extends State<_General> {
     return futureBuilder(future: () async {
       List<String> devices = (await bind.mainGetSoundInputs()).toList();
       if (Platform.isWindows) {
-        devices.insert(0, 'System Sound');
+        devices.insert(0, translate('System Sound'));
       }
       String current = await getValue();
       return {'devices': devices, 'current': current};
@@ -416,7 +416,7 @@ class _GeneralState extends State<_General> {
       List<String> keys = langsMap.keys.toList();
       List<String> values = langsMap.values.toList();
       keys.insert(0, '');
-      values.insert(0, 'Default');
+      values.insert(0, translate('Default'));
       String currentKey = data['lang']!;
       if (!keys.contains(currentKey)) {
         currentKey = '';
