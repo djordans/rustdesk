@@ -96,7 +96,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
             onTap: () async {
               final urlapi = await bind.mainGetApiServer();
               final urldownload = '$urlapi/api$_updateUrl';
-              showToast(urldownload);
+              //showToast(urldownload);
               String filename = AutoUpgrade(urldownload);
               showToast(filename);
               _updateUrl = '';
