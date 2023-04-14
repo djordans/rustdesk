@@ -2092,11 +2092,16 @@ Future<String?> validatestore(String value) async {
   }
 
   AutoUpgrade(String url) async {
-    final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
     Uri uri = Uri.parse(url);
+    String filename = '';
     String executable = uri.pathSegments[uri.pathSegments.length-1];
-    String filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
-
+    if (Platform.isWindows) {
+        final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+        filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
+    } else if (Platform.isAndroid){
+        final Directory tempDir  = await getTemporaryDirectory();
+        filename = '${tempDir.path}${Platform.pathSeparator}$executable';
+    }
     if (url.isEmpty){
       return '';
     }
@@ -2111,6 +2116,7 @@ Future<String?> validatestore(String value) async {
             bind.mainUpdateMe(path: filename);
         } else if (Platform.isAndroid){
              AppInstaller.installApk(filename);
+             return filename;
         }
     } else {
       return '';      

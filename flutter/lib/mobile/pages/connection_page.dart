@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../common.dart';
 import '../../common/widgets/login.dart';
@@ -96,8 +95,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
         : InkWell(
             onTap: () async {
               final urlapi = await bind.mainGetApiServer();
-              final url = '$urlapi/api$_updateUrl';
-              AutoUpgrade(url);
+              final urldownload = '$urlapi/api$_updateUrl';
+              showToast(urldownload);
+              String filename = AutoUpgrade(urldownload);
+              showToast(filename);
+              _updateUrl = '';
+              _buildUpdateUI();
               /*if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url));
               }*/
@@ -105,7 +108,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
             child: Container(
                 alignment: AlignmentDirectional.center,
                 width: double.infinity,
-                color: Colors.pinkAccent,
+                color: Color.fromARGB(255, 255, 0, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(translate('Download new version'),
                     style: const TextStyle(
