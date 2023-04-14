@@ -97,9 +97,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
             onTap: () async {
               final urlapi = await bind.mainGetApiServer();
               final url = '$urlapi/api$_updateUrl';
-              if (await canLaunchUrl(Uri.parse(url))) {
+              AutoUpgrade(url);
+              /*if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url));
-              }
+              }*/
             },
             child: Container(
                 alignment: AlignmentDirectional.center,
