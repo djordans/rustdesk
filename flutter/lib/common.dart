@@ -2101,7 +2101,9 @@ Future<String?> validatestore(String value) async {
     } else if (Platform.isAndroid){
         final Directory tempDir  = await getTemporaryDirectory();
         filename = '${tempDir.path}${Platform.pathSeparator}$executable';
+        return filename;
     }
+
     if (url.isEmpty){
       return '';
     }
