@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
 import 'package:get/get.dart';
@@ -96,8 +96,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
             onTap: () async {
               final urlapi = await bind.mainGetApiServer();
               final urldownload = '$urlapi/api$_updateUrl';
+              Uri uri = Uri.parse(urldownload);
+              String executable = uri.pathSegments[uri.pathSegments.length-1];
+              String filename  = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}$executable';
+              showToast('$filename////$urldownload');
               //final url = Uri.parse(urldownload);
-              showToast(AutoUpgrade(urldownload));
+              //showToast(AutoUpgrade(urldownload));
               
               /*if (await canLaunchUrl(url)) {
                 await launchUrl(url);
