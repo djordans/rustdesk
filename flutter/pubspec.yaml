@@ -95,7 +95,8 @@ dependencies:
   texture_rgba_renderer: ^0.0.16
   percent_indicator: ^4.2.2
   dropdown_button2: ^2.0.0
-  app_installer: ^1.1.0
+  install_plugin_v2: ^1.0.0
+  permission_handler: ^10.2.0
 
 dev_dependencies:
   icons_launcher: ^2.0.4

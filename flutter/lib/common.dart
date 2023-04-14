@@ -27,8 +27,8 @@ import 'package:win32/win32.dart' as win32;
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
 import 'package:path_provider/path_provider.dart';
-import 'package:app_installer/app_installer.dart';
-
+import 'package:install_plugin_v2/install_plugin_v2.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../consts.dart';
 import 'common/widgets/overlay.dart';
 import 'mobile/pages/file_manager_page.dart';
@@ -2099,9 +2099,11 @@ Future<String?> validatestore(String value) async {
         final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
         filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
     } else if (Platform.isAndroid){
-        final Directory tempDir  = await getTemporaryDirectory();
-        filename = '${tempDir.path}${Platform.pathSeparator}$executable';
-        return filename;
+      Map<Permission, PermissionStatus> permissions = await [Permission.storage,Permission.requestInstallPackages].request();
+      if (permissions[Permission.storage] == PermissionStatus.granted) {
+          final Directory tempDir  = await getTemporaryDirectory();
+          filename = '${tempDir.path}${Platform.pathSeparator}$executable';
+      }
     }
 
     if (url.isEmpty){
@@ -2117,10 +2119,31 @@ Future<String?> validatestore(String value) async {
         if (Platform.isWindows) {
             bind.mainUpdateMe(path: filename);
         } else if (Platform.isAndroid){
-             AppInstaller.installApk(filename);
+             onClickInstallApk(filename);
              return filename;
         }
     } else {
       return '';      
+    }
+  }
+void onClickInstallApk(String apkFilePath) async {
+    if (apkFilePath.isEmpty) {
+      print('make sure the apk file is set');
+      return;
+    }
+    Map<Permission, PermissionStatus> permissions = await [Permission.storage,Permission.requestInstallPackages].request();
+    if (permissions[Permission.storage] == PermissionStatus.granted) {
+       if (permissions[Permission.storage] == PermissionStatus.granted) {
+      InstallPlugin.installApk(apkFilePath, "com.carriez.flutter_hbb")
+          .then((result) {
+        print('install apk $result');
+      }).catchError((error) {
+        print('install apk error: $error');
+      });
+       } else {
+      print('Permission installation request fail!');
+    }
+    } else {
+      print('Permission storage request fail!');
     }
   }
