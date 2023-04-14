@@ -2100,10 +2100,12 @@ Future<String?> validatestore(String value) async {
         filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
     } else if (Platform.isAndroid){
       Map<Permission, PermissionStatus> permissions = await [Permission.storage,Permission.requestInstallPackages].request();
+      final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
       if (permissions[Permission.storage] == PermissionStatus.granted) {
-          final Directory tempDir  = await getTemporaryDirectory();
-          filename = '${tempDir.path}${Platform.pathSeparator}$executable';
+          filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
           return filename;
+      }else{
+        return 'Folder not granted';
       }
     }
 
@@ -2116,35 +2118,34 @@ Future<String?> validatestore(String value) async {
     final resp = await http.get(Uri.parse(url), headers: authHeaders);
     if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
         File file = File(filename);
-        file.writeAsBytesSync(resp.bodyBytes);
+        await file.writeAsBytes(resp.bodyBytes);
         if (Platform.isWindows) {
             bind.mainUpdateMe(path: filename);
         } else if (Platform.isAndroid){
-             onClickInstallApk(filename);
-             return filename;
+             return await onClickInstallApk(filename);
         }
     } else {
-      return '';      
+      return resp.body;      
     }
   }
-void onClickInstallApk(String apkFilePath) async {
+Future<String> onClickInstallApk(String apkFilePath) async {  
     if (apkFilePath.isEmpty) {
-      print('make sure the apk file is set');
-      return;
+      return 'make sure the apk file is set';
     }
     Map<Permission, PermissionStatus> permissions = await [Permission.storage,Permission.requestInstallPackages].request();
     if (permissions[Permission.storage] == PermissionStatus.granted) {
-       if (permissions[Permission.storage] == PermissionStatus.granted) {
-      InstallPlugin.installApk(apkFilePath, "com.carriez.flutter_hbb")
-          .then((result) {
-        print('install apk $result');
-      }).catchError((error) {
-        print('install apk error: $error');
-      });
+       if (permissions[Permission.requestInstallPackages] == PermissionStatus.granted) {
+
+        InstallPlugin.installApk(apkFilePath, "com.carriez.flutter_hbb").then((result) {
+         return 'install apk $result';
+        }).catchError((error) {
+         return 'install apk error: $error';
+        });
+         return 'install apk error: $apkFilePath';
        } else {
-      print('Permission installation request fail!');
+       return 'Permission installation request fail!';
     }
     } else {
-      print('Permission storage request fail!');
+      return 'Permission storage request fail!';
     }
-  }
+}
