@@ -2095,29 +2095,34 @@ Future<String?> validatestore(String value) async {
     if (url.isEmpty){
       return '';
     }
+    try {
     Uri uri = Uri.parse(url);
     String filename = '';
     String executable = uri.pathSegments[uri.pathSegments.length-1];
-    if (Platform.isWindows) {
-      final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
-      filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
-    } else if (Platform.isAndroid){
-      filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}$executable';
-      return filename;
-    }
-    var authHeaders = getHttpHeaders();
-    authHeaders['Content-Type'] = "application/octet-stream";
-    final resp = await http.get(Uri.parse(url), headers: authHeaders);
-    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-        File file = File(filename);
-        await file.writeAsBytes(resp.bodyBytes);
-        if (Platform.isWindows) {
-          bind.mainUpdateMe(path: filename);
-        } else if (Platform.isAndroid){
-          return await onClickInstallApk(filename);
-        }
-    } else {
-      return resp.body;      
+   
+      if (Platform.isWindows) {
+        final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+        filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
+      } else if (Platform.isAndroid){
+        filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}$executable';
+        return filename;
+      }
+      var authHeaders = getHttpHeaders();
+      authHeaders['Content-Type'] = "application/octet-stream";
+      final resp = await http.get(Uri.parse(url), headers: authHeaders);
+      if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+          File file = File(filename);
+          await file.writeAsBytes(resp.bodyBytes);
+          if (Platform.isWindows) {
+            bind.mainUpdateMe(path: filename);
+          } else if (Platform.isAndroid){
+            return await onClickInstallApk(filename);
+          }
+      } else {
+        return resp.body;      
+      }
+    } catch(e) {
+      return e.toString();
     }
   }
 Future<String> onClickInstallApk(String apkFilePath) async {  
