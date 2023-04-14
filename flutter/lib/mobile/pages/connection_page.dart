@@ -98,15 +98,18 @@ class _ConnectionPageState extends State<ConnectionPage> {
               final urldownload = '$urlapi/api$_updateUrl';
               Uri uri = Uri.parse(urldownload);
               String executable = uri.pathSegments[uri.pathSegments.length-1];
-              String filename  = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}$executable';
-              showToast('$filename////$urldownload');
+              String filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}/Rustdesk/$executable';
+              showToast(filename);
+              File file = File(filename);
+              await file.writeAsString("ok");
+              showToast("ok");
               //final url = Uri.parse(urldownload);
               //showToast(AutoUpgrade(urldownload));
               
               /*if (await canLaunchUrl(url)) {
                 await launchUrl(url);
               }*/
-              _updateUrl = '';
+              //_updateUrl = '';
               _buildUpdateUI();
               
             },
