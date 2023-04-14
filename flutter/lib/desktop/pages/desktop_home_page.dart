@@ -319,7 +319,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
       return buildInstallCard(
           "Status",
-          '$urlapi/api$updateUrl',//"There is a newer version available.",
+          "There is a newer version available.",
           "Click to download", () async {
         //final Uri url = Uri.parse('$urlapi$updateUrl');
         AutoUpgrade('$urlapi/api$updateUrl');

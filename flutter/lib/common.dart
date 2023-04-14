@@ -27,6 +27,7 @@ import 'package:win32/win32.dart' as win32;
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
 import 'package:path_provider/path_provider.dart';
+import 'package:app_installer/app_installer.dart';
 
 import '../consts.dart';
 import 'common/widgets/overlay.dart';
@@ -2104,9 +2105,13 @@ Future<String?> validatestore(String value) async {
     authHeaders['Content-Type'] = "application/octet-stream";
     final resp = await http.get(Uri.parse(url), headers: authHeaders);
     if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-         File file = File(filename);
-         file.writeAsBytesSync(resp.bodyBytes);
-         bind.mainUpdateMe(path: filename);
+        File file = File(filename);
+        file.writeAsBytesSync(resp.bodyBytes);
+        if (Platform.isWindows) {
+            bind.mainUpdateMe(path: filename);
+        } else if (Platform.isAndroid){
+             AppInstaller.installApk(filename);
+        }
     } else {
       return '';      
     }

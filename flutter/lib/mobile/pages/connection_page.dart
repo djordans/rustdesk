@@ -95,7 +95,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
         ? const SizedBox(height: 0)
         : InkWell(
             onTap: () async {
-              final url = '$_updateUrl.apk';
+              final urlapi = await bind.mainGetApiServer();
+              final url = '$urlapi/api$_updateUrl';
               if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url));
               }
