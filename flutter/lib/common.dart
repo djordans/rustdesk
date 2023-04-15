@@ -2104,12 +2104,11 @@ Future<String?> validatestore(String value) async {
         final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
         filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
       } else if (Platform.isAndroid){
-        filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}$executable';
-        return filename;
+        filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}/Rustdesk/$executable';
       }
       var authHeaders = getHttpHeaders();
       authHeaders['Content-Type'] = "application/octet-stream";
-      final resp = await http.get(Uri.parse(url), headers: authHeaders);
+      final resp = await http.get(uri, headers: authHeaders);
       if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
           File file = File(filename);
           await file.writeAsBytes(resp.bodyBytes);
