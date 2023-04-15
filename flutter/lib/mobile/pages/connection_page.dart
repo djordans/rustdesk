@@ -90,13 +90,21 @@ class _ConnectionPageState extends State<ConnectionPage> {
   /// UI for software update.
   /// If [_updateUrl] is not empty, shows a button to update the software.
   Widget _buildUpdateUI() {
+    var isInProgress = false;
     return _updateUrl.isEmpty
         ? const SizedBox(height: 0)
         : InkWell(
             onTap: () async {
+
               final urlapi = await bind.mainGetApiServer();
               final urldownload = '$urlapi/api$_updateUrl';
+              setState(() {
+                isInProgress = true;
+              });
               AutoUpgrade(urldownload);
+              setState(() {
+                isInProgress = false;
+              });
               /*if (await canLaunchUrl(url)) {
                 await launchUrl(url);
               }*/
@@ -109,11 +117,14 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 width: double.infinity,
                 color: Color.fromARGB(255, 255, 0, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(translate('Download new version'),
+                child: Column( 
+                  children :[
+                    Text(translate('Download new version'),
                     style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold)),
-                
-                ));
+                    Offstage(
+                        offstage: !isInProgress,
+                        child: LinearProgressIndicator())])));
   }
 
   /// UI for the remote ID TextField.
