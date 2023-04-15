@@ -590,6 +590,12 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                   'allow-remote-config-modification',
                   enabled: enabled,
                   fakeValue: fakeValue),
+              _OptionCheckBox(
+                  context,
+                  'Enable AutoUpdate',
+                  'AutoUpdate',
+                  enabled: enabled,
+                  fakeValue: fakeValue),
             ],
           ),
         )

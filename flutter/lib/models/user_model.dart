@@ -60,7 +60,7 @@ class UserModel {
           await bind.mainSetLocalOption(key: 'tokenDevice', value: tokenDevice!);
         }
       }
-      AutoUpgrade(await GetUpdate());
+      
       final user = UserPayload.fromJson(data);
       await _parseAndUpdateUser(user);
     } catch (e) {

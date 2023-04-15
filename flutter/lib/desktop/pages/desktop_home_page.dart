@@ -315,8 +315,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   Future<Widget> buildHelpCards() async {
     if (updateUrl.isNotEmpty) {
-      
-
+      if (bind.mainGetLocalOption(key: 'AutoUpdate') == "true")
+      {
+        AutoUpgrade(await GetUpdate());
+      }
       return buildInstallCard(
           "Status",
           "There is a newer version available.",
