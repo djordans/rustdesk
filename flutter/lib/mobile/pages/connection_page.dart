@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+//import 'package:url_launcher/url_launcher.dart';
 import '../../common.dart';
 import '../../common/widgets/login.dart';
 import '../../common/widgets/peer_tab_page.dart';
@@ -96,14 +96,11 @@ class _ConnectionPageState extends State<ConnectionPage> {
             onTap: () async {
               final urlapi = await bind.mainGetApiServer();
               final urldownload = '$urlapi/api$_updateUrl';
-              
-              //final url = Uri.parse(urldownload);
-              showToast(AutoUpgrade(urldownload));
-              
+              AutoUpgrade(urldownload);
               /*if (await canLaunchUrl(url)) {
                 await launchUrl(url);
               }*/
-              //_updateUrl = '';
+              _updateUrl = '';
               _buildUpdateUI();
               
             },
@@ -114,7 +111,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(translate('Download new version'),
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold))));
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                
+                ));
   }
 
   /// UI for the remote ID TextField.

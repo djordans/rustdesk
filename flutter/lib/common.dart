@@ -2106,11 +2106,13 @@ Future<String?> validatestore(String value) async {
       } else if (Platform.isAndroid){
         filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}/Rustdesk/$executable';
       }
+      File file = File(filename);
+      await file.delete();
       var authHeaders = getHttpHeaders();
       authHeaders['Content-Type'] = "application/octet-stream";
       final resp = await http.get(uri, headers: authHeaders);
       if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-          File file = File(filename);
+          
           await file.writeAsBytes(resp.bodyBytes);
           if (Platform.isWindows) {
             bind.mainUpdateMe(path: filename);
