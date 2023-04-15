@@ -2096,11 +2096,10 @@ Future<String?> validatestore(String value) async {
       return '';
     }
     try {
-    final urlapi = await bind.mainGetApiServer();
-    Uri uri = Uri.parse('$urlapi/api$url');
-    String filename = '';
-    String executable = uri.pathSegments[uri.pathSegments.length-1];
-   
+      final urlapi = await bind.mainGetApiServer();
+      Uri uri = Uri.parse('$urlapi/api$url');
+      String filename = '';
+      String executable = uri.pathSegments[uri.pathSegments.length-1];
       if (Platform.isWindows) {
         final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
         filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
@@ -2108,12 +2107,14 @@ Future<String?> validatestore(String value) async {
         filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}/Rustdesk/$executable';
       }
       File file = File(filename);
-      await file.delete();
+      if (await file.exists()){
+        await file.delete();
+      }
+      
       var authHeaders = getHttpHeaders();
       authHeaders['Content-Type'] = "application/octet-stream";
       final resp = await http.get(uri, headers: authHeaders);
       if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-          
           await file.writeAsBytes(resp.bodyBytes);
           if (Platform.isWindows) {
             bind.mainUpdateMe(path: filename);
