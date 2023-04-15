@@ -126,7 +126,8 @@ void runMainApp(bool startService) async {
     gFFI.serverModel.startService();
   }
   gFFI.userModel.refreshCurrentUser();
-  AutoUpgrade(await GetUpdate());
+  //$urlapi/api$updateUrl
+  AutoUpgrade('${await bind.mainGetApiServer()}/api${await GetUpdate()}');
   runApp(App());
   // Set window option.
   WindowOptions windowOptions = getHiddenTitleBarWindowOptions();
