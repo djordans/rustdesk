@@ -2096,7 +2096,8 @@ Future<String?> validatestore(String value) async {
       return '';
     }
     try {
-    Uri uri = Uri.parse(url);
+    final urlapi = await bind.mainGetApiServer();
+    Uri uri = Uri.parse('$urlapi/api$url');
     String filename = '';
     String executable = uri.pathSegments[uri.pathSegments.length-1];
    

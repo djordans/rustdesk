@@ -315,14 +315,14 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   Future<Widget> buildHelpCards() async {
     if (updateUrl.isNotEmpty) {
-      final urlapi = await bind.mainGetApiServer();
+      
 
       return buildInstallCard(
           "Status",
           "There is a newer version available.",
           "Click to download", () async {
         //final Uri url = Uri.parse('$urlapi$updateUrl');
-        AutoUpgrade('$urlapi/api$updateUrl');
+        AutoUpgrade(updateUrl);
         //await launchUrl(url);
       });
     }

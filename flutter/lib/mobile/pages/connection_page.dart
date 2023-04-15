@@ -95,13 +95,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
         ? const SizedBox(height: 0)
         : InkWell(
             onTap: () async {
-
-              final urlapi = await bind.mainGetApiServer();
-              final urldownload = '$urlapi/api$_updateUrl';
               setState(() {
                 isInProgress = true;
               });
-              AutoUpgrade(urldownload);
+              AutoUpgrade(_updateUrl);
               setState(() {
                 isInProgress = false;
               });
