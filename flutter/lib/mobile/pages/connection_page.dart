@@ -98,7 +98,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
               setState(() {
                 isInProgress = true;
               });
-              AutoUpgrade(_updateUrl);
+              await AutoUpgrade(_updateUrl);
               setState(() {
                 isInProgress = false;
               });

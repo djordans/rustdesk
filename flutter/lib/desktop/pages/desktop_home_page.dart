@@ -319,7 +319,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       if (AutoUpdate == "Y")
       {
         if (bind.mainIsInstalled()){
-          AutoUpgrade(updateUrl);
+          await AutoUpgrade(updateUrl);
         }
       }
       return buildInstallCard(
