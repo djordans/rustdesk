@@ -45,6 +45,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   var watchIsProcessTrust = false;
   var watchIsInputMonitoring = false;
   var watchIsCanRecordAudio = false;
+  var isInProgress = false;
   Timer? _updateTimer;
 
   @override
@@ -327,7 +328,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           "There is a newer version available.",
           "Click to download", () async {
         //final Uri url = Uri.parse('$urlapi$updateUrl');
-        AutoUpgrade(updateUrl);
+        setState(() {
+         isInProgress = true;
+        });
+        await AutoUpgrade(updateUrl);
+        setState(() {
+         isInProgress = true;
+        });
         //await launchUrl(url);
       });
     }
@@ -449,7 +456,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                                   textSize: 20,
                                   radius: 10,
                                   onTap: onPressed,
-                                )
+                                ),
+                                Offstage(
+                                  offstage: !isInProgress,
+                                  child: LinearProgressIndicator())
                               ])
                         ]
                       : <Widget>[]) +
@@ -468,6 +478,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                                   )).marginOnly(top: 6)),
                         ]
                       : <Widget>[]))),
+                      
     );
   }
 
