@@ -214,6 +214,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Invalid port", "Port invalide"),
         ("Closed manually by the peer", "Fermé manuellement par le pair"),
         ("Enable remote configuration modification", "Autoriser la modification de la configuration à distance"),
+        ("Enable autoupdate","Activer les mises à jour automatique"),
         ("Run without install", "Exécuter sans installer"),
         ("Connect via relay", "Connexion via relais"),
         ("Always connect via relay", "Forcer la connexion relais"),

@@ -592,7 +592,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                   fakeValue: fakeValue),
               _OptionCheckBox(
                   context,
-                  'Enable AutoUpdate',
+                  'Enable autoupdate',
                   'AutoUpdate',
                   enabled: enabled,
                   fakeValue: fakeValue),
