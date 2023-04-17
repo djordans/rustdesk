@@ -29,16 +29,13 @@ class PeerTabModel with ChangeNotifier {
   bool get rightFullyVisible => _rightFullyVisible;
   bool _rightFullyVisible = false;
   ScrollPosController sc = ScrollPosController();
-  List<String> tabNames = gFFI.userModel.isAdmin.isTrue ? [
+  List<String> tabNames = [
     'Recent Sessions',
     'Favorites',
     'Discovered',
     'Address Book',
     defaultGroupTabname,
-  ]
-  :
-  ['Discovered',
-    defaultGroupTabname,];
+  ];
 
   PeerTabModel(this.parent) {
     // init tabHiddenFlag
