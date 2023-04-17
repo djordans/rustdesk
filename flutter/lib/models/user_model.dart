@@ -101,6 +101,7 @@ class UserModel {
               body: jsonEncode({
                 'id': await bind.mainGetMyId(),
                 'uuid': await bind.mainGetUuid(),
+                'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
               }),
               headers: authHeaders)
           .timeout(Duration(seconds: 2));
