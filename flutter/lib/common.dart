@@ -1608,7 +1608,6 @@ bool callUniLinksUriHandler(Uri uri) {
     var param = uri.queryParameters;
     String? switch_uuid = param["switch_uuid"];
     String? password = param["password"];
-    String? password = param["password"];
     Future.delayed(Duration.zero, () {
       rustDeskWinManager.newRemoteDesktop(peerId, password: password, switch_uuid: switch_uuid);
     });
