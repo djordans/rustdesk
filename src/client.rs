@@ -53,9 +53,7 @@ use scrap::{
     ImageFormat,
 };
 
-use crate::{
-    common::{self, is_keyboard_mode_supported},
-};
+use crate::common::{self, is_keyboard_mode_supported};
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::common::{check_clipboard, ClipboardContext, CLIPBOARD_INTERVAL};
@@ -73,6 +71,8 @@ pub const MILLI1: Duration = Duration::from_millis(1);
 pub const SEC30: Duration = Duration::from_secs(30);
 pub const VIDEO_QUEUE_SIZE: usize = 120;
 
+#[cfg(all(target_os = "linux", feature = "linux_headless"))]
+#[cfg(not(any(feature = "flatpak", feature = "appimage")))]
 pub const LOGIN_MSG_DESKTOP_NOT_INITED: &str = "Desktop env is not inited";
 pub const LOGIN_MSG_DESKTOP_SESSION_NOT_READY: &str = "Desktop session not ready";
 pub const LOGIN_MSG_DESKTOP_XSESSION_FAILED: &str = "Desktop xsession failed";
@@ -88,7 +88,9 @@ pub const LOGIN_MSG_PASSWORD_EMPTY: &str = "Empty Password";
 pub const LOGIN_MSG_PASSWORD_WRONG: &str = "Wrong Password";
 pub const LOGIN_MSG_NO_PASSWORD_ACCESS: &str = "No Password Access";
 pub const LOGIN_MSG_OFFLINE: &str = "Offline";
+#[cfg(target_os = "linux")]
 pub const SCRAP_UBUNTU_HIGHER_REQUIRED: &str = "Wayland requires Ubuntu 21.04 or higher version.";
+#[cfg(target_os = "linux")]
 pub const SCRAP_OTHER_VERSION_OR_X11_REQUIRED: &str =
     "Wayland requires higher version of linux distro. Please try X11 desktop or change your OS.";
 pub const SCRAP_X11_REQUIRED: &str = "x11 expected";
@@ -198,7 +200,7 @@ impl Client {
         token: &str,
         conn_type: ConnType,
         interface: impl Interface,
-    ) -> ResultType<(Stream, bool)> {
+    ) -> ResultType<(Stream, bool, Option<Vec<u8>>)> {
         match Self::_start(peer, key, token, conn_type, interface).await {
             Err(err) => {
                 let err_str = err.to_string();
@@ -219,7 +221,7 @@ impl Client {
         token: &str,
         conn_type: ConnType,
         interface: impl Interface,
-    ) -> ResultType<(Stream, bool)> {
+    ) -> ResultType<(Stream, bool, Option<Vec<u8>>)> {
         // to-do: remember the port for each peer, so that we can retry easier
         if hbb_common::is_ip_str(peer) {
             return Ok((
@@ -229,6 +231,7 @@ impl Client {
                 )
                 .await?,
                 true,
+                None,
             ));
         }
         // Allow connect to {domain}:{port}
@@ -236,6 +239,7 @@ impl Client {
             return Ok((
                 socket_client::connect_tcp(peer, RENDEZVOUS_TIMEOUT).await?,
                 true,
+                None,
             ));
         }
         let (mut rendezvous_server, servers, contained) = crate::get_rendezvous_server(1_000).await;
@@ -331,7 +335,7 @@ impl Client {
                                 my_addr.is_ipv4(),
                             )
                             .await?;
-                            Self::secure_connection(
+                            let pk = Self::secure_connection(
                                 peer,
                                 signed_id_pk,
                                 key,
@@ -340,7 +344,7 @@ impl Client {
                                 interface,
                             )
                             .await?;
-                            return Ok((conn, false));
+                            return Ok((conn, false, pk));
                         }
                         _ => {
                             log::error!("Unexpected protobuf msg received: {:?}", msg_in);
@@ -401,7 +405,7 @@ impl Client {
         token: &str,
         conn_type: ConnType,
         interface: impl Interface,
-    ) -> ResultType<(Stream, bool)> {
+    ) -> ResultType<(Stream, bool, Option<Vec<u8>>)> {
         let direct_failures = PeerConfig::load(peer_id).direct_failures;
         let mut connect_timeout = 0;
         const MIN: u64 = 1000;
@@ -471,8 +475,9 @@ impl Client {
         }
         let mut conn = conn?;
         log::info!("{:?} used to establish connection", start.elapsed());
-        Self::secure_connection(peer_id, signed_id_pk, key, &mut conn, direct, interface).await?;
-        Ok((conn, direct))
+        let pk = Self::secure_connection(peer_id, signed_id_pk, key, &mut conn, direct, interface)
+            .await?;
+        Ok((conn, direct, pk))
     }
 
     /// Establish secure connection with the server.
@@ -483,17 +488,19 @@ impl Client {
         conn: &mut Stream,
         direct: bool,
         interface: impl Interface,
-    ) -> ResultType<()> {
+    ) -> ResultType<Option<Vec<u8>>> {
         let rs_pk = get_rs_pk(if key.is_empty() {
             hbb_common::config::RS_PUB_KEY
         } else {
             key
         });
         let mut sign_pk = None;
+        let mut option_pk = None;
         if !signed_id_pk.is_empty() && rs_pk.is_some() {
             if let Ok((id, pk)) = decode_id_pk(&signed_id_pk, &rs_pk.unwrap()) {
                 if id == peer_id {
                     sign_pk = Some(sign::PublicKey(pk));
+                    option_pk = Some(pk.to_vec());
                 }
             }
             if sign_pk.is_none() {
@@ -505,7 +512,7 @@ impl Client {
             None => {
                 // send an empty message out in case server is setting up secure and waiting for first message
                 conn.send(&Message::new()).await?;
-                return Ok(());
+                return Ok(option_pk);
             }
         };
         match timeout(READ_TIMEOUT, conn.next()).await? {
@@ -558,7 +565,7 @@ impl Client {
                 bail!("Reset by the peer");
             }
         }
-        Ok(())
+        Ok(option_pk)
     }
 
     /// Request a relay connection to the server.
