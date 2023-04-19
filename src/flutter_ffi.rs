@@ -1394,14 +1394,14 @@ pub fn send_url_scheme(_url: String) {
     std::thread::spawn(move || crate::handle_url_scheme(_url));
 }
 
-#[inline]
+/*#[inline]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn plugin_event(id: String, event: Vec<u8>) {
     #[cfg(feature = "plugin_framework")]
     {
         allow_err!(crate::plugin::handle_ui_event(&id, &event));
     }
-}
+}*/
 
 #[cfg(target_os = "android")]
 pub mod server_side {
