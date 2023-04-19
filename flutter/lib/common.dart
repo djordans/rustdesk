@@ -2128,6 +2128,7 @@ Future<String?> validatestore(String value) async {
       return e.toString();
     }
   }
+
 Future<String> onClickInstallApk(String apkFilePath) async {  
     if (apkFilePath.isEmpty) {
       return 'make sure the apk file is set';
@@ -2148,4 +2149,17 @@ Future<String> onClickInstallApk(String apkFilePath) async {
     } else {
       return 'Permission storage request fail!';
     }
+}
+void HeartBeat() async {
+    final urlapi = await bind.mainGetApiServer();
+    if (urlapi.isEmpty){
+      return;
+    }
+    final id = await bind.mainGetMyId();
+    final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
+    final body = jsonEncode({"id": id, "modified_at":"0" ,"ver":"","tokenDevice":tokenDevice});
+    final urlupdate = "$urlapi/api/heartbeat";
+    var authHeaders = getHttpHeaders();
+    authHeaders['Content-Type'] = "application/json";
+    await http.post(Uri.parse(urlupdate), headers: authHeaders,body: body);
 }

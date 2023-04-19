@@ -36,7 +36,7 @@ class ConnectionPage extends StatefulWidget implements PageShape {
 class _ConnectionPageState extends State<ConnectionPage> {
   /// Controller for the id input bar.
   final _idController = IDTextEditingController();
-
+  Timer? _updateTimer;
   /// Update url. If it's not null, means an update is available.
   var _updateUrl = '';
 
@@ -59,6 +59,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
         if (_updateUrl.isNotEmpty) setState(() {});
       });
     }
+    _updateTimer = periodic_immediate(Duration(minutes: 2), () async {
+      HeartBeat();
+    });
   }
 
   @override
@@ -195,6 +198,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
 
   @override
   void dispose() {
+    _updateTimer?.cancel();
     _idController.dispose();
     super.dispose();
   }
