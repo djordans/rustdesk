@@ -2065,15 +2065,6 @@ void onCopyFingerprint(String value) {
   }
 }
 
-void onCopyFingerprint(String value) {
-  if (value.isNotEmpty) {
-    Clipboard.setData(ClipboardData(text: value));
-    showToast('$value\n${translate("Copied")}');
-  } else {
-    showToast(translate("no fingerprints"));
-  }
-}
-
 Future<String?> checkstore(String value) async {
     final url = await bind.mainGetApiServer();
     if (url.isEmpty){

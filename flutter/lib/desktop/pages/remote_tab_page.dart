@@ -163,7 +163,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
                     connectionType.secure.value == ConnectionType.strSecure;
                 bool direct =
                     connectionType.direct.value == ConnectionType.strDirect;
-                var msgConn;
+                var msgConn = '';
                 if (secure && direct) {
                   msgConn = translate("Direct and encrypted connection");
                 } else if (secure && !direct) {
