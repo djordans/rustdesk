@@ -437,13 +437,15 @@ jobs:
         run: |
           pushd flutter
           flutter build ios --release --no-codesign
+          cp ./flutter/build/ios/iphoneos/Runner.app ./flutter/build/ios/iphoneos/payload/
+          mv ./flutter/build/ios/iphoneos/payload ./flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.ipa
       
       - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
         uses: actions/upload-artifact@master
         with:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.ipa
-          path: flutter/build/ios/ipa/*.ipa
+          path: flutter/build/ios/iphoneos/*.ipa
 
       - name: Publish ipa package
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
@@ -451,7 +453,7 @@ jobs:
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
-          files: flutter/build/ios/ipa/*.ipa
+          files: flutter/build/ios/iphoneos/*.ipa
     
 
   build-rustdesk-android:
