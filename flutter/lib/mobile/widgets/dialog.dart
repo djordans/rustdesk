@@ -179,7 +179,7 @@ void showServerSettingsWithValue(
         if (apiServerMsg != null) return false;
       }
       if (codeMagasinCtrl.text != bind.mainGetLocalOption(key: 'codeMagasin')){
-        codeMagasinMsg = await validatestore(codeMagasinCtrl.text);
+        codeMagasinMsg = await checkstore(codeMagasinCtrl.text);
          if (codeMagasinMsg == 'false'){
           bind.mainSetLocalOption(key: 'codeMagasin',value: '');
           codeMagasinCtrl.text = '';

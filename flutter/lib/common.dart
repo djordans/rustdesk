@@ -2054,7 +2054,7 @@ Widget futureBuilder(
       });
 }
 
-Future<String?> validatestore(String value) async {
+Future<String?> checkstore(String value) async {
     final url = await bind.mainGetApiServer();
     if (url.isEmpty){
       return 'false';
@@ -2066,6 +2066,11 @@ Future<String?> validatestore(String value) async {
     final api = "$url/api/checkstore/$value";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
+    authHeaders['DeviceInfo'] = jsonEncode({
+      'os'  : Platform.operatingSystem,
+      'type': 'client',
+      'name': bind.mainGetHostname(),
+    });
     final resp = await http.get(Uri.parse(api), headers: authHeaders);
     if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
         return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
