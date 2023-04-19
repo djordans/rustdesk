@@ -437,9 +437,10 @@ jobs:
         run: |
           pushd flutter
           flutter build ios --release --no-codesign
-          ls /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/
+          mkdir /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload
           cp /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Runner.app /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload/
-          mv /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.ipa
+          zip -r /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.zip /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload
+          mv /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.zip /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.ipa
       
       - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
