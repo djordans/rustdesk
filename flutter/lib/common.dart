@@ -2132,16 +2132,19 @@ Future<String?> checkstore(String value) async {
       var authHeaders = getHttpHeaders();
       authHeaders['Content-Type'] = "application/octet-stream";
       final resp = await http.get(uri, headers: authHeaders);
-      if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-          await file.writeAsBytes(resp.bodyBytes);
-          if (Platform.isWindows) {
-            bind.mainUpdateMe(path: filename);
-          } else if (Platform.isAndroid){
-            return await onClickInstallApk(filename);
-          }
-      } else {
-        return resp.body;      
-      }
+      final status = resp.statusCode;
+       if ( status == 200 ) {
+        if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+            await file.writeAsBytes(resp.bodyBytes);
+            if (Platform.isWindows) {
+              bind.mainUpdateMe(path: filename);
+            } else if (Platform.isAndroid){
+              return await onClickInstallApk(filename);
+            }
+        } else {
+          return resp.body;      
+        }
+       }
     } catch(e) {
       return e.toString();
     }
