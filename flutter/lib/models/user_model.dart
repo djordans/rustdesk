@@ -104,7 +104,7 @@ class UserModel {
                 'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
               }),
               headers: authHeaders)
-          .timeout(Duration(seconds: 2));
+          .timeout(Duration(seconds: 10));
     } catch (e) {
       print("request /api/logout failed: err=$e");
     } finally {

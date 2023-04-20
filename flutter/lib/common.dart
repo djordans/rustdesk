@@ -2100,12 +2100,13 @@ Future<String?> checkstore(String value) async {
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
     final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
-    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-        return resp.body;
-    } else {
-      return '';      
-    }
-    
+    final status = resp.statusCode;
+      if ( status == 200 ) {
+        if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+            return resp.body;
+        }
+      }
+      return '';
   }
 
   AutoUpgrade(String url) async {
