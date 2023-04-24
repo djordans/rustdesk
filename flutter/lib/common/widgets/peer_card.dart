@@ -788,42 +788,43 @@ class RecentPeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
+    if(gFFI.userModel.isAdmin.isTrue){
+      final List favs = (await bind.mainGetFav()).toList();
 
-    final List favs = (await bind.mainGetFav()).toList();
-
-    if (isDesktop && peer.platform != 'Android') {
-      menuItems.add(_tcpTunnelingAction(context, peer.id));
-    }
-    menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (peer.platform == 'Windows') {
-      menuItems.add(_rdpAction(context, peer.id));
-    }
-    menuItems.add(_wolAction(peer.id));
-    if (Platform.isWindows) {
-      menuItems.add(_createShortCutAction(peer.id));
-    }
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_renameAction(peer.id));
-    if (await bind.mainPeerHasPassword(id: peer.id)) {
-      menuItems.add(_unrememberPasswordAction(peer.id));
-    }
-
-    if (!favs.contains(peer.id)) {
-      menuItems.add(_addFavAction(peer.id));
-    } else {
-      menuItems.add(_rmFavAction(peer.id, () async {}));
-    }
-
-    if (gFFI.userModel.userName.isNotEmpty) {
-      if (!gFFI.abModel.idContainBy(peer.id)) {
-        menuItems.add(_addToAb(peer));
+      if (isDesktop && peer.platform != 'Android') {
+        menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-    }
+      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      if (peer.platform == 'Windows') {
+        menuItems.add(_rdpAction(context, peer.id));
+      }
+      menuItems.add(_wolAction(peer.id));
+      if (Platform.isWindows) {
+        menuItems.add(_createShortCutAction(peer.id));
+      }
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_renameAction(peer.id));
+      if (await bind.mainPeerHasPassword(id: peer.id)) {
+        menuItems.add(_unrememberPasswordAction(peer.id));
+      }
 
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_removeAction(peer.id, () async {
-      await bind.mainLoadRecentPeers();
-    }));
+      if (!favs.contains(peer.id)) {
+        menuItems.add(_addFavAction(peer.id));
+      } else {
+        menuItems.add(_rmFavAction(peer.id, () async {}));
+      }
+
+      if (gFFI.userModel.userName.isNotEmpty) {
+        if (!gFFI.abModel.idContainBy(peer.id)) {
+          menuItems.add(_addToAb(peer));
+        }
+      }
+
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_removeAction(peer.id, () async {
+        await bind.mainLoadRecentPeers();
+      }));
+    }
     return menuItems;
   }
 
@@ -843,36 +844,38 @@ class FavoritePeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
-    if (isDesktop && peer.platform != 'Android') {
-      menuItems.add(_tcpTunnelingAction(context, peer.id));
-    }
-    menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (peer.platform == 'Windows') {
-      menuItems.add(_rdpAction(context, peer.id));
-    }
-    menuItems.add(_wolAction(peer.id));
-    if (Platform.isWindows) {
-      menuItems.add(_createShortCutAction(peer.id));
-    }
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_renameAction(peer.id));
-    if (await bind.mainPeerHasPassword(id: peer.id)) {
-      menuItems.add(_unrememberPasswordAction(peer.id));
-    }
-    menuItems.add(_rmFavAction(peer.id, () async {
-      await bind.mainLoadFavPeers();
-    }));
-
-    if (gFFI.userModel.userName.isNotEmpty) {
-      if (!gFFI.abModel.idContainBy(peer.id)) {
-        menuItems.add(_addToAb(peer));
+    if(gFFI.userModel.isAdmin.isTrue){
+      if (isDesktop && peer.platform != 'Android') {
+        menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-    }
+      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      if (peer.platform == 'Windows') {
+        menuItems.add(_rdpAction(context, peer.id));
+      }
+      menuItems.add(_wolAction(peer.id));
+      if (Platform.isWindows) {
+        menuItems.add(_createShortCutAction(peer.id));
+      }
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_renameAction(peer.id));
+      if (await bind.mainPeerHasPassword(id: peer.id)) {
+        menuItems.add(_unrememberPasswordAction(peer.id));
+      }
+      menuItems.add(_rmFavAction(peer.id, () async {
+        await bind.mainLoadFavPeers();
+      }));
 
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_removeAction(peer.id, () async {
-      await bind.mainLoadFavPeers();
-    }));
+      if (gFFI.userModel.userName.isNotEmpty) {
+        if (!gFFI.abModel.idContainBy(peer.id)) {
+          menuItems.add(_addToAb(peer));
+        }
+      }
+
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_removeAction(peer.id, () async {
+        await bind.mainLoadFavPeers();
+      }));
+    }
     return menuItems;
   }
 
@@ -892,39 +895,40 @@ class DiscoveredPeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
+    if(gFFI.userModel.isAdmin.isTrue){
+      final List favs = (await bind.mainGetFav()).toList();
 
-    final List favs = (await bind.mainGetFav()).toList();
-
-    if (isDesktop && peer.platform != 'Android') {
-      menuItems.add(_tcpTunnelingAction(context, peer.id));
-    }
-    menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (peer.platform == 'Windows') {
-      menuItems.add(_rdpAction(context, peer.id));
-    }
-    menuItems.add(_wolAction(peer.id));
-    if (Platform.isWindows) {
-      menuItems.add(_createShortCutAction(peer.id));
-    }
-
-    if (!favs.contains(peer.id)) {
-      menuItems.add(_addFavAction(peer.id));
-    } else {
-      menuItems.add(_rmFavAction(peer.id, () async {}));
-    }
-
-    if (gFFI.userModel.userName.isNotEmpty) {
-      if (!gFFI.abModel.idContainBy(peer.id)) {
-        menuItems.add(_addToAb(peer));
+      if (isDesktop && peer.platform != 'Android') {
+        menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-    }
+      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      if (peer.platform == 'Windows') {
+        menuItems.add(_rdpAction(context, peer.id));
+      }
+      menuItems.add(_wolAction(peer.id));
+      if (Platform.isWindows) {
+        menuItems.add(_createShortCutAction(peer.id));
+      }
 
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(
-      _removeAction(peer.id, () async {
-        await bind.mainLoadLanPeers();
-      }, isLan: true),
-    );
+      if (!favs.contains(peer.id)) {
+        menuItems.add(_addFavAction(peer.id));
+      } else {
+        menuItems.add(_rmFavAction(peer.id, () async {}));
+      }
+
+      if (gFFI.userModel.userName.isNotEmpty) {
+        if (!gFFI.abModel.idContainBy(peer.id)) {
+          menuItems.add(_addToAb(peer));
+        }
+      }
+
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(
+        _removeAction(peer.id, () async {
+          await bind.mainLoadLanPeers();
+        }, isLan: true),
+      );
+    }
     return menuItems;
   }
 
@@ -944,29 +948,32 @@ class AddressBookPeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
-    if (isDesktop && peer.platform != 'Android') {
-      menuItems.add(_tcpTunnelingAction(context, peer.id));
-    }
-    menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (peer.platform == 'Windows') {
-      menuItems.add(_rdpAction(context, peer.id));
-    }
-    menuItems.add(_wolAction(peer.id));
-    if (Platform.isWindows) {
-      menuItems.add(_createShortCutAction(peer.id));
-    }
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_renameAction(peer.id));
-    if (await bind.mainPeerHasPassword(id: peer.id)) {
-      menuItems.add(_unrememberPasswordAction(peer.id));
-    }
-    if (gFFI.abModel.tags.isNotEmpty) {
-      menuItems.add(_editTagAction(peer.id));
-    }
+    if(gFFI.userModel.isAdmin.isTrue){
+      if (isDesktop && peer.platform != 'Android') {
+        menuItems.add(_tcpTunnelingAction(context, peer.id));
+      }
+      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      if (peer.platform == 'Windows') {
+        menuItems.add(_rdpAction(context, peer.id));
+      }
+      menuItems.add(_wolAction(peer.id));
+      if (Platform.isWindows) {
+        menuItems.add(_createShortCutAction(peer.id));
+      }
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_renameAction(peer.id));
+      if (await bind.mainPeerHasPassword(id: peer.id)) {
+        menuItems.add(_unrememberPasswordAction(peer.id));
+      }
+      if (gFFI.abModel.tags.isNotEmpty) {
+        menuItems.add(_editTagAction(peer.id));
+      }
 
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_removeAction(peer.id, () async {}));
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_removeAction(peer.id, () async {}));
+    }
     return menuItems;
+    
   }
 
   @protected
