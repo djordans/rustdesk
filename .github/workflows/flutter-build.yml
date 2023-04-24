@@ -436,7 +436,7 @@ jobs:
         shell: bash
         run: |
           pushd flutter
-          flutter build ios --release --no-codesign
+          flutter build ipa --release --obfuscate --split-debug-info=./split-debug-info --no-codesign--no-codesign
         #  #mkdir /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload
         #  cp -r /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Runner.app /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload/
         #  zip -r /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.zip /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload

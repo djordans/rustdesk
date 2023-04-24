@@ -1,12 +1,12 @@
 use std::{
     collections::HashMap,
     ffi::{c_char, c_void},
-    path::Path,
+    path::PathBuf,
     sync::{Arc, RwLock},
 };
 
-use super::{callback_msg, desc::Desc, errno::*, get_code_msg_from_ret};
-use crate::flutter;
+use super::{desc::Desc, errno::*, *};
+use crate::{flutter, ui_interface::get_id};
 use hbb_common::{
     bail,
     dlopen::symbor::Library,
@@ -19,7 +19,14 @@ const METHOD_HANDLE_UI: &[u8; 10] = b"handle_ui\0";
 const METHOD_HANDLE_PEER: &[u8; 12] = b"handle_peer\0";
 
 lazy_static::lazy_static! {
+    static ref PLUGIN_INFO: Arc<RwLock<HashMap<String, PluginInfo>>> = Default::default();
     pub static ref PLUGINS: Arc<RwLock<HashMap<String, Plugin>>> = Default::default();
+    pub static ref LOCAL_PEER_ID: Arc<RwLock<String>> = Default::default();
+}
+
+struct PluginInfo {
+    path: String,
+    desc: Desc,
 }
 
 /// Initialize the plugins.
@@ -59,22 +66,30 @@ type PluginFuncCallbackMsg = fn(
     len: usize,
 );
 pub type PluginFuncSetCallbackMsg = fn(PluginFuncCallbackMsg);
+/// Callback to get the id of local peer id.
+/// The returned string is utf8 string(null terminated).
+/// Don't free the returned ptr.
+type GetIdFuncCallback = fn() -> *const c_char;
+pub type PluginFuncGetIdCallback = fn(GetIdFuncCallback);
 /// The main function of the plugin.
 /// method: The method. "handle_ui" or "handle_peer"
+/// peer:  The peer id.
 /// args: The arguments.
 ///
 /// Return null ptr if success.
 /// Return the error message if failed.  `i32-String` without dash, i32 is a signed little-endian number, the String is utf8 string.
 /// The plugin allocate memory with `libc::malloc` and return the pointer.
-pub type PluginFuncCall =
-    fn(method: *const c_char, args: *const c_void, len: usize) -> *const c_void;
+pub type PluginFuncCall = fn(
+    method: *const c_char,
+    peer: *const c_char,
+    args: *const c_void,
+    len: usize,
+) -> *const c_void;
 
 macro_rules! make_plugin {
     ($($field:ident : $tp:ty),+) => {
         pub struct Plugin {
             _lib: Library,
-            path: String,
-            desc: Option<Desc>,
             $($field: $tp),+
         }
 
@@ -89,7 +104,7 @@ macro_rules! make_plugin {
 
                 $(let $field = match unsafe { lib.symbol::<$tp>(stringify!($field)) } {
                         Ok(m) => {
-                            log::info!("method found {}", stringify!($field));
+                            log::debug!("{} method found {}", path, stringify!($field));
                             *m
                         },
                         Err(e) => {
@@ -100,8 +115,6 @@ macro_rules! make_plugin {
 
                 Ok(Self {
                     _lib: lib,
-                    path: path.to_string(),
-                    desc: None,
                     $( $field ),+
                 })
             }
@@ -110,54 +123,96 @@ macro_rules! make_plugin {
 }
 
 make_plugin!(
-    fn_init: PluginFuncInit,
-    fn_reset: PluginFuncReset,
-    fn_clear: PluginFuncClear,
-    fn_desc: PluginFuncDesc,
-    fn_set_cb_msg: PluginFuncSetCallbackMsg,
-    fn_call: PluginFuncCall
+    init: PluginFuncInit,
+    reset: PluginFuncReset,
+    clear: PluginFuncClear,
+    desc: PluginFuncDesc,
+    call: PluginFuncCall,
+    set_cb_msg: PluginFuncSetCallbackMsg,
+    set_cb_get_id: PluginFuncGetIdCallback
 );
 
-pub fn load_plugins<P: AsRef<Path>>(dir: P) -> ResultType<()> {
-    for entry in std::fs::read_dir(dir)? {
-        match entry {
-            Ok(entry) => {
-                let path = entry.path();
-                if path.is_file() {
-                    let path = path.to_str().unwrap_or("");
-                    if path.ends_with(".so") {
-                        if let Err(e) = load_plugin(path) {
-                            log::error!("{e}");
+#[cfg(target_os = "windows")]
+const DYLIB_SUFFIX: &str = ".dll";
+#[cfg(target_os = "linux")]
+const DYLIB_SUFFIX: &str = ".so";
+#[cfg(target_os = "macos")]
+const DYLIB_SUFFIX: &str = ".dylib";
+
+pub fn load_plugins() -> ResultType<()> {
+    let exe = std::env::current_exe()?.to_string_lossy().to_string();
+    match PathBuf::from(&exe).parent() {
+        Some(dir) => {
+            for entry in std::fs::read_dir(dir)? {
+                match entry {
+                    Ok(entry) => {
+                        let path = entry.path();
+                        if path.is_file() {
+                            let filename = entry.file_name();
+                            let filename = filename.to_str().unwrap_or("");
+                            if filename.starts_with("plugin_") && filename.ends_with(DYLIB_SUFFIX) {
+                                if let Err(e) = load_plugin(Some(path.to_str().unwrap_or("")), None)
+                                {
+                                    log::error!("Failed to load plugin {}, {}", filename, e);
+                                }
+                            }
                         }
+                    }
+                    Err(e) => {
+                        log::error!("Failed to read dir entry, {}", e);
                     }
                 }
             }
-            Err(e) => {
-                log::error!("Failed to read dir entry, {}", e);
-            }
+            Ok(())
+        }
+        None => {
+            bail!("Failed to get parent dir of {}", exe);
         }
     }
-    Ok(())
+}
+
+pub fn unload_plugins() {
+    let mut plugins = PLUGINS.write().unwrap();
+    for (id, plugin) in plugins.iter() {
+        let _ret = (plugin.clear)();
+        log::info!("Plugin {} unloaded", id);
+    }
+    plugins.clear();
 }
 
 pub fn unload_plugin(id: &str) {
     if let Some(plugin) = PLUGINS.write().unwrap().remove(id) {
-        let _ret = (plugin.fn_clear)();
+        let _ret = (plugin.clear)();
     }
 }
 
 pub fn reload_plugin(id: &str) -> ResultType<()> {
-    let path = match PLUGINS.read().unwrap().get(id) {
+    let path = match PLUGIN_INFO.read().unwrap().get(id) {
         Some(plugin) => plugin.path.clone(),
         None => bail!("Plugin {} not found", id),
     };
     unload_plugin(id);
-    load_plugin(&path)
+    load_plugin(Some(&path), Some(id))
 }
 
-pub fn load_plugin(path: &str) -> ResultType<()> {
-    let mut plugin = Plugin::new(path)?;
-    let desc = (plugin.fn_desc)();
+#[no_mangle]
+fn get_local_peer_id() -> *const c_char {
+    let mut id = (*LOCAL_PEER_ID.read().unwrap()).clone();
+    if id.is_empty() {
+        let mut lock = LOCAL_PEER_ID.write().unwrap();
+        id = (*lock).clone();
+        if id.is_empty() {
+            id = get_id();
+            id.push('\0');
+            *lock = id.clone();
+        }
+    }
+    id.as_ptr() as _
+}
+
+fn load_plugin_path(path: &str) -> ResultType<()> {
+    let plugin = Plugin::new(path)?;
+    let desc = (plugin.desc)();
     let desc_res = Desc::from_cstr(desc);
     unsafe {
         libc::free(desc as _);
@@ -166,19 +221,54 @@ pub fn load_plugin(path: &str) -> ResultType<()> {
     let id = desc.id().to_string();
     // to-do validate plugin
     // to-do check the plugin id (make sure it does not use another plugin's id)
-    (plugin.fn_set_cb_msg)(callback_msg::callback_msg);
-    update_ui_plugin_desc(&desc);
+    (plugin.set_cb_msg)(callback_msg::callback_msg);
+    (plugin.set_cb_get_id)(get_local_peer_id as _);
+    // Ui may be not ready now, so we need to update again once ui is ready.
+    update_ui_plugin_desc(&desc, None);
     update_config(&desc);
-    reload_ui(&desc);
-    plugin.desc = Some(desc);
-    PLUGINS.write().unwrap().insert(id, plugin);
+    // Ui may be not ready now, so we need to reload again once ui is ready.
+    reload_ui(&desc, None);
+    let plugin_info = PluginInfo {
+        path: path.to_string(),
+        desc,
+    };
+    PLUGIN_INFO.write().unwrap().insert(id.clone(), plugin_info);
+    PLUGINS.write().unwrap().insert(id.clone(), plugin);
+    log::info!("Plugin {} loaded", id);
     Ok(())
 }
 
-fn handle_event(method: &[u8], id: &str, event: &[u8]) -> ResultType<()> {
+pub fn sync_ui(sync_to: String) {
+    for plugin in PLUGIN_INFO.read().unwrap().values() {
+        update_ui_plugin_desc(&plugin.desc, Some(&sync_to));
+        reload_ui(&plugin.desc, Some(&sync_to));
+    }
+}
+
+pub fn load_plugin(path: Option<&str>, id: Option<&str>) -> ResultType<()> {
+    match (path, id) {
+        (Some(path), _) => load_plugin_path(path),
+        (None, Some(id)) => match PLUGIN_INFO.read().unwrap().get(id) {
+            Some(plugin) => load_plugin_path(&plugin.path),
+            None => bail!("Plugin {} not found", id),
+        },
+        (None, None) => {
+            bail!("path and id are both None");
+        }
+    }
+}
+
+fn handle_event(method: &[u8], id: &str, peer: &str, event: &[u8]) -> ResultType<()> {
+    let mut peer: String = peer.to_owned();
+    peer.push('\0');
     match PLUGINS.read().unwrap().get(id) {
         Some(plugin) => {
-            let ret = (plugin.fn_call)(method.as_ptr() as _, event.as_ptr() as _, event.len());
+            let ret = (plugin.call)(
+                method.as_ptr() as _,
+                peer.as_ptr() as _,
+                event.as_ptr() as _,
+                event.len(),
+            );
             if ret.is_null() {
                 Ok(())
             } else {
@@ -200,21 +290,24 @@ fn handle_event(method: &[u8], id: &str, event: &[u8]) -> ResultType<()> {
 }
 
 #[inline]
-pub fn handle_ui_event(id: &str, event: &[u8]) -> ResultType<()> {
-    handle_event(METHOD_HANDLE_UI, id, event)
+pub fn handle_ui_event(id: &str, peer: &str, event: &[u8]) -> ResultType<()> {
+    handle_event(METHOD_HANDLE_UI, id, peer, event)
 }
 
 #[inline]
-pub fn handle_server_event(id: &str, event: &[u8]) -> ResultType<()> {
-    handle_event(METHOD_HANDLE_PEER, id, event)
+pub fn handle_server_event(id: &str, peer: &str, event: &[u8]) -> ResultType<()> {
+    handle_event(METHOD_HANDLE_PEER, id, peer, event)
 }
 
 #[inline]
-pub fn handle_client_event(id: &str, event: &[u8]) -> Option<Message> {
+pub fn handle_client_event(id: &str, peer: &str, event: &[u8]) -> Option<Message> {
+    let mut peer: String = peer.to_owned();
+    peer.push('\0');
     match PLUGINS.read().unwrap().get(id) {
         Some(plugin) => {
-            let ret = (plugin.fn_call)(
+            let ret = (plugin.call)(
                 METHOD_HANDLE_PEER.as_ptr() as _,
+                peer.as_ptr() as _,
                 event.as_ptr() as _,
                 event.len(),
             );
@@ -226,19 +319,23 @@ pub fn handle_client_event(id: &str, event: &[u8]) -> Option<Message> {
                     libc::free(ret as _);
                 }
                 if code > ERR_RUSTDESK_HANDLE_BASE && code < ERR_PLUGIN_HANDLE_BASE {
-                    let name = plugin.desc.as_ref().unwrap().name();
+                    let name = match PLUGIN_INFO.read().unwrap().get(id) {
+                        Some(plugin) => plugin.desc.name(),
+                        None => "???",
+                    }
+                    .to_owned();
                     match code {
                         ERR_CALL_NOT_SUPPORTED_METHOD => Some(make_plugin_response(
                             id,
-                            name,
+                            &name,
                             "plugin method is not supported",
                         )),
                         ERR_CALL_INVALID_ARGS => Some(make_plugin_response(
                             id,
-                            name,
+                            &name,
                             "plugin arguments is invalid",
                         )),
-                        _ => Some(make_plugin_response(id, name, &msg)),
+                        _ => Some(make_plugin_response(id, &name, &msg)),
                     }
                 } else {
                     log::error!(
@@ -268,48 +365,74 @@ fn make_plugin_response(id: &str, name: &str, msg: &str) -> Message {
 }
 
 fn update_config(desc: &Desc) {
-    super::config::set_local_items(desc.id(), &desc.config().local);
+    super::config::set_shared_items(desc.id(), &desc.config().shared);
     super::config::set_peer_items(desc.id(), &desc.config().peer);
 }
 
-fn reload_ui(desc: &Desc) {
+fn reload_ui(desc: &Desc, sync_to: Option<&str>) {
     for (location, ui) in desc.location().ui.iter() {
-        let v: Vec<&str> = location.split('|').collect();
-        // The first element is the "client" or "host".
-        // The second element is the "main", "remote", "cm", "file transfer", "port forward".
-        if v.len() >= 2 {
-            let available_channels = vec![
-                flutter::APP_TYPE_MAIN,
-                flutter::APP_TYPE_DESKTOP_REMOTE,
-                flutter::APP_TYPE_CM,
-                flutter::APP_TYPE_DESKTOP_FILE_TRANSFER,
-                flutter::APP_TYPE_DESKTOP_PORT_FORWARD,
-            ];
-            if available_channels.contains(&v[1]) {
-                if let Ok(ui) = serde_json::to_string(&ui) {
-                    let mut m = HashMap::new();
-                    m.insert("name", "plugin_reload");
-                    m.insert("id", desc.id());
-                    m.insert("location", &location);
-                    m.insert("ui", &ui);
-                    flutter::push_global_event(v[1], serde_json::to_string(&m).unwrap());
+        if let Ok(ui) = serde_json::to_string(&ui) {
+            let make_event = |ui: &str| {
+                let mut m = HashMap::new();
+                m.insert("name", MSG_TO_UI_TYPE_PLUGIN_RELOAD);
+                m.insert("id", desc.id());
+                m.insert("location", &location);
+                // Do not depend on the "location" and plugin desc on the ui side.
+                // Send the ui field to ensure the ui is valid.
+                m.insert("ui", ui);
+                serde_json::to_string(&m).unwrap_or("".to_owned())
+            };
+            match sync_to {
+                Some(channel) => {
+                    let _res = flutter::push_global_event(channel, make_event(&ui));
+                }
+                None => {
+                    let v: Vec<&str> = location.split('|').collect();
+                    // The first element is the "client" or "host".
+                    // The second element is the "main", "remote", "cm", "file transfer", "port forward".
+                    if v.len() >= 2 {
+                        let available_channels = vec![
+                            flutter::APP_TYPE_MAIN,
+                            flutter::APP_TYPE_DESKTOP_REMOTE,
+                            flutter::APP_TYPE_CM,
+                            flutter::APP_TYPE_DESKTOP_FILE_TRANSFER,
+                            flutter::APP_TYPE_DESKTOP_PORT_FORWARD,
+                        ];
+                        if available_channels.contains(&v[1]) {
+                            let _res = flutter::push_global_event(v[1], make_event(&ui));
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-fn update_ui_plugin_desc(desc: &Desc) {
+fn update_ui_plugin_desc(desc: &Desc, sync_to: Option<&str>) {
     // This function is rarely used. There's no need to care about serialization efficiency here.
     if let Ok(desc_str) = serde_json::to_string(desc) {
         let mut m = HashMap::new();
-        m.insert("name", "plugin_desc");
+        m.insert("name", MSG_TO_UI_TYPE_PLUGIN_DESC);
         m.insert("desc", &desc_str);
-        flutter::push_global_event(flutter::APP_TYPE_MAIN, serde_json::to_string(&m).unwrap());
-        flutter::push_global_event(
-            flutter::APP_TYPE_DESKTOP_REMOTE,
-            serde_json::to_string(&m).unwrap(),
-        );
-        flutter::push_global_event(flutter::APP_TYPE_CM, serde_json::to_string(&m).unwrap());
+        let event = serde_json::to_string(&m).unwrap_or("".to_owned());
+        match sync_to {
+            Some(channel) => {
+                let _res = flutter::push_global_event(channel, serde_json::to_string(&m).unwrap());
+            }
+            None => {
+                let _res = flutter::push_global_event(
+                    flutter::APP_TYPE_MAIN,
+                    serde_json::to_string(&m).unwrap(),
+                );
+                let _res = flutter::push_global_event(
+                    flutter::APP_TYPE_DESKTOP_REMOTE,
+                    serde_json::to_string(&m).unwrap(),
+                );
+                let _res = flutter::push_global_event(
+                    flutter::APP_TYPE_CM,
+                    serde_json::to_string(&m).unwrap(),
+                );
+            }
+        }
     }
 }

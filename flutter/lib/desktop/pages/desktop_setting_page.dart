@@ -11,6 +11,8 @@ import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
 import 'package:flutter_hbb/models/model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:flutter_hbb/models/server_model.dart';
+import 'package:flutter_hbb/plugin/desc.dart';
+import 'package:flutter_hbb/plugin/model.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -72,16 +74,6 @@ class DesktopSettingPage extends StatefulWidget {
 
 class _DesktopSettingPageState extends State<DesktopSettingPage>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  final List<_TabInfo> settingTabs = <_TabInfo>[
-    _TabInfo('General', Icons.settings_outlined, Icons.settings),
-    _TabInfo('Security', Icons.enhanced_encryption_outlined,
-        Icons.enhanced_encryption),
-    _TabInfo('Network', Icons.link_outlined, Icons.link),
-    _TabInfo('Display', Icons.desktop_windows_outlined, Icons.desktop_windows),
-    _TabInfo('Account', Icons.person_outline, Icons.person),
-    _TabInfo('About', Icons.info_outline, Icons.info)
-  ];
-
   late PageController controller;
   late RxInt selectedIndex;
 
@@ -105,6 +97,39 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
     Get.delete<RxInt>(tag: _kSettingPageIndexTag);
   }
 
+  List<_TabInfo> _settingTabs() {
+    final List<_TabInfo> settingTabs = <_TabInfo>[
+      _TabInfo('General', Icons.settings_outlined, Icons.settings),
+      _TabInfo('Security', Icons.enhanced_encryption_outlined,
+          Icons.enhanced_encryption),
+      _TabInfo('Network', Icons.link_outlined, Icons.link),
+      _TabInfo(
+          'Display', Icons.desktop_windows_outlined, Icons.desktop_windows),
+      _TabInfo('Account', Icons.person_outline, Icons.person),
+      _TabInfo('About', Icons.info_outline, Icons.info)
+    ];
+    if (bind.pluginFeatureIsEnabled()) {
+      settingTabs.insert(
+          4, _TabInfo('Plugin', Icons.extension_outlined, Icons.extension));
+    }
+    return settingTabs;
+  }
+
+  List<Widget> _children() {
+    final children = [
+      _General(),
+      _Safety(),
+      _Network(),
+      _Display(),
+      _Account(),
+      _About(),
+    ];
+    if (bind.pluginFeatureIsEnabled()) {
+      children.insert(4, _Plugin());
+    }
+    return children;
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -117,7 +142,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
             child: Column(
               children: [
                 _header(),
-                Flexible(child: _listView(tabs: settingTabs)),
+                Flexible(child: _listView(tabs: _settingTabs())),
               ],
             ),
           ),
@@ -130,14 +155,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
                   child: PageView(
                     controller: controller,
                     physics: DraggableNeverScrollableScrollPhysics(),
-                    children: const [
-                      _General(),
-                      _Safety(),
-                      _Network(),
-                      _Display(),
-                      _Account(),
-                      _About(),
-                    ],
+                    children: _children(),
                   )),
             ),
           )
@@ -1447,6 +1465,109 @@ class _AccountState extends State<_Account> {
   Widget accountAction() {
     return Obx(() => _Button(
         gFFI.userModel.userName.value.isEmpty ? translate("Login") : '${translate("Logout")} (${gFFI.userModel.userName.value})' ,
+        () => {
+              gFFI.userModel.userName.value.isEmpty
+                  ? loginDialog()
+                  : gFFI.userModel.logOut()
+            }));
+  }
+}
+
+class _Plugin extends StatefulWidget {
+  const _Plugin({Key? key}) : super(key: key);
+
+  @override
+  State<_Plugin> createState() => _PluginState();
+}
+
+class _PluginState extends State<_Plugin> {
+  // temp checkbox widget
+  Widget _checkbox(
+    String label,
+    bool Function() getValue,
+    Future<void> Function(bool) setValue,
+  ) {
+    final value = getValue();
+    onChanged(bool b) async {
+      await setValue(b);
+      setState(() {});
+    }
+
+    return GestureDetector(
+        child: Row(
+          children: [
+            Checkbox(
+              value: bind.pluginIsEnabled(),
+              onChanged: (_) => onChanged(!value),
+            ).marginOnly(right: 5),
+            Expanded(
+              child: Text(translate(label)),
+            )
+          ],
+        ).marginOnly(left: _kCheckBoxLeftMargin),
+        onTap: () => onChanged(!value));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scrollController = ScrollController();
+    buildCards(DescModel model) {
+      final cards = <Widget>[
+        _Card(
+          title: 'Plugin',
+          children: [
+            _checkbox(
+              'Enable',
+              () => bind.pluginIsEnabled() ?? false,
+              (bool v) async {
+                if (!v) {
+                  clearLocations();
+                }
+                await bind.pluginEnable(v: v);
+              },
+            ),
+          ],
+        ),
+      ];
+      model.all.forEach((key, value) {
+        cards.add(_Card(title: key, children: [
+          _Button(
+            'Reload',
+            () => bind.pluginReload(id: key),
+          ),
+          _checkbox(
+            'Enable',
+            () => bind.pluginIdIsEnabled(id: key),
+            (bool v) async {
+              if (!v) {
+                clearPlugin(key);
+              }
+              await bind.pluginIdEnable(id: key, v: v);
+            },
+          ),
+        ]));
+      });
+      return cards;
+    }
+
+    return DesktopScrollWrapper(
+      scrollController: scrollController,
+      child: ChangeNotifierProvider.value(
+        value: DescModel.instance,
+        child: Consumer<DescModel>(builder: (context, model, child) {
+          return ListView(
+            physics: DraggableNeverScrollableScrollPhysics(),
+            controller: scrollController,
+            children: buildCards(model),
+          ).marginOnly(bottom: _kListViewBottomMargin);
+        }),
+      ),
+    );
+  }
+
+  Widget accountAction() {
+    return Obx(() => _Button(
+        gFFI.userModel.userName.value.isEmpty ? 'Login' : 'Logout',
         () => {
               gFFI.userModel.userName.value.isEmpty
                   ? loginDialog()
