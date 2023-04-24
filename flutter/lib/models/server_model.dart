@@ -228,6 +228,7 @@ class ServerModel with ChangeNotifier {
       update = true;
     }
     if (update) {
+      gFFI.userModel.refreshCurrentUser();
       notifyListeners();
     }
   }
