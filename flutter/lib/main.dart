@@ -19,6 +19,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock/wakelock.dart';
 // import 'package:window_manager/window_manager.dart';
 
 import 'common.dart';
@@ -153,6 +154,7 @@ void runMobileApp() async {
   await initEnv(kAppTypeMain);
   await bind.mainCheckConnectStatus();
   await [Permission.storage,Permission.requestInstallPackages].request();
+  Wakelock.enable();
   gFFI.userModel.refreshCurrentUser();
   if (isAndroid) androidChannelInit();
   platformFFI.syncAndroidServiceAppDirConfigPath();
