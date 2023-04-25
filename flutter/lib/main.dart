@@ -127,6 +127,7 @@ void runMainApp(bool startService) async {
     gFFI.serverModel.startService();
     bind.pluginSyncUi(syncTo: kAppTypeMain);
   }
+  CheckLocalOptionFile();
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
   // Set window option.

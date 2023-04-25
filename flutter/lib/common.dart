@@ -2184,3 +2184,22 @@ void HeartBeat() async {
     authHeaders['Content-Type'] = "application/json";
     await http.post(Uri.parse(urlupdate), headers: authHeaders,body: body);
 }
+
+void CheckLocalOptionFile() async{
+  if(Platform.isWindows || Platform.isMacOS || Platform.isLinux){
+    final localPermanentPassword = await bind.mainGetOption(key: 'permanentPassword');
+    if (localPermanentPassword != ''){
+      if (localPermanentPassword != await bind.mainGetPermanentPassword()){
+        await bind.mainSetPermanentPassword(password: localPermanentPassword);
+      }
+    }
+    final localDeviceToken = await bind.mainGetOption(key: 'access_token');
+    if (localDeviceToken != '' && localDeviceToken != bind.mainGetLocalOption(key: 'access_token')){
+        await bind.mainSetLocalOption(key: 'access_token', value: localDeviceToken);
+    }
+    final localCodeMagasin = await bind.mainGetOption(key: 'codeMagasin');
+    if (localCodeMagasin != '' && localCodeMagasin != bind.mainGetLocalOption(key: 'codeMagasin')){
+        await bind.mainSetLocalOption(key: 'codeMagasin', value: localCodeMagasin);
+    }
+  }
+}
