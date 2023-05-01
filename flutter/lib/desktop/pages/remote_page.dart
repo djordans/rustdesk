@@ -177,6 +177,26 @@ class _RemotePageState extends State<RemotePage>
     if (Platform.isWindows) {
       _isWindowBlur = false;
     }
+    if (!Platform.isLinux) {
+      Wakelock.enable();
+    }
+  }
+
+  // When the window is unminimized, onWindowMaximize or onWindowRestore can be called when the old state was maximized or not.
+  @override
+  void onWindowMaximize() {
+    super.onWindowMaximize();
+    if (!Platform.isLinux) {
+      Wakelock.enable();
+    }
+  }
+
+  @override
+  void onWindowMinimize() {
+    super.onWindowMinimize();
+    if (!Platform.isLinux) {
+      Wakelock.disable();
+    }
   }
 
   @override
