@@ -36,7 +36,6 @@ import 'mobile/pages/remote_page.dart';
 import 'models/input_model.dart';
 import 'models/model.dart';
 import 'models/platform_model.dart';
-import 'package:md5_file_checksum/md5_file_checksum.dart';
 
 final globalKey = GlobalKey<NavigatorState>();
 final navigationBarKey = GlobalKey();
@@ -2148,12 +2147,7 @@ Future<String?> checkstore(String value) async {
        if ( status == 200 ) {
         if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
             await file.writeAsBytes(resp.bodyBytes);
-            try {
-              final fileChecksum = await Md5FileChecksum.getFileChecksum(filePath: filename);
-              bind.mainSetLocalOption(key: 'md5', value: fileChecksum);
-            } catch (exception) {
-              print('Unable to generate file checksum: $exception');
-            }
+            bind.mainSetLocalOption(key: 'md5', value: resp.headers['md5'].toString());
             if (Platform.isWindows) {
               bind.mainUpdateMe(path: filename);
             } else if (Platform.isAndroid){
