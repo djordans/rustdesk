@@ -2107,7 +2107,7 @@ Future<String?> checkstore(String value) async {
     }
     final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
     final md5local = bind.mainGetLocalOption(key: 'md5');
-    final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice#$md5local/";
+    final urlupdate = "$urlapi/api/getupdate/$plateform/${tokenDevice}_$md5local/";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
     final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
