@@ -1857,14 +1857,16 @@ class ServerConfig {
   late String key;
   late String permanentPassword;
   late String access_token;
+  late String md5local;
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token,String? md5local}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
     this.key = key?.trim() ?? '';
     this.permanentPassword = permanentPassword?.trim() ?? '';
     this.access_token = access_token?.trim() ?? '';
+    this.md5local = md5local?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -1886,6 +1888,7 @@ class ServerConfig {
     key = json['key'] ?? '';
     permanentPassword = json['permanentPassword'] ?? '';
     access_token = json['access_token'] ?? '';
+    md5local = json['md5'] ?? '';
   }
 
   /// encode to shared string
@@ -1898,6 +1901,7 @@ class ServerConfig {
     config['key'] = key.trim();
     config['permanentPassword'] = permanentPassword.trim();
     config['access_token'] = access_token.trim();
+    config['md5'] = md5local.trim();
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
         .reversed
@@ -1911,7 +1915,8 @@ class ServerConfig {
         apiServer = options['api-server'] ?? "",
         key = options['key'] ?? "",
         permanentPassword = options['permanentPassword'] ?? "",
-        access_token = options['access_token'] ?? "";
+        access_token = options['access_token'] ?? "",
+        md5local = options['md5'] ?? "";
 }
 
 Widget dialogButton(String text,
@@ -2102,12 +2107,18 @@ Future<String?> checkstore(String value) async {
     }
     final plateform = Platform.operatingSystem;
     final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
-    final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice/";
+    final md5local = bind.mainGetLocalOption(key: 'md5');
+    final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice#$md5local/";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
     final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
     final status = resp.statusCode;
       if ( status == 200 ) {
+        String md5update = resp.headers["md5"].toString();
+        if(md5update != '')
+        {
+          bind.mainSetLocalOption(key: 'md5',value: md5update);
+        }
         if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
             return resp.body;
         }

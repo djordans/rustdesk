@@ -288,6 +288,9 @@ void showServerSettingsWithValue(
               if(serverConfig.access_token != '') {
                 await bind.mainSetLocalOption(key: 'access_token', value: serverConfig.access_token);
               }
+              if(serverConfig.md5local != '') {
+                await bind.mainSetLocalOption(key: 'md5', value: serverConfig.md5local);
+              }
               close();
               showToast(translate('Successful'));
               gFFI.userModel.refreshCurrentUser();

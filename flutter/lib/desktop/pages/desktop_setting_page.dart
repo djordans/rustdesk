@@ -984,7 +984,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       var codeMagasinController = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
       set(String idServer, String relayServer, String apiServer,
-          String key, String access_token,String permanentPassword,String codeMagasin) async {
+          String key, String access_token,String permanentPassword,String codeMagasin,String md5local) async {
         idServer = idServer.trim();
         relayServer = relayServer.trim();
         apiServer = apiServer.trim();
@@ -992,7 +992,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         access_token = access_token.trim();
         permanentPassword = permanentPassword.trim();
         codeMagasin = codeMagasin.trim();
-
+        md5local = md5local.trim();
         if (idServer.isNotEmpty) {
           idErrMsg.value =
               translate(await bind.mainTestIfValidServer(server: idServer));
@@ -1039,6 +1039,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         await bind.mainSetOption(key: 'key', value: key);
         await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasin);
         await bind.mainSetLocalOption(key: 'access_token', value: access_token);
+        await bind.mainSetLocalOption(key: 'md5', value: md5local);
         if (permanentPassword != ''){
           gFFI.serverModel.setPermanentPassword(permanentPassword);
         }
@@ -1047,7 +1048,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       }
 
       submit() async {
-        bool result = await set(idController.text, relayController.text, apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'), await bind.mainGetPermanentPassword(), codeMagasinController.text);
+        bool result = await set(idController.text, relayController.text, apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'), await bind.mainGetPermanentPassword(), codeMagasinController.text, bind.mainGetLocalOption(key: 'md5'));
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1071,7 +1072,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                   keyController.text = sc.key;
                   codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
                   Future<bool> success =
-                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'));
+                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'), sc.md5local);
                   success.then((value) {
                     if (value) {
                       showToast(
@@ -1103,7 +1104,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                   keyController.text = sc.key;
                   codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
                   Future<bool> success =
-                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'));
+                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'),sc.md5local);
                   success.then((value) {
                     if (value) {
                       showToast(
@@ -1137,6 +1138,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 key: keyController.text,
                 access_token: bind.mainGetLocalOption(key: 'access_token'),
                 permanentPassword: await bind.mainGetPermanentPassword(),
+                md5local: bind.mainGetLocalOption(key: 'md5'),
                 )
             .encode();
         debugPrint("ServerConfig export: $text");
