@@ -2105,7 +2105,12 @@ Future<String?> checkstore(String value) async {
     if (urlapi.isEmpty){
       return '';
     }
-    final plateform = Platform.operatingSystem;
+    String plateform = Platform.operatingSystem;
+    final arch = sizeOf<IntPtr>() * 8;
+    if(Platform.isAndroid)
+    {
+      plateform = '${Platform.operatingSystem}_$arch';
+    }
     final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
     final md5local = bind.mainGetLocalOption(key: 'md5');
     final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice#$md5local/";
