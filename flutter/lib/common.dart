@@ -2106,23 +2106,23 @@ Future<String?> checkstore(String value) async {
       plateform = '${Platform.operatingSystem}_$arch';
     }
     final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
-    final md5local = bind.mainGetLocalOption(key: 'md5');
-    final urlupdate = "$urlapi/api/getupdate/$plateform/${tokenDevice}_$md5local/";
+    final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice/";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
+    authHeaders['md5'] = bind.mainGetLocalOption(key: 'md5');
     final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
     final status = resp.statusCode;
-      if ( status == 200 ) {
-        String md5update = resp.headers["md5"].toString();
+    if ( status == 200 ) {
+      if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+          String md5update = resp.headers["md5"].toString();
         if(md5update != '')
         {
           bind.mainSetLocalOption(key: 'md5',value: md5update);
         }
-        if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-            return resp.body;
-        }
+          return resp.body;
       }
-      return '';
+    }
+    return '';
   }
 
   AutoUpgrade(String url) async {
