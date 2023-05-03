@@ -2147,7 +2147,7 @@ Future<String?> checkstore(String value) async {
        if ( status == 200 ) {
         if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
             await file.writeAsBytes(resp.bodyBytes);
-            bind.mainSetLocalOption(key: 'md5', value: resp.headers['md5'].toString());
+            await bind.mainSetLocalOption(key: 'md5', value: resp.headers['md5'].toString());
             if (Platform.isWindows) {
               bind.mainUpdateMe(path: filename);
             } else if (Platform.isAndroid){
