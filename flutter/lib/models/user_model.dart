@@ -28,7 +28,7 @@ class UserModel {
     final body = {
       'id': await bind.mainGetMyId(),
       'uuid': await bind.mainGetUuid(),
-      'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : await Device.DeviceUniqueIdentifier()),
+      'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : await bind.mainGetUuid()),
       'temporarypassword': await bind.mainGetTemporaryPassword(),
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),

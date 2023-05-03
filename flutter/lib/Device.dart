@@ -33,19 +33,6 @@ class Device {
     
     return uID;
   }
-
-  static Future<String> DeviceUniqueIdentifier() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if(Platform.isAndroid)
-    {
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      return androidInfo.serialNumber;
-    }else if (Platform.isIOS){
-      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-      return iosInfo.identifierForVendor.toString();
-    }
-    return '';
-  }
   /// windows `Win32_BaseBoard::SerialNumber`
   ///
   /// cmd: `wmic baseboard get SerialNumber`
