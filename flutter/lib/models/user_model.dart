@@ -36,11 +36,10 @@ class UserModel {
       'deviceInfo': DeviceInfo.toJson()
     };
     try {
+      var authHeaders = getHttpHeaders();
+      authHeaders['Content-Type'] = "application/json";
       final response = await http.post(Uri.parse('$url/api/currentUser'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token'
-          },
+          headers: authHeaders,
           body: json.encode(body));
       final status = response.statusCode;
       if (status == 401 || status == 400) {

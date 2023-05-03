@@ -2183,6 +2183,7 @@ Future<String> onClickInstallApk(String apkFilePath) async {
       return 'Permission storage request fail!';
     }
 }
+
 void HeartBeat() async {
     final urlapi = await bind.mainGetApiServer();
     if (urlapi.isEmpty){
