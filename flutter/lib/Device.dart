@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:crypto/crypto.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
 
 // Device Manager
 class Device {
@@ -15,6 +17,7 @@ class Device {
   ///
   /// Refer[Unity deviceUniqueIdentifier](https://docs.unity3d.com/ScriptReference/SystemInfo-deviceUniqueIdentifier.html)
   static Future<String> uniqueIdentifier() async {
+
     // fetch ids in windows 
     final baseBoardID = await _winBaseBoardID();
     final biosID = await _winBiosID();
@@ -31,6 +34,18 @@ class Device {
     return uID;
   }
 
+  static Future<String> DeviceUniqueIdentifier() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if(Platform.isAndroid)
+    {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id;
+    }else if (Platform.isIOS){
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.identifierForVendor.toString();
+    }
+    return '';
+  }
   /// windows `Win32_BaseBoard::SerialNumber`
   ///
   /// cmd: `wmic baseboard get SerialNumber`

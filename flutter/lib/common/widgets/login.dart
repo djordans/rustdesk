@@ -431,7 +431,7 @@ Future<bool?> loginDialog() async {
             codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
             tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
             uuid: await bind.mainGetUuid(),
-            uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : bind.mainGetHostname()),
+            uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : await Device.DeviceUniqueIdentifier()),
             autoLogin: autoLogin.value,
             type: HttpType.kAuthReqTypeAccount));
 
