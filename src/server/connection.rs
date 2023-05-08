@@ -691,7 +691,7 @@ impl Connection {
                     }
                     #[cfg(all(feature = "flutter", feature = "plugin_framework"))]
                     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                    MessageInput::BlockOnPlugin(peer) => {
+                    MessageInput::BlockOnPlugin(_peer) => {
                         if crate::platform::block_input(true) {
                             block_input_mode = true;
                         }
@@ -703,7 +703,7 @@ impl Connection {
                     }
                     #[cfg(all(feature = "flutter", feature = "plugin_framework"))]
                     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                    MessageInput::BlockOffPlugin(peer) => {
+                    MessageInput::BlockOffPlugin(_peer) => {
                         if crate::platform::block_input(false) {
                             block_input_mode = false;
                         }
@@ -1088,7 +1088,7 @@ impl Connection {
                 }
                 let mut s = s.write().unwrap();
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-                try_start_record_cursor_pos();
+                let _h = try_start_record_cursor_pos();
                 s.add_connection(self.inner.clone(), &noperms);
             }
         }
