@@ -559,7 +559,7 @@ void window_on_top(int? id) {
 }
 
 typedef DialogBuilder = CustomAlertDialog Function(
-    StateSetter setState, void Function([dynamic]) close);
+    StateSetter setState, void Function([dynamic]) close, BuildContext context);
 
 class Dialog<T> {
   OverlayEntry? entry;
@@ -662,7 +662,7 @@ class OverlayDialogManager {
               child: StatefulBuilder(builder: (context, setState) {
                 return Listener(
                   onPointerUp: (_) => innerClicked = true,
-                  child: builder(setState, close),
+                  child: builder(setState, close, overlayState.context),
                 );
               })));
     });
@@ -682,7 +682,7 @@ class OverlayDialogManager {
       VoidCallback? onCancel}) {
     final tag = _tagCount.toString();
     _tagCount++;
-    show((setState, close) {
+    show((setState, close, context) {
       cancel() {
         dismissAll();
         if (onCancel != null) {
@@ -940,7 +940,7 @@ void msgBox(String id, String type, String title, String text, String link,
     buttons.insert(0, dialogButton('JumpLink', onPressed: jumplink));
   }
   dialogManager.show(
-    (setState, close) => CustomAlertDialog(
+    (setState, close, context) => CustomAlertDialog(
       title: null,
       content: SelectionArea(child: msgboxContent(type, title, text)),
       actions: buttons,
@@ -1013,7 +1013,7 @@ Widget msgboxContent(String type, String title, String text) {
 void msgBoxCommon(OverlayDialogManager dialogManager, String title,
     Widget content, List<Widget> buttons,
     {bool hasCancel = true}) {
-  dialogManager.show((setState, close) => CustomAlertDialog(
+  dialogManager.show((setState, close, context) => CustomAlertDialog(
         title: Text(
           translate(title),
           style: TextStyle(fontSize: 21),
