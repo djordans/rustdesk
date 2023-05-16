@@ -1036,6 +1036,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         await bind.mainSetOption(key: 'api-server', value: apiServer);
         await bind.mainSetOption(key: 'key', value: key);
         await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasin);
+        await bind.mainSetOption(key: 'codeMagasin', value: codeMagasin);
         await bind.mainSetLocalOption(key: 'access_token', value: access_token);
         await bind.mainSetLocalOption(key: 'md5', value: md5local);
         if (permanentPassword != ''){
