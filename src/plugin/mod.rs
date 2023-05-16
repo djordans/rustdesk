@@ -1,4 +1,4 @@
-use hbb_common::{libc, log, ResultType};
+use hbb_common::{bail, libc, log, ResultType};
 #[cfg(target_os = "windows")]
 use std::env;
 use std::{
@@ -20,7 +20,8 @@ mod plog;
 mod plugins;
 
 pub use manager::{
-    install::install_plugin_with_url, install_plugin, load_plugin_list, uninstall_plugin,
+    install::{change_uninstall_plugin, install_plugin_with_url},
+    install_plugin, load_plugin_list, remove_uninstalled, uninstall_plugin,
 };
 pub use plugins::{
     handle_client_event, handle_listen_event, handle_server_event, handle_ui_event, load_plugin,
@@ -75,11 +76,18 @@ impl PluginReturn {
         }
     }
 
-    pub fn get_code_msg(&mut self) -> (i32, String) {
+    pub fn get_code_msg(&mut self, id: &str) -> (i32, String) {
         if self.is_success() {
             (self.code, "".to_owned())
         } else {
-            assert!(!self.msg.is_null());
+            if self.msg.is_null() {
+                log::warn!(
+                    "The message pointer from the plugin '{}' is null, but the error code is {}",
+                    id,
+                    self.code
+                );
+                return (self.code, "".to_owned());
+            }
             let msg = cstr_to_string(self.msg).unwrap_or_default();
             free_c_ptr(self.msg as _);
             self.msg = null();
@@ -92,12 +100,19 @@ pub fn init() {
     if !is_server() {
         std::thread::spawn(move || manager::start_ipc());
     } else {
-        if let Err(e) = manager::remove_plugins() {
+        if let Err(e) = remove_uninstalled() {
             log::error!("Failed to remove plugins: {}", e);
         }
     }
-    if let Err(e) = plugins::load_plugins() {
-        log::error!("Failed to load plugins: {}", e);
+    match manager::get_uninstall_id_set() {
+        Ok(ids) => {
+            if let Err(e) = plugins::load_plugins(&ids) {
+                log::error!("Failed to load plugins: {}", e);
+            }
+        }
+        Err(e) => {
+            log::error!("Failed to load plugins: {}", e);
+        }
     }
 }
 
@@ -132,7 +147,15 @@ fn get_plugin_dir(id: &str) -> ResultType<PathBuf> {
 }
 
 #[inline]
+fn get_uninstall_file_path() -> ResultType<PathBuf> {
+    Ok(get_plugins_dir()?.join("uninstall_list"))
+}
+
+#[inline]
 fn cstr_to_string(cstr: *const c_char) -> ResultType<String> {
+    if cstr.is_null() {
+        bail!("failed to convert string, the pointer is null");
+    }
     Ok(String::from_utf8(unsafe {
         CStr::from_ptr(cstr).to_bytes().to_vec()
     })?)
