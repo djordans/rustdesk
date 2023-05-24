@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hbb/mobile/pages/server_page.dart';
 import 'package:flutter_hbb/mobile/pages/settings_page.dart';
 import '../../common.dart';
-import '../../common/widgets/chat_page.dart';
 import 'connection_page.dart';
 
 abstract class PageShape extends Widget {

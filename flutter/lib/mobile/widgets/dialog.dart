@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 
 import '../../common.dart';
 import '../../models/platform_model.dart';
-import 'package:http/http.dart' as http;
 
 void _showSuccess() {
   showToast(translate("Successful"));

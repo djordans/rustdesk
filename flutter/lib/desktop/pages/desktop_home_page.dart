@@ -20,7 +20,6 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_size/window_size.dart' as window_size;
-import 'package:path_provider/path_provider.dart';
 import '../widgets/button.dart';
 
 class DesktopHomePage extends StatefulWidget {

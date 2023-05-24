@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../../common.dart';
 import '../../common/widgets/login.dart';
 import '../../common/widgets/peer_tab_page.dart';
-import '../../consts.dart';
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import 'home_page.dart';

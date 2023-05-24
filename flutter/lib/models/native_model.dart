@@ -9,10 +9,9 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/consts.dart';
-import 'package:get/get.dart';
+
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:win32/win32.dart' as win32;
 
 import '../common.dart';
 import '../generated_bridge.dart';

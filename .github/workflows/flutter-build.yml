@@ -20,6 +20,7 @@ env:
   VERSION: "1.2.0"
   NDK_VERSION: "r23"
   #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -440,25 +441,22 @@ jobs:
         run: |
           pushd flutter
           flutter build ipa --release --obfuscate --split-debug-info=./split-debug-info --no-codesign
-        #  #mkdir /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload
-        #  cp -r /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Runner.app /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload/
-        #  zip -r /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.zip /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/Payload
-        #  mv /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.zip /Users/runner/work/rustdesk/rustdesk/flutter/build/ios/iphoneos/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.ipa
       
-      #- name: Upload Artifacts
+      # - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
       #   uses: actions/upload-artifact@master
       #   with:
-      #   name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.ipa
-      #   path: flutter/build/ios/iphoneos/*.ipa
+      #     name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
+      #     path: flutter/build/ios/ipa/*.ipa
 
       # - name: Publish ipa package
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
-      #  uses: softprops/action-gh-release@v1
-      #  with:
-      #   prerelease: true
-      #    tag_name: ${{ env.TAG_NAME }}
-      #    files: flutter/build/ios/iphoneos/*.ipa
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     prerelease: true
+      #     tag_name: ${{ env.TAG_NAME }}
+      #     files: |
+      #       flutter/build/ios/ipa/*.ipa
     
 
   build-rustdesk-android:
@@ -584,7 +582,7 @@ jobs:
       
       - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
-        if: env.UPLOAD_ARTIFACT == 'true'
+        if: env.ANDROID_SIGNING_KEY != null
         id: sign-rustdesk
         with:
           releaseDirectory: ./signed-apk
@@ -597,14 +595,14 @@ jobs:
           BUILD_TOOLS_VERSION: "30.0.2"
 
       - name: Upload Artifacts
-        if: env.UPLOAD_ARTIFACT == 'true'
+        if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
         uses: actions/upload-artifact@master
         with:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
           path: ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
       - name: Publish signed apk package
-        if: env.UPLOAD_ARTIFACT == 'true'
+        if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -613,7 +611,7 @@ jobs:
             ${{steps.sign-rustdesk.outputs.signedReleaseFile}}
 
       - name: Publish unsigned apk package
-        if: env.UPLOAD_ARTIFACT == 'true'
+        if: env.ANDROID_SIGNING_KEY == null && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -727,7 +725,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu20.04
+          distro: ubuntu18.04
           # not ready yet
           # distro: ubuntu18.04-rustdesk
           githubToken: ${{ github.token }}
@@ -1122,14 +1120,14 @@ jobs:
           - {
               arch: aarch64,
               target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04, # just for naming package, not running host
+              os: ubuntu-18.04, # just for naming package, not running host
               use-cross: true,
               extra-build-features: "",
             }
           - {
               arch: aarch64,
               target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04, # just for naming package, not running host
+              os: ubuntu-18.04, # just for naming package, not running host
               use-cross: true,
               extra-build-features: "appimage",
             }
@@ -1386,19 +1384,19 @@ jobs:
           - {
               arch: x86_64,
               target: x86_64-unknown-linux-gnu,
-              os: ubuntu-20.04,
+              os: ubuntu-18.04, 
               extra-build-features: "",
             }
           - {
               arch: x86_64,
               target: x86_64-unknown-linux-gnu,
-              os: ubuntu-20.04,
+              os: ubuntu-18.04,
               extra-build-features: "flatpak",
             }
           - {
               arch: x86_64,
               target: x86_64-unknown-linux-gnu,
-              os: ubuntu-20.04,
+              os: ubuntu-18.04,
               extra-build-features: "appimage",
             }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-20.04, use-cross: true }
@@ -1429,7 +1427,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu20.04
+          distro: ubuntu18.04
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
@@ -1659,7 +1657,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-20.04, arch: x86_64 }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-18.04, arch: x86_64 }
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -1679,7 +1677,7 @@ jobs:
         id: rpm
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu20.04
+          distro: ubuntu18.04
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
