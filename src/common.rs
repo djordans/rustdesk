@@ -19,13 +19,11 @@ use hbb_common::compress::decompress;
 use hbb_common::{
     allow_err,
     compress::compress as compress_func,
-    config::{self, Config, CONNECT_TIMEOUT, READ_TIMEOUT},
-    get_version_number, log,
+    config::{self, Config, CONNECT_TIMEOUT, READ_TIMEOUT}, log,
     message_proto::*,
     protobuf::Enum,
     protobuf::Message as _,
-    rendezvous_proto::*,
-    sleep, socket_client,
+    rendezvous_proto::*, socket_client,
     tcp::FramedStream,
     tokio, ResultType,
 };
