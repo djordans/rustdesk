@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class DraggableDivider extends StatefulWidget {
   final Axis axis;
