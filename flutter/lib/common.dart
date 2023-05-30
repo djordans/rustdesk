@@ -528,6 +528,7 @@ String formatDurationToTime(Duration duration) {
 
 closeConnection({String? id}) {
   if (isAndroid || isIOS) {
+    gFFI.chatModel.hideChatOverlay();
     Navigator.popUntil(globalKey.currentContext!, ModalRoute.withName("/"));
   } else {
     final controller = Get.find<DesktopTabController>();
