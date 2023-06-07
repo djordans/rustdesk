@@ -17,7 +17,6 @@ path = "src/naming.rs"
 
 [features]
 inline = []
-hbbs = []
 cli = []
 flutter_texture_render = []
 appimage = []
@@ -74,7 +73,7 @@ chrono = "0.4"
 cidr-utils = "0.5"
 libloading = "0.8"
 fon = "0.6"
-zip = "0.6.5"
+zip = "0.6"
 
 
 [target.'cfg(not(any(target_os = "android", target_os = "linux")))'.dependencies]
@@ -93,10 +92,8 @@ arboard = "3.2"
 system_shutdown = "4.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-trayicon = { git = "https://github.com/open-trade/trayicon-rs", features = ["winit"] }
-winit = "0.26"
-winapi = { version = "0.3", features = ["winuser", "wincrypt"] }
-winreg = "0.10"
+winapi = { version = "0.3", features = ["winuser", "wincrypt", "shellscalingapi"] }
+winreg = "0.11"
 windows-service = "0.6"
 virtual_display = { path = "libs/virtual_display", optional = true }
 impersonate_system = { git = "https://github.com/21pages/impersonate-system" }
@@ -114,10 +111,11 @@ dark-light = "1.0"
 fruitbasket = "0.10"
 objc_id = "0.1"
 
-[target.'cfg(any(target_os = "macos", target_os = "linux"))'.dependencies]
-tray-icon = "0.5"
-tao = { git = "https://github.com/Kingtous/tao", branch = "muda" }
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))'.dependencies]
+tray-icon = { git = "https://github.com/rustdesk-org/tray-icon" }
+tao = { git = "https://github.com/rustdesk-org/tao", branch = "muda" }
 image = "0.24"
+keepawake = { git = "https://github.com/segevfiner/keepawake-rs" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 psimple = { package = "libpulse-simple-binding", version = "2.27" }
@@ -135,15 +133,12 @@ users = { version = "0.11" }
 android_logger = "0.13"
 jni = "0.21"
 
-[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
-flutter_rust_bridge = "1.75"
-
 [workspace]
 members = ["libs/scrap", "libs/hbb_common", "libs/enigo", "libs/clipboard", "libs/virtual_display", "libs/virtual_display/dylib", "libs/portable"]
 exclude = ["vdi/host", "examples/custom_plugin"]
 
 [package.metadata.winres]
-LegalCopyright = "Copyright © 2022 Purslane, Inc."
+LegalCopyright = "Copyright © 2023 Purslane, Inc."
 # this FileDescription overrides package.description
 FileDescription = "RustDesk"
 

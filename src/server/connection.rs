@@ -639,6 +639,10 @@ impl Connection {
         if active_conns_lock.is_empty() {
             video_service::reset_resolutions();
         }
+        #[cfg(all(windows, feature = "virtual_display_driver"))]
+        if active_conns_lock.is_empty() {
+            video_service::try_plug_out_virtual_display();
+        }
         log::info!("#{} connection loop exited", id);
     }
 
@@ -1793,6 +1797,14 @@ impl Connection {
                 Some(message::Union::Misc(misc)) => match misc.union {
                     Some(misc::Union::SwitchDisplay(s)) => {
                         video_service::switch_display(s.display).await;
+                        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                        if s.width != 0 && s.height != 0 {
+                            self.change_resolution(&Resolution {
+                                width: s.width,
+                                height: s.height,
+                                ..Default::default()
+                            });
+                        }
                     }
                     Some(misc::Union::ChatMessage(c)) => {
                         self.send_to_cm(ipc::Data::ChatMessage { text: c.text });
@@ -2157,12 +2169,6 @@ impl Connection {
                     }
                     _ => {}
                 }
-            }
-        }
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
-        if let Some(custom_resolution) = o.custom_resolution.as_ref() {
-            if custom_resolution.width > 0 && custom_resolution.height > 0 {
-                self.change_resolution(&custom_resolution);
             }
         }
         if self.keyboard {
