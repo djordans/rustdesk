@@ -96,7 +96,9 @@ dependencies:
   percent_indicator: ^4.2.2
   dropdown_button2: ^2.0.0
   install_plugin_v2: ^1.0.0
-  permission_handler: ^10.2.0
+  permission_handler: ^10.2.0  
+  uuid: ^3.0.7
+
 dev_dependencies:
   icons_launcher: ^2.0.4
   #flutter_test:
