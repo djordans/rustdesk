@@ -12,17 +12,17 @@ pub fn make_tray() -> hbb_common::ResultType<()> {
         TrayEvent, TrayIconBuilder,
     };
     let icon;
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     {
         let mode = dark_light::detect();
-        const LIGHT: &[u8] = include_bytes!("../res/mac-tray-light-x2.png");
-        const DARK: &[u8] = include_bytes!("../res/mac-tray-dark-x2.png");
+        const LIGHT: &[u8] = include_bytes!("../res/outlined-tray-light-x2.png");
+        const DARK: &[u8] = include_bytes!("../res/outlined-tray-dark-x2.png");
         icon = match mode {
             dark_light::Mode::Dark => LIGHT,
             _ => DARK,
         };
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     {
         icon = include_bytes!("../res/tray-icon.ico");
     }
@@ -76,7 +76,13 @@ pub fn make_tray() -> hbb_common::ResultType<()> {
         }
         // xdg-open?
         #[cfg(target_os = "linux")]
-        crate::run_me::<&str>(vec![]).ok();
+        if !std::process::Command::new("xdg-open")
+            .arg("rustdesk://")
+            .spawn()
+            .is_ok()
+        {
+            crate::run_me::<&str>(vec![]).ok();
+        }
     };
 
     event_loop.run(move |_event, _, control_flow| {
@@ -91,9 +97,10 @@ pub fn make_tray() -> hbb_common::ResultType<()> {
 
         if let Ok(event) = menu_channel.try_recv() {
             if event.id == quit_i.id() {
-                #[cfg(target_os = "macos")]
-                crate::platform::macos::uninstall(false);
-                #[cfg(not(target_os = "macos"))]
+                if !crate::check_process("--server", false) {
+                    *control_flow = ControlFlow::Exit;
+                    return;
+                }
                 crate::platform::uninstall_service(false);
             } else if event.id == open_i.id() {
                 open_func();

@@ -121,7 +121,7 @@ pub fn is_server() -> bool {
     *IS_SERVER
 }
 
-// Is server logic running. 
+// Is server logic running.
 #[inline]
 pub fn is_server_running() -> bool {
     *SERVER_RUNNING.read().unwrap()
@@ -1058,4 +1058,39 @@ pub async fn get_next_nonkeyexchange_msg(
         break;
     }
     None
+}
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub fn check_process(arg: &str, same_uid: bool) -> bool {
+    use hbb_common::sysinfo::{ProcessExt, System, SystemExt};
+    let mut sys = System::new();
+    sys.refresh_processes();
+    let mut path = std::env::current_exe().unwrap_or_default();
+    if let Ok(linked) = path.read_link() {
+        path = linked;
+    }
+    let my_uid = sys
+        .process((std::process::id() as usize).into())
+        .map(|x| x.user_id())
+        .unwrap_or_default();
+    for (_, p) in sys.processes().iter() {
+        let mut cur_path = p.exe().to_path_buf();
+        if let Ok(linked) = cur_path.read_link() {
+            cur_path = linked;
+        }
+        if cur_path != path {
+            continue;
+        }
+        if p.pid().to_string() == std::process::id().to_string() {
+            continue;
+        }
+        if same_uid && p.user_id() != my_uid {
+            continue;
+        }
+        let parg = if p.cmd().len() <= 1 { "" } else { &p.cmd()[1] };
+        if arg == parg {
+            return true;
+        }
+    }
+    false
 }

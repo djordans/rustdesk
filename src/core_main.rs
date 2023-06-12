@@ -41,6 +41,14 @@ pub fn core_main() -> Option<Vec<String>> {
         }
         i += 1;
     }
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    if args.is_empty() {
+        #[cfg(target_os = "linux")]
+        hbb_common::allow_err!(crate::platform::check_autostart_config());
+        if crate::check_process("--server", false) && !crate::check_process("--tray", true) {
+            hbb_common::allow_err!(crate::run_me(vec!["--tray"]));
+        }
+    }
     #[cfg(not(debug_assertions))]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     register_breakdown_handler(breakdown_callback);
@@ -86,6 +94,13 @@ pub fn core_main() -> Option<Vec<String>> {
         }
     }
     hbb_common::init_log(false, &log_name);
+
+    // linux uni (url) go here.
+    #[cfg(all(target_os = "linux", feature = "flutter"))]
+    if args.len() > 0 && args[0].starts_with("rustdesk:") {
+        return try_send_by_dbus(args[0].clone());
+    }
+
     #[cfg(windows)]
     if !crate::platform::is_installed()
         && args.is_empty()
@@ -160,7 +175,9 @@ pub fn core_main() -> Option<Vec<String>> {
                 return None;
             }
         } else if args[0] == "--tray" {
-            crate::tray::start_tray();
+            if !crate::check_process("--tray", true) {
+                crate::tray::start_tray();
+            }
             return None;
         } else if args[0] == "--service" {
             log::info!("start --service");
@@ -170,15 +187,6 @@ pub fn core_main() -> Option<Vec<String>> {
             log::info!("start --server with user {}", crate::username());
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             {
-                #[cfg(target_os = "linux")]
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_secs(3));
-                    if crate::platform::is_root() {
-                        hbb_common::allow_err!(crate::platform::run_as_user(vec!["--tray"], None));
-                    } else {
-                        hbb_common::allow_err!(crate::run_me(vec!["--tray"]));
-                    }
-                });
                 crate::start_server(true);
                 return None;
             }
@@ -342,20 +350,8 @@ fn core_main_invoke_new_connection(mut args: std::env::Args) -> Option<Vec<Strin
     );
 
     #[cfg(target_os = "linux")]
-    {
-        use crate::dbus::invoke_new_connection;
+    return try_send_by_dbus(uni_links);
 
-        match invoke_new_connection(uni_links) {
-            Ok(()) => {
-                return None;
-            }
-            Err(err) => {
-                log::error!("{}", err.as_ref());
-                // return Some to invoke this new connection by self
-                return Some(Vec::new());
-            }
-        }
-    }
     #[cfg(windows)]
     {
         use winapi::um::winuser::WM_USER;
@@ -375,5 +371,21 @@ fn core_main_invoke_new_connection(mut args: std::env::Args) -> Option<Vec<Strin
         } else {
             None
         };
+    }
+}
+
+#[cfg(all(target_os = "linux", feature = "flutter"))]
+fn try_send_by_dbus(uni_links: String) -> Option<Vec<String>> {
+    use crate::dbus::invoke_new_connection;
+
+    match invoke_new_connection(uni_links) {
+        Ok(()) => {
+            return None;
+        }
+        Err(err) => {
+            log::error!("{}", err.as_ref());
+            // return Some to invoke this url by self
+            return Some(Vec::new());
+        }
     }
 }

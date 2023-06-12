@@ -44,12 +44,12 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
   static const IconData selectedIcon = Icons.desktop_windows_sharp;
   static const IconData unselectedIcon = Icons.desktop_windows_outlined;
 
-  late MenubarState _menubarState;
+  late ToolbarState _toolbarState;
 
   var connectionMap = RxList<Widget>.empty(growable: true);
 
   _ConnectionTabPageState(Map<String, dynamic> params) {
-    _menubarState = MenubarState();
+    _toolbarState = ToolbarState();
     RemoteCountState.init();
     final peerId = params['id'];
     if (peerId != null) {
@@ -75,7 +75,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
           key: ValueKey(peerId),
           id: peerId,
           password: params['password'],
-          menubarState: _menubarState,
+          toolbarState: _toolbarState,
           tabController: tabController,
           switchUuid: params['switch_uuid'],
           forceRelay: params['forceRelay'],
@@ -102,6 +102,8 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
         final switchUuid = args['switch_uuid'];
         window_on_top(windowId());
         ConnectionTypeState.init(id);
+        _toolbarState.setShow(
+            bind.mainGetUserDefaultOption(key: 'collapse_toolbar') != 'Y');
         tabController.add(TabInfo(
           key: id,
           label: id,
@@ -112,7 +114,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
             key: ValueKey(id),
             id: id,
             password: args['password'],
-            menubarState: _menubarState,
+            toolbarState: _toolbarState,
             tabController: tabController,
             switchUuid: switchUuid,
             forceRelay: args['forceRelay'],
@@ -135,7 +137,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
   @override
   void dispose() {
     super.dispose();
-    _menubarState.save();
+    _toolbarState.save();
   }
 
   @override
@@ -240,7 +242,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
             ));
   }
 
-  // Note: Some dup code to ../widgets/remote_menubar
+  // Note: Some dup code to ../widgets/remote_toolbar
   Widget _tabMenuBuilder(String key, CancelFunc cancelFunc) {
     final List<MenuEntryBase<String>> menu = [];
     const EdgeInsets padding = EdgeInsets.only(left: 8.0, right: 5.0);
@@ -266,11 +268,11 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
       MenuEntryButton<String>(
         childBuilder: (TextStyle? style) => Obx(() => Text(
               translate(
-                  _menubarState.show.isTrue ? 'Hide Menubar' : 'Show Menubar'),
+                  _toolbarState.show.isTrue ? 'Hide Toolbar' : 'Show Toolbar'),
               style: style,
             )),
         proc: () {
-          _menubarState.switchShow();
+          _toolbarState.switchShow();
           cancelFunc();
         },
         padding: padding,
