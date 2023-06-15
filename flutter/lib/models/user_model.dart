@@ -122,7 +122,7 @@ class UserModel {
     try {
       body = jsonDecode(resp.body);
     } catch (e) {
-      print("jsonDecode resp body failed: ${e.toString()}");
+      print("login: jsonDecode resp body failed: ${e.toString()}");
       rethrow;
     }
 
@@ -134,7 +134,7 @@ class UserModel {
     try {
       loginResponse = LoginResponse.fromJson(body);
     } catch (e) {
-      print("jsonDecode LoginResponse failed: ${e.toString()}");
+      print("login: jsonDecode LoginResponse failed: ${e.toString()}");
       rethrow;
     }
 
@@ -143,5 +143,16 @@ class UserModel {
     }
 
     return loginResponse;
+  }
+
+  static Future<List<dynamic>> queryLoginOptions() async {
+    final url = await bind.mainGetApiServer();
+    final resp = await http.get(Uri.parse('$url/api/login-options'));
+    try {
+      return jsonDecode(resp.body);
+    } catch (e) {
+      print("queryLoginOptions: jsonDecode resp body failed: ${e.toString()}");
+      return [];
+    }
   }
 }
