@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -11,7 +12,6 @@ import 'platform_model.dart';
 
 class UserModel {
   final RxString userName = ''.obs;
-  final RxString groupName = ''.obs;
   final RxBool isAdmin = false.obs;
   WeakReference<FFI> parent;
 
@@ -45,7 +45,7 @@ class UserModel {
         reset();
         return;
       }
-      final data = json.decode(response.body);
+      final data = json.decode(utf8.decode(response.bodyBytes));
       final error = data['error'];
       if (error != null) {
         throw error;
@@ -73,13 +73,11 @@ class UserModel {
     await gFFI.abModel.reset();
     await gFFI.groupModel.reset();
     userName.value = '';
-    groupName.value = '';
     gFFI.peerTabModel.check_dynamic_tabs();
   }
 
   Future<void> _parseAndUpdateUser(UserPayload user) async {
     userName.value = user.name;
-    groupName.value = user.grp;
     isAdmin.value = user.isAdmin;
   }
 
@@ -120,7 +118,7 @@ class UserModel {
 
     final Map<String, dynamic> body;
     try {
-      body = jsonDecode(resp.body);
+      body = jsonDecode(utf8.decode(resp.bodyBytes));
     } catch (e) {
       print("login: jsonDecode resp body failed: ${e.toString()}");
       rethrow;
@@ -146,9 +144,9 @@ class UserModel {
   }
 
   static Future<List<dynamic>> queryLoginOptions() async {
-    final url = await bind.mainGetApiServer();
-    final resp = await http.get(Uri.parse('$url/api/login-options'));
     try {
+      final url = await bind.mainGetApiServer();
+      final resp = await http.get(Uri.parse('$url/api/login-options'));
       return jsonDecode(resp.body);
     } catch (e) {
       print("queryLoginOptions: jsonDecode resp body failed: ${e.toString()}");
