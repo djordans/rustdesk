@@ -11,31 +11,40 @@ import 'package:http/http.dart' as http;
 class GroupModel {
   final RxBool groupLoading = false.obs;
   final RxString groupLoadError = "".obs;
-  final RxBool peerLoading = false.obs; //to-do: not used
-  final RxString peerLoadError = "".obs;
-  final RxString groupName = ''.obs;
   final RxString groupId = ''.obs;
+  RxString groupName = ''.obs;
   final RxList<UserPayload> users = RxList.empty(growable: true);
-  final RxList<PeerPayload> peerPayloads = RxList.empty(growable: true);
   final RxList<Peer> peersShow = RxList.empty(growable: true);
+  final RxString selectedUser = ''.obs;
+  final RxString searchUserText = ''.obs;
   WeakReference<FFI> parent;
+  var initialized = false;
 
   GroupModel(this.parent);
 
-  Future<void> reset() async {
-    groupLoading.value = false;
-    groupLoadError.value = "";
-    peerLoading.value = false;
-    peerLoadError.value = "";
+  reset() {
     groupName.value = '';
     groupId.value = '';
     users.clear();
-    peerPayloads.clear();
     peersShow.clear();
+    initialized = false;
   }
 
-  Future<void> pull() async {
-    await reset();
+  Future<void> pull({force = true, quiet = false}) async {
+    /*
+    if (!force && initialized) return;
+    if (!quiet) {
+      groupLoading.value = true;
+      groupLoadError.value = "";
+    }
+    await _pull();
+    groupLoading.value = false;
+    initialized = true;
+    */
+  }
+
+  Future<void> _pull() async {
+    reset();
     if (bind.mainGetLocalOption(key: 'access_token') == '') {
       return;
     }
@@ -45,17 +54,10 @@ class GroupModel {
         return;
       }
     } catch (e) {
-      debugPrintStack(label: '$e');
+      debugPrint('$e');
       reset();
       return;
     }
-    if (gFFI.userModel.userName.isEmpty ||
-        (gFFI.userModel.isAdmin.isFalse && groupName.isEmpty)) {
-      gFFI.peerTabModel.check_dynamic_tabs();
-      return;
-    }
-    groupLoading.value = true;
-    groupLoadError.value = "";
     final api = "${await bind.mainGetApiServer()}/api/users";
     try {
       var uri0 = Uri.parse(api);
@@ -98,11 +100,10 @@ class GroupModel {
         }
       } while (current * pageSize < total);
     } catch (err) {
-      debugPrintStack(label: '$err');
+      debugPrint('$err');
       groupLoadError.value = err.toString();
     } finally {
-      groupLoading.value = false;
-      gFFI.peerTabModel.check_dynamic_tabs();
+      _pullUserPeers();
     }
   }
 
@@ -128,23 +129,29 @@ class GroupModel {
       groupId.value = data['id'] ?? '';
       return groupId.value.isNotEmpty && groupName.isNotEmpty;
     } catch (e) {
-      debugPrintStack(label: '$e');
+      debugPrint('$e');
+      groupLoadError.value = e.toString();
     } finally {}
 
     return false;
   }
 
-  Future<void> pullUserPeers(UserPayload user) async {
-    peerPayloads.clear();
+  Future<void> _pullUserPeers() async {
     peersShow.clear();
-    peerLoading.value = true;
-    peerLoadError.value = "";
     final api = "${await bind.mainGetApiServer()}/api/peers";
     try {
       var uri0 = Uri.parse(api);
-      final pageSize = 20;
+      final pageSize =
+          20; // ????????????????????????????????????????????????????? stupid stupis, how about >20 peers
       var total = 0;
       int current = 0;
+      var queryParameters = {
+        'current': current.toString(),
+        'pageSize': pageSize.toString(),
+      };
+      if (!gFFI.userModel.isAdmin.value) {
+        queryParameters.addAll({'grp': groupId.value});
+      }
       do {
         current += 1;
         var uri = Uri(
@@ -152,11 +159,7 @@ class GroupModel {
             host: uri0.host,
             path: uri0.path,
             port: uri0.port,
-            queryParameters: {
-              'current': current.toString(),
-              'pageSize': pageSize.toString(),
-              'target_user': user.id,
-            });
+            queryParameters: queryParameters);
         final resp = await http.get(uri, headers: getHttpHeaders());
         if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
           Map<String, dynamic> json = jsonDecode(utf8.decode(resp.bodyBytes));
@@ -169,9 +172,11 @@ class GroupModel {
                 final data = json['data'];
                 if (data is List) {
                   for (final p in data) {
-                    final peer = PeerPayload.fromJson(p);
-                    peerPayloads.add(peer);
-                    peersShow.add(PeerPayload.toPeer(peer));
+                    final peerPayload = PeerPayload.fromJson(p);
+                    final peer = PeerPayload.toPeer(peerPayload);
+                    if (!peersShow.any((e) => e.id == peer.id)) {
+                      peersShow.add(peer);
+                    }
                   }
                 }
               }
@@ -180,10 +185,8 @@ class GroupModel {
         }
       } while (current * pageSize < total);
     } catch (err) {
-      debugPrintStack(label: '$err');
-      peerLoadError.value = err.toString();
-    } finally {
-      peerLoading.value = false;
-    }
+      debugPrint('$err');
+      groupLoadError.value = err.toString();
+    } finally {}
   }
 }

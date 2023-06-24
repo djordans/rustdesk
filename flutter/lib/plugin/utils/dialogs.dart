@@ -46,9 +46,8 @@ void showPeerSelectionDialog(
                 key: ValueKey(index),
                 height: 50.0,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).highlightColor,
-                  borderRadius: BorderRadius.circular(12.0)
-                ),
+                    color: Theme.of(context).highlightColor,
+                    borderRadius: BorderRadius.circular(12.0)),
                 padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                 margin: EdgeInsets.symmetric(vertical: 4.0),
                 child: Row(
@@ -56,14 +55,18 @@ void showPeerSelectionDialog(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     // platform
-                    SizedBox(width: 8.0,),
+                    SizedBox(
+                      width: 8.0,
+                    ),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         getPlatformImage(platform, size: 34.0),
                       ],
                     ),
-                    SizedBox(width: 8.0,),
+                    SizedBox(
+                      width: 8.0,
+                    ),
                     // id/alias
                     Expanded(child: Text(alias.isEmpty ? id : alias)),
                   ],

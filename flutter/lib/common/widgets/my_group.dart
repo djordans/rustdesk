@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/hbbs/hbbs.dart';
+import 'package:flutter_hbb/common/widgets/login.dart';
 import 'package:flutter_hbb/common/widgets/peers_view.dart';
 import 'package:get/get.dart';
 
@@ -16,8 +17,8 @@ class MyGroup extends StatefulWidget {
 }
 
 class _MyGroupState extends State<MyGroup> {
-  static final RxString selectedUser = ''.obs;
-  static final RxString searchUserText = ''.obs;
+  RxString get selectedUser => gFFI.groupModel.selectedUser;
+  RxString get searchUserText => gFFI.groupModel.searchUserText;
   static TextEditingController searchUserController = TextEditingController();
 
   @override
@@ -26,17 +27,19 @@ class _MyGroupState extends State<MyGroup> {
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<Widget>(
-      future: buildBody(context),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return snapshot.data!;
-        } else {
-          return const Offstage();
-        }
-      });
+  Widget build(BuildContext context) {
+    return Obx(() {
+      // use username to be same with ab
+      if (gFFI.userModel.userName.value.isEmpty) {
+        return Center(
+            child: ElevatedButton(
+                onPressed: loginDialog, child: Text(translate("Login"))));
+      }
+      return buildBody(context);
+    });
+  }
 
-  Future<Widget> buildBody(BuildContext context) async {
+  Widget buildBody(BuildContext context) {
     return Obx(() {
       if (gFFI.groupModel.groupLoading.value) {
         return const Center(
@@ -70,85 +73,72 @@ class _MyGroupState extends State<MyGroup> {
   }
 
   Widget _buildDesktop() {
-    return Obx(
-      () => Row(
-        children: [
-          Card(
-            margin: EdgeInsets.symmetric(horizontal: 4.0),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                    color: Theme.of(context).scaffoldBackgroundColor)),
-            child: Container(
-              width: 200,
-              height: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-              child: Column(
-                children: [
-                  _buildLeftHeader(),
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration:
-                          BoxDecoration(borderRadius: BorderRadius.circular(2)),
-                      child: _buildUserContacts(),
-                    ).marginSymmetric(vertical: 8.0),
-                  )
-                ],
-              ),
+    return Row(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  Border.all(color: Theme.of(context).colorScheme.background)),
+          child: Container(
+            width: 150,
+            height: double.infinity,
+            child: Column(
+              children: [
+                _buildLeftHeader(),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: _buildUserContacts(),
+                  ),
+                )
+              ],
             ),
-          ).marginOnly(right: 8.0),
-          Expanded(
-            child: Align(
-                alignment: Alignment.topLeft,
-                child: MyGroupPeerView(
-                    menuPadding: widget.menuPadding,
-                    initPeers: gFFI.groupModel.peersShow.value)),
-          )
-        ],
-      ),
+          ),
+        ).marginOnly(right: 12.0),
+        Expanded(
+          child: Align(
+              alignment: Alignment.topLeft,
+              child: Obx(() => MyGroupPeerView(
+                  menuPadding: widget.menuPadding,
+                  // ignore: invalid_use_of_protected_member
+                  initPeers: gFFI.groupModel.peersShow.value))),
+        )
+      ],
     );
   }
 
   Widget _buildMobile() {
-    return Obx(
-      () => Column(
-        children: [
-          Card(
-            margin: EdgeInsets.symmetric(horizontal: 4.0),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                    color: Theme.of(context).scaffoldBackgroundColor)),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildLeftHeader(),
-                  Container(
-                    width: double.infinity,
-                    decoration:
-                        BoxDecoration(borderRadius: BorderRadius.circular(4)),
-                    child: _buildUserContacts(),
-                  ).marginSymmetric(vertical: 8.0)
-                ],
-              ),
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border:
+                  Border.all(color: Theme.of(context).colorScheme.background)),
+          child: Container(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildLeftHeader(),
+                Container(
+                  width: double.infinity,
+                  child: _buildUserContacts(),
+                )
+              ],
             ),
           ),
-          Divider(),
-          Expanded(
-            child: Align(
-                alignment: Alignment.topLeft,
-                child: MyGroupPeerView(
-                    menuPadding: widget.menuPadding,
-                    initPeers: gFFI.groupModel.peersShow.value)),
-          )
-        ],
-      ),
+        ).marginOnly(bottom: 12.0),
+        Expanded(
+          child: Align(
+              alignment: Alignment.topLeft,
+              child: Obx(() => MyGroupPeerView(
+                  menuPadding: widget.menuPadding,
+                  // ignore: invalid_use_of_protected_member
+                  initPeers: gFFI.groupModel.peersShow.value))),
+        )
+      ],
     );
   }
 
@@ -162,6 +152,7 @@ class _MyGroupState extends State<MyGroup> {
             searchUserText.value = value;
           },
           decoration: InputDecoration(
+            filled: false,
             prefixIcon: Icon(
               Icons.search_rounded,
               color: Theme.of(context).hintColor,
@@ -198,7 +189,8 @@ class _MyGroupState extends State<MyGroup> {
     return InkWell(onTap: () {
       if (selectedUser.value != username) {
         selectedUser.value = username;
-        gFFI.groupModel.pullUserPeers(user);
+      } else {
+        selectedUser.value = '';
       }
     }, child: Obx(
       () {
@@ -214,7 +206,7 @@ class _MyGroupState extends State<MyGroup> {
           child: Container(
             child: Row(
               children: [
-                Icon(Icons.person_outline_rounded, color: Colors.grey, size: 16)
+                Icon(Icons.person_rounded, color: Colors.grey, size: 16)
                     .marginOnly(right: 4),
                 Expanded(child: Text(username)),
               ],
@@ -222,6 +214,6 @@ class _MyGroupState extends State<MyGroup> {
           ),
         );
       },
-    )).marginSymmetric(horizontal: 12);
+    )).marginSymmetric(horizontal: 12).marginOnly(bottom: 6);
   }
 }

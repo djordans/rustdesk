@@ -718,11 +718,10 @@ RawGestureDetector getMixinGestureDetector({
             GestureRecognizerFactoryWithHandlers<HoldTapMoveGestureRecognizer>(
                 () => HoldTapMoveGestureRecognizer(),
                 (instance) => instance
-                        ..onHoldDragStart = onHoldDragStart
-                        ..onHoldDragUpdate = onHoldDragUpdate
-                        ..onHoldDragCancel = onHoldDragCancel
-                        ..onHoldDragEnd = onHoldDragEnd
-                    ),
+                  ..onHoldDragStart = onHoldDragStart
+                  ..onHoldDragUpdate = onHoldDragUpdate
+                  ..onHoldDragCancel = onHoldDragCancel
+                  ..onHoldDragEnd = onHoldDragEnd),
         DoubleFinerTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<
                 DoubleFinerTapGestureRecognizer>(
             () => DoubleFinerTapGestureRecognizer(), (instance) {

@@ -26,8 +26,9 @@ class _DraggableDividerState extends State<DraggableDivider> {
   Widget build(BuildContext context) {
     return Listener(
       onPointerMove: (event) {
-        final dl =
-            widget.axis == Axis.horizontal ? event.localDelta.dy : event.localDelta.dx;
+        final dl = widget.axis == Axis.horizontal
+            ? event.localDelta.dy
+            : event.localDelta.dx;
         widget.onPointerMove?.call(dl);
       },
       onPointerHover: (event) => widget.onHover?.call(),

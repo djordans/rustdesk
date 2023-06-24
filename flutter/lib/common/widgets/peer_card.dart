@@ -8,7 +8,6 @@ import 'package:get/get.dart';
 
 import '../../common.dart';
 import '../../common/formatter/id_formatter.dart';
-import '../../models/model.dart';
 import '../../models/peer_model.dart';
 import '../../models/platform_model.dart';
 import '../../desktop/widgets/material_mod_popup_menu.dart' as mod_menu;
@@ -314,7 +313,7 @@ class _PeerCardState extends State<_PeerCard>
         _menuPos = RelativeRect.fromLTRB(x, y, x, y);
       },
       onPointerUp: (_) => _showPeerMenu(peer.id),
-      child: ActionMore());
+      child: build_more(context));
 
   /// Show the peer menu and handle user's choice.
   /// User might remove the peer or send a file to the peer.
@@ -1236,27 +1235,28 @@ Widget getOnline(double rightPadding, bool online) {
               radius: 3, backgroundColor: online ? Colors.green : kColorWarn)));
 }
 
-class ActionMore extends StatelessWidget {
-  final RxBool _hover = false.obs;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-        onTap: () {},
-        onHover: (value) => _hover.value = value,
-        child: Obx(() => CircleAvatar(
-            radius: 14,
-            backgroundColor: _hover.value
-                ? Theme.of(context).scaffoldBackgroundColor
-                : Theme.of(context).colorScheme.background,
-            child: Icon(Icons.more_vert,
-                size: 18,
-                color: _hover.value
-                    ? Theme.of(context).textTheme.titleLarge?.color
-                    : Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.color
-                        ?.withOpacity(0.5)))));
-  }
+Widget build_more(BuildContext context, {bool invert = false}) {
+  final RxBool hover = false.obs;
+  return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {},
+      onHover: (value) => hover.value = value,
+      child: Obx(() => CircleAvatar(
+          radius: 14,
+          backgroundColor: hover.value
+              ? (invert
+                  ? Theme.of(context).colorScheme.background
+                  : Theme.of(context).scaffoldBackgroundColor)
+              : (invert
+                  ? Theme.of(context).scaffoldBackgroundColor
+                  : Theme.of(context).colorScheme.background),
+          child: Icon(Icons.more_vert,
+              size: 18,
+              color: hover.value
+                  ? Theme.of(context).textTheme.titleLarge?.color
+                  : Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.color
+                      ?.withOpacity(0.5)))));
 }
