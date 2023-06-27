@@ -362,9 +362,9 @@ impl UI {
     fn get_connect_status(&mut self) -> Value {
         let mut v = Value::array(0);
         let x = get_connect_status();
-        v.push(x.0);
-        v.push(x.1);
-        v.push(x.3);
+        v.push(x.status_num);
+        v.push(x.key_confirmed);
+        v.push(x.id);
         v
     }
 
@@ -542,6 +542,7 @@ impl UI {
     }
 
     fn change_id(&self, id: String) {
+        reset_async_job_status();
         let old_id = self.get_id();
         change_id_shared(id, old_id);
     }
