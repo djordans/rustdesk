@@ -37,8 +37,6 @@ pub type NotifyMessageBox = fn(String, String, String, String) -> dyn Future<Out
 pub const CLIPBOARD_NAME: &'static str = "clipboard";
 pub const CLIPBOARD_INTERVAL: u64 = 333;
 
-pub const SYNC_PEER_INFO_DISPLAYS: i32 = 1;
-
 #[cfg(all(target_os = "macos", feature = "flutter_texture_render"))]
 // https://developer.apple.com/forums/thread/712709
 // Memory alignment should be multiple of 64.
@@ -666,11 +664,13 @@ pub async fn get_nat_type(ms_timeout: u64) -> i32 {
     crate::ipc::get_nat_type(ms_timeout).await
 }
 
-// #[cfg(any(target_os = "android", target_os = "ios", feature = "cli"))]
+// used for client to test which server is faster in case stop-servic=Y
 #[tokio::main(flavor = "current_thread")]
 async fn test_rendezvous_server_() {
     let servers = Config::get_rendezvous_servers();
-    Config::reset_online();
+    if servers.len() <= 1 {
+        return;
+    }
     let mut futs = Vec::new();
     for host in servers {
         futs.push(tokio::spawn(async move {
@@ -690,6 +690,7 @@ async fn test_rendezvous_server_() {
         }));
     }
     join_all(futs).await;
+    Config::reset_online();
 }
 
 // #[cfg(any(target_os = "android", target_os = "ios", feature = "cli"))]

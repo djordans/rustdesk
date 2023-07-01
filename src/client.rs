@@ -55,11 +55,11 @@ use scrap::{
 
 use crate::is_keyboard_mode_supported;
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-use crate::{check_clipboard, ClipboardContext, CLIPBOARD_INTERVAL};
 #[cfg(not(feature = "flutter"))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::ui_session_interface::SessionPermissionConfig;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+use crate::{check_clipboard, ClipboardContext, CLIPBOARD_INTERVAL};
 
 pub use super::lang::*;
 
@@ -213,6 +213,8 @@ impl Client {
         conn_type: ConnType,
         interface: impl Interface,
     ) -> ResultType<(Stream, bool, Option<Vec<u8>>)> {
+        interface.update_direct(None);
+        interface.update_received(false);
         match Self::_start(peer, key, token, conn_type, interface).await {
             Err(err) => {
                 let err_str = err.to_string();
@@ -353,15 +355,8 @@ impl Client {
                             my_addr.is_ipv4(),
                         )
                         .await?;
-                        let pk = Self::secure_connection(
-                            peer,
-                            signed_id_pk,
-                            key,
-                            &mut conn,
-                            false,
-                            interface,
-                        )
-                        .await?;
+                        let pk =
+                            Self::secure_connection(peer, signed_id_pk, key, &mut conn).await?;
                         return Ok((conn, false, pk));
                     }
                     _ => {
@@ -459,6 +454,7 @@ impl Client {
         let mut conn =
             socket_client::connect_tcp_local(peer, Some(local_addr), connect_timeout).await;
         let mut direct = !conn.is_err();
+        interface.update_direct(Some(direct));
         if interface.is_force_relay() || conn.is_err() {
             if !relay_server.is_empty() {
                 conn = Self::request_relay(
@@ -471,6 +467,7 @@ impl Client {
                     conn_type,
                 )
                 .await;
+                interface.update_direct(Some(false));
                 if conn.is_err() {
                     bail!(
                         "Failed to connect via relay server: {}",
@@ -490,8 +487,7 @@ impl Client {
         }
         let mut conn = conn?;
         log::info!("{:?} used to establish connection", start.elapsed());
-        let pk = Self::secure_connection(peer_id, signed_id_pk, key, &mut conn, direct, interface)
-            .await?;
+        let pk = Self::secure_connection(peer_id, signed_id_pk, key, &mut conn).await?;
         Ok((conn, direct, pk))
     }
 
@@ -501,8 +497,6 @@ impl Client {
         signed_id_pk: Vec<u8>,
         key: &str,
         conn: &mut Stream,
-        direct: bool,
-        interface: impl Interface,
     ) -> ResultType<Option<Vec<u8>>> {
         let rs_pk = get_rs_pk(if key.is_empty() {
             hbb_common::config::RS_PUB_KEY
@@ -532,13 +526,7 @@ impl Client {
         };
         match timeout(READ_TIMEOUT, conn.next()).await? {
             Some(res) => {
-                let bytes = match res {
-                    Ok(bytes) => bytes,
-                    Err(err) => {
-                        interface.set_force_relay(direct, false);
-                        bail!("{}", err);
-                    }
-                };
+                let bytes = res?;
                 if let Ok(msg_in) = Message::parse_from_bytes(&bytes) {
                     if let Some(message::Union::SignedId(si)) = msg_in.union {
                         if let Ok((id, their_pk_b)) = decode_id_pk(&si.id, &sign_pk) {
@@ -593,11 +581,17 @@ impl Client {
         let mut succeed = false;
         let mut uuid = "".to_owned();
         let mut ipv4 = true;
+
         for i in 1..=3 {
-            // use different socket due to current hbbs implement requiring different nat address for each attempt
+            // use different socket due to current hbbs implementation requiring different nat address for each attempt
             let mut socket = socket_client::connect_tcp(rendezvous_server, CONNECT_TIMEOUT)
                 .await
                 .with_context(|| "Failed to connect to rendezvous server")?;
+
+            if !key.is_empty() && !token.is_empty() {
+                // mainly for the security of token
+                allow_err!(secure_punch_connection(&mut socket, key).await);
+            }
 
             ipv4 = socket.local_addr().is_ipv4();
             let mut msg_out = RendezvousMessage::new();
@@ -619,15 +613,16 @@ impl Client {
                 ..Default::default()
             });
             socket.send(&msg_out).await?;
-            if let Some(Ok(bytes)) = socket.next_timeout(CONNECT_TIMEOUT).await {
-                if let Ok(msg_in) = RendezvousMessage::parse_from_bytes(&bytes) {
-                    if let Some(rendezvous_message::Union::RelayResponse(rs)) = msg_in.union {
-                        if !rs.refuse_reason.is_empty() {
-                            bail!(rs.refuse_reason);
-                        }
-                        succeed = true;
-                        break;
+
+            if let Some(msg_in) =
+                crate::get_next_nonkeyexchange_msg(&mut socket, Some(CONNECT_TIMEOUT)).await
+            {
+                if let Some(rendezvous_message::Union::RelayResponse(rs)) = msg_in.union {
+                    if !rs.refuse_reason.is_empty() {
+                        bail!(rs.refuse_reason);
                     }
+                    succeed = true;
+                    break;
                 }
             }
         }
@@ -1066,17 +1061,14 @@ pub struct LoginConfigHandler {
     config: PeerConfig,
     pub port_forward: (String, i32),
     pub version: i64,
-    pub conn_id: i32,
     features: Option<Features>,
-    session_id: u64,
+    pub session_id: u64, // used for local <-> server communication
     pub supported_encoding: SupportedEncoding,
     pub restarting_remote_device: bool,
     pub force_relay: bool,
     pub direct: Option<bool>,
     pub received: bool,
     switch_uuid: Option<String>,
-    pub success_time: Option<hbb_common::tokio::time::Instant>,
-    pub direct_error_counter: usize,
 }
 
 impl Deref for LoginConfigHandler {
@@ -1116,15 +1108,17 @@ impl LoginConfigHandler {
         let config = self.load_config();
         self.remember = !config.password.is_empty();
         self.config = config;
-        self.session_id = rand::random();
+        let mut sid = rand::random();
+        if sid == 0 { // you won the lottery
+            sid = 1;
+        }
+        self.session_id = sid;
         self.supported_encoding = Default::default();
         self.restarting_remote_device = false;
         self.force_relay = !self.get_option("force-always-relay").is_empty() || force_relay;
         self.direct = None;
         self.received = false;
         self.switch_uuid = switch_uuid;
-        self.success_time = None;
-        self.direct_error_counter = 0;
     }
 
     /// Check if the client should auto login.
@@ -1662,7 +1656,6 @@ impl LoginConfigHandler {
                 config.keyboard_mode = KeyboardMode::Legacy.to_string();
             }
         }
-        self.conn_id = pi.conn_id;
         // no matter if change, for update file time
         self.save_config(config);
         self.supported_encoding = pi.encoding.clone().unwrap_or_default();
@@ -1751,18 +1744,6 @@ impl LoginConfigHandler {
         let mut msg_out = Message::new();
         msg_out.set_misc(misc);
         msg_out
-    }
-
-    pub fn set_force_relay(&mut self, direct: bool, received: bool) {
-        self.force_relay = false;
-        if direct && !received {
-            let errno = errno::errno().0;
-            // TODO: check mac and ios
-            if cfg!(windows) && errno == 10054 || !cfg!(windows) && errno == 104 {
-                self.force_relay = true;
-                self.set_option("force-always-relay".to_owned(), "Y".to_owned());
-            }
-        }
     }
 }
 
@@ -2308,16 +2289,48 @@ pub trait Interface: Send + Clone + 'static + Sized {
     async fn handle_test_delay(&mut self, t: TestDelay, peer: &mut Stream);
 
     fn get_login_config_handler(&self) -> Arc<RwLock<LoginConfigHandler>>;
-    fn set_force_relay(&self, direct: bool, received: bool) {
-        self.get_login_config_handler()
-            .write()
-            .unwrap()
-            .set_force_relay(direct, received);
-    }
+
     fn is_force_relay(&self) -> bool {
         self.get_login_config_handler().read().unwrap().force_relay
     }
     fn swap_modifier_mouse(&self, _msg: &mut hbb_common::protos::message::MouseEvent) {}
+
+    fn update_direct(&self, direct: Option<bool>) {
+        self.get_login_config_handler().write().unwrap().direct = direct;
+    }
+
+    fn update_received(&self, received: bool) {
+        self.get_login_config_handler().write().unwrap().received = received;
+    }
+
+    fn on_establish_connection_error(&self, err: String) {
+        log::error!("Connection closed: {}", err);
+        let title = "Connection Error";
+        let text = err.to_string();
+        let lc = self.get_login_config_handler();
+        let direct = lc.read().unwrap().direct;
+        let received = lc.read().unwrap().received;
+        let relay_condition = direct == Some(true) && !received;
+
+        // force relay
+        let errno = errno::errno().0;
+        if relay_condition
+            && (cfg!(windows) && (errno == 10054 || err.contains("10054"))
+                || !cfg!(windows) && (errno == 104 || err.contains("104")))
+        {
+            lc.write().unwrap().force_relay = true;
+            lc.write()
+                .unwrap()
+                .set_option("force-always-relay".to_owned(), "Y".to_owned());
+        }
+
+        // relay-hint
+        if cfg!(feature = "flutter") && relay_condition {
+            self.msgbox("relay-hint", title, &text, "");
+        } else {
+            self.msgbox("error", title, &text, "");
+        }
+    }
 }
 
 /// Data used by the client interface.

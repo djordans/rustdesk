@@ -10,7 +10,7 @@ import '../common.dart';
 import 'model.dart';
 import 'platform_model.dart';
 
-bool refresing_user = false;
+bool refreshingUser = false;
 
 class UserModel {
   final RxString userName = ''.obs;
@@ -37,15 +37,15 @@ class UserModel {
       'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin'),
       'deviceInfo': DeviceInfo.toJson()
     };
-    if (refresing_user) return;
+    if (refreshingUser) return;
     try {
       var authHeaders = getHttpHeaders();
       authHeaders['Content-Type'] = "application/json";
-      refresing_user = true;
+      refreshingUser = true;
       final response = await http.post(Uri.parse('$url/api/currentUser'),
           headers: authHeaders,
           body: json.encode(body));
-      refresing_user = false;
+      refreshingUser = false;
       final status = response.statusCode;
       if (status == 401 || status == 400) {
         reset();
@@ -69,7 +69,7 @@ class UserModel {
     } catch (e) {
       debugPrint('Failed to refreshCurrentUser: $e');
     } finally {
-      refresing_user = false;
+      refreshingUser = false;
       await updateOtherModels();
     }
   }
@@ -178,6 +178,7 @@ class UserModel {
   static Future<List<dynamic>> queryLoginOptions() async {
     try {
       final url = await bind.mainGetApiServer();
+      if (url.trim().isEmpty) return [];
       final resp = await http.get(Uri.parse('$url/api/login-options'));
       return jsonDecode(resp.body);
     } catch (e) {

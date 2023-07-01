@@ -124,7 +124,7 @@ impl<T: InvokeUiSession> Remote<T> {
         {
             Ok((mut peer, direct, pk)) => {
                 self.handler.set_connection_type(peer.is_secured(), direct); // flutter -> connection_ready
-                self.handler.set_connection_info(direct, false);
+                self.handler.update_direct(Some(direct));
                 if conn_type == ConnType::DEFAULT_CONN {
                     self.handler
                         .set_fingerprint(crate::common::pk_to_fingerprint(pk.unwrap_or_default()));
@@ -160,24 +160,14 @@ impl<T: InvokeUiSession> Remote<T> {
                             if let Some(res) = res {
                                 match res {
                                     Err(err) => {
-                                        log::error!("Connection closed: {}", err);
-                                        self.handler.set_force_relay(direct, received);
-                                        let msgtype = "error";
-                                        let title = "Connection Error";
-                                        let text = err.to_string();
-                                        let show_relay_hint = self.handler.show_relay_hint(last_recv_time, msgtype, title, &text);
-                                        if show_relay_hint{
-                                            self.handler.msgbox("relay-hint", title, &text, "");
-                                        } else {
-                                            self.handler.msgbox(msgtype, title, &text, "");
-                                        }
+                                        self.handler.on_establish_connection_error(err.to_string());
                                         break;
                                     }
                                     Ok(ref bytes) => {
                                         last_recv_time = Instant::now();
                                         if !received {
                                             received = true;
-                                            self.handler.set_connection_info(direct, true);
+                                            self.handler.update_received(true);
                                         }
                                         self.data_count.fetch_add(bytes.len(), Ordering::Relaxed);
                                         if !self.handle_msg_from_peer(bytes, &mut peer).await {
@@ -206,16 +196,21 @@ impl<T: InvokeUiSession> Remote<T> {
                         _msg = rx_clip_client.recv() => {
                             #[cfg(windows)]
                             match _msg {
-                                Some(clip) => {
-                                    let is_stopping_allowed = clip.is_stopping_allowed();
-                                    let server_file_transfer_enabled = *self.handler.server_file_transfer_enabled.read().unwrap();
-                                    let file_transfer_enabled = self.handler.lc.read().unwrap().enable_file_transfer.v;
-                                    let stop = is_stopping_allowed && !(server_file_transfer_enabled && file_transfer_enabled);
-                                    log::debug!("Process clipboard message from system, stop: {}, is_stopping_allowed: {}, server_file_transfer_enabled: {}, file_transfer_enabled: {}", stop, is_stopping_allowed, server_file_transfer_enabled, file_transfer_enabled);
-                                    if stop {
-                                        ContextSend::set_is_stopped();
-                                    } else {
-                                        allow_err!(peer.send(&crate::clipboard_file::clip_2_msg(clip)).await);
+                                Some(clip) => match clip {
+                                    clipboard::ClipboardFile::NotifyCallback{r#type, title, text} => {
+                                        self.handler.msgbox(&r#type, &title, &text, "");
+                                    }
+                                    _ => {
+                                        let is_stopping_allowed = clip.is_stopping_allowed();
+                                        let server_file_transfer_enabled = *self.handler.server_file_transfer_enabled.read().unwrap();
+                                        let file_transfer_enabled = self.handler.lc.read().unwrap().enable_file_transfer.v;
+                                        let stop = is_stopping_allowed && !(server_file_transfer_enabled && file_transfer_enabled);
+                                        log::debug!("Process clipboard message from system, stop: {}, is_stopping_allowed: {}, server_file_transfer_enabled: {}, file_transfer_enabled: {}", stop, is_stopping_allowed, server_file_transfer_enabled, file_transfer_enabled);
+                                        if stop {
+                                            ContextSend::set_is_stopped();
+                                        } else {
+                                            allow_err!(peer.send(&crate::clipboard_file::clip_2_msg(clip)).await);
+                                        }
                                     }
                                 }
                                 None => {
@@ -266,8 +261,7 @@ impl<T: InvokeUiSession> Remote<T> {
                 }
             }
             Err(err) => {
-                self.handler
-                    .msgbox("error", "Connection Error", &err.to_string(), "");
+                self.handler.on_establish_connection_error(err.to_string());
             }
         }
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -1410,11 +1404,8 @@ impl<T: InvokeUiSession> Remote<T> {
                         }
                     }
                 }
-                Some(message::Union::PeerInfo(pi)) => match pi.conn_id {
-                    crate::SYNC_PEER_INFO_DISPLAYS => {
-                        self.handler.set_displays(&pi.displays);
-                    }
-                    _ => {}
+                Some(message::Union::PeerInfo(pi)) => {
+                    self.handler.set_displays(&pi.displays);
                 },
                 _ => {}
             }

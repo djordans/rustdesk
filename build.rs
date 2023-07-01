@@ -25,7 +25,7 @@ fn build_manifest() {
     use std::io::Write;
     if std::env::var("PROFILE").unwrap() == "release" {
         let mut res = winres::WindowsResource::new();
-        res.set_icon("res/tray-icon.ico")
+        res.set_icon("res/icon.ico")
             .set_language(winapi::um::winnt::MAKELANGID(
                 winapi::um::winnt::LANG_ENGLISH,
                 winapi::um::winnt::SUBLANG_ENGLISH_US,
@@ -78,7 +78,7 @@ fn install_oboe() {
 
 #[cfg(feature = "flutter")]
 fn gen_flutter_rust_bridge() {
-    if std::env::var("IGNORE_FFIGEN").is_ok() {
+    if !std::env::var("RUN_FFIGEN").is_ok() {
         return;
     }
     use lib_flutter_rust_bridge_codegen::{

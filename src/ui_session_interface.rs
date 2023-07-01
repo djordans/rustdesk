@@ -49,7 +49,7 @@ const CHANGE_RESOLUTION_VALID_TIMEOUT_SECS: u64 = 15;
 
 #[derive(Clone, Default)]
 pub struct Session<T: InvokeUiSession> {
-    pub session_id: SessionID,
+    pub session_id: SessionID, // different from the one in LoginConfigHandler, used for flutter UI message pass
     pub id: String, // peer id
     pub password: String,
     pub args: Vec<String>,
@@ -144,12 +144,6 @@ impl<T: InvokeUiSession> Session<T> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     pub fn is_rdp(&self) -> bool {
         self.lc.read().unwrap().conn_type.eq(&ConnType::RDP)
-    }
-
-    pub fn set_connection_info(&mut self, direct: bool, received: bool) {
-        let mut lc = self.lc.write().unwrap();
-        lc.direct = Some(direct);
-        lc.received = received;
     }
 
     pub fn get_view_style(&self) -> String {
@@ -312,8 +306,7 @@ impl<T: InvokeUiSession> Session<T> {
     }
 
     pub fn get_audit_server(&self, typ: String) -> String {
-        if self.lc.read().unwrap().conn_id <= 0
-            || LocalConfig::get_option("access_token").is_empty()
+        if LocalConfig::get_option("access_token").is_empty()
         {
             return "".to_owned();
         }
@@ -327,9 +320,9 @@ impl<T: InvokeUiSession> Session<T> {
     pub fn send_note(&self, note: String) {
         let url = self.get_audit_server("conn".to_string());
         let id = self.id.clone();
-        let conn_id = self.lc.read().unwrap().conn_id;
+        let session_id = self.lc.read().unwrap().session_id;
         std::thread::spawn(move || {
-            send_note(url, id, conn_id, note);
+            send_note(url, id, session_id, note);
         });
     }
 
@@ -941,38 +934,6 @@ impl<T: InvokeUiSession> Session<T> {
     pub fn close_voice_call(&self) {
         self.send(Data::CloseVoiceCall);
     }
-
-    pub fn show_relay_hint(
-        &mut self,
-        last_recv_time: tokio::time::Instant,
-        msgtype: &str,
-        title: &str,
-        text: &str,
-    ) -> bool {
-        let duration = Duration::from_secs(3);
-        let counter_interval = 3;
-        let lock = self.lc.read().unwrap();
-        let success_time = lock.success_time;
-        let direct = lock.direct.unwrap_or(false);
-        let received = lock.received;
-        drop(lock);
-        if let Some(success_time) = success_time {
-            if direct && last_recv_time.duration_since(success_time) < duration {
-                let retry_for_relay = direct && !received;
-                let retry = check_if_retry(msgtype, title, text, retry_for_relay);
-                if retry && !retry_for_relay {
-                    self.lc.write().unwrap().direct_error_counter += 1;
-                    if self.lc.read().unwrap().direct_error_counter % counter_interval == 0 {
-                        #[cfg(feature = "flutter")]
-                        return true;
-                    }
-                }
-            } else {
-                self.lc.write().unwrap().direct_error_counter = 0;
-            }
-        }
-        false
-    }
 }
 
 pub trait InvokeUiSession: Send + Sync + Clone + 'static + Sized + Default {
@@ -1060,9 +1021,9 @@ impl<T: InvokeUiSession> Interface for Session<T> {
     }
 
     fn msgbox(&self, msgtype: &str, title: &str, text: &str, link: &str) {
-        let direct = self.lc.read().unwrap().direct.unwrap_or_default();
+        let direct = self.lc.read().unwrap().direct;
         let received = self.lc.read().unwrap().received;
-        let retry_for_relay = direct && !received;
+        let retry_for_relay = direct == Some(true) && !received;
         let retry = check_if_retry(msgtype, title, text, retry_for_relay);
         self.ui_handler.msgbox(msgtype, title, text, link, retry);
     }
@@ -1119,7 +1080,6 @@ impl<T: InvokeUiSession> Interface for Session<T> {
                 "Connected, waiting for image...",
                 "",
             );
-            self.lc.write().unwrap().success_time = Some(tokio::time::Instant::now());
         }
         self.on_connected(self.lc.read().unwrap().conn_type);
         #[cfg(windows)]
@@ -1347,7 +1307,7 @@ async fn start_one_port_forward<T: InvokeUiSession>(
 }
 
 #[tokio::main(flavor = "current_thread")]
-async fn send_note(url: String, id: String, conn_id: i32, note: String) {
-    let body = serde_json::json!({ "id": id, "Id": conn_id, "note": note });
+async fn send_note(url: String, id: String, sid: u64, note: String) {
+    let body = serde_json::json!({ "id": id, "session_id": sid, "note": note });
     allow_err!(crate::post_request(url, body.to_string(), "").await);
 }
