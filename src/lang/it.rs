@@ -453,7 +453,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Voice call", "Chiamata vocale"),
         ("Text chat", "Chat testuale"),
         ("Stop voice call", "Interrompi chiamata vocale"),
-        ("relay_hint_tip", "Se non è possibile connettersi direttamente, puoi provare a farlo tramite relay.\nInoltre, se si vuoi usare il relay al primo tentativo, è possibile aggiungere all'ID il suffisso '/r\' o selezionare nella scheda peer l'opzione 'Collegati sempre tramite relay'."),
+        ("relay_hint_tip", "Se non è possibile connettersi direttamente, puoi provare a farlo tramite relay.\nInoltre, se si vuoi usare il relay al primo tentativo, è possibile aggiungere all'ID il suffisso '/r\' o selezionare nella scheda se esiste l'opzione 'Collegati sempre tramite relay'."),
         ("Reconnect", "Riconnetti"),
         ("Codec", "Codec"),
         ("Resolution", "Risoluzione"),
@@ -511,6 +511,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Collapse toolbar", "Comprimi barra strumenti"),
         ("Accept and Elevate", "Accetta ed eleva"),
         ("accept_and_elevate_btn_tooltip", "Accetta la connessione ed eleva le autorizzazioni UAC."),
-        ("clipboard_wait_response_timeout_tip", ""),
+        ("clipboard_wait_response_timeout_tip", "Timeout attesa risposta della copia."),
     ].iter().cloned().collect();
 }

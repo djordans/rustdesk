@@ -439,11 +439,16 @@ Future<bool?> loginDialog() async {
             }
             break;
           case HttpType.kAuthResTypeEmailCheck:
-            setState(() => isInProgress = false);
-            final res = await verificationCodeDialog(resp.user);
-            if (res == true) {
+            if (isMobile) {
               close(true);
-              return;
+              verificationCodeDialog(resp.user);
+            } else {
+              setState(() => isInProgress = false);
+              final res = await verificationCodeDialog(resp.user);
+              if (res == true) {
+                close(true);
+                return;
+              }
             }
             break;
           default:
@@ -517,7 +522,11 @@ Future<bool?> loginDialog() async {
             size: 25,
             // No need to handle the branch of null.
             // Because we can ensure the color is not null when debug.
-            color: Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.55),
+            color: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.color
+                ?.withOpacity(0.55),
           ),
           onTap: onDialogCancel,
           hoverColor: Colors.red,

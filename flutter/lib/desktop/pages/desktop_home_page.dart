@@ -329,7 +329,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           "Status",
           "There is a newer version available.",
           "Click to download", () async {
-        //final Uri url = Uri.parse('$urlapi$updateUrl');
+        //final Uri url = Uri.parse('$urlapi$updateUrl/download');
         setState(() {
          isInProgress = true;
         });

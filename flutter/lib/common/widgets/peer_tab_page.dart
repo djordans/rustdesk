@@ -104,7 +104,7 @@ class _PeerTabPageState extends State<PeerTabPage>
                   offstage: gFFI.peerTabModel.currentTab == 0,
                   child: PeerSortDropdown().marginOnly(left: 8),
                 ),
-                IconButton(
+                /*IconButton(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 2),
                   onPressed: () {
@@ -114,7 +114,7 @@ class _PeerTabPageState extends State<PeerTabPage>
                     Icons.refresh_rounded,
                   ),
                   tooltip: translate("Refresh address book"),
-                ),
+                ),*/
                 Offstage(
                   offstage: gFFI.peerTabModel.currentTab != 3,
                   child: InkWell(
