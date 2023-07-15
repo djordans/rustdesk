@@ -22,7 +22,7 @@ env:
   # vcpkg version: 2023.04.15
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
-  VERSION: "1.2.0"
+  VERSION: "1.2.1"
   NDK_VERSION: "r25c"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -377,6 +377,7 @@ jobs:
     uses: ./.github/workflows/bridge.yml
 
   build-rustdesk-ios:
+    if: ${{ inputs.upload-artifact }}
     needs: [generate-bridge-linux]
     name: build rustdesk ios ipa ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ${{ matrix.job.os }}
@@ -782,6 +783,7 @@ jobs:
           path: target/release/liblibrustdesk.so
 
   build-rustdesk-lib-linux-arm:
+    if: ${{ inputs.upload-artifact }}
     needs: [generate-bridge-linux, build-vcpkg-deps-linux]
     name: build-rust-lib ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ${{ matrix.job.os }}
@@ -944,6 +946,7 @@ jobs:
           path: target/release/liblibrustdesk.so
 
   build-rustdesk-sciter-arm:
+    if: ${{ inputs.upload-artifact }}
     needs: [build-vcpkg-deps-linux]
     name: build-rustdesk(sciter) ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ${{ matrix.job.os }}
@@ -1102,6 +1105,7 @@ jobs:
           path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
 
   build-rustdesk-linux-arm:
+    if: ${{ inputs.upload-artifact }}
     needs: [build-rustdesk-lib-linux-arm]
     name: build-rustdesk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ubuntu-20.04 # 20.04 has more performance on arm build
@@ -1126,7 +1130,7 @@ jobs:
           # - {
           #     arch: aarch64,
           #     target: aarch64-unknown-linux-gnu,
-          #     os: ubuntu-18.04, # just for naming package, not running host
+          #     os: ubuntu-20.04, # just for naming package, not running host
           #     use-cross: true,
           #     extra-build-features: "flatpak",
           #   }
@@ -1229,7 +1233,7 @@ jobs:
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
             mkdir -p /opt/artifacts/rpm
             for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-fedora28-centos8.rpm" 
+                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm" 
             done
             # rpm suse package
             echo -e "start packaging suse package"
@@ -1354,7 +1358,7 @@ jobs:
       #     files: |
       #       res/rustdesk*.zst
 
-      - name: Publish fedora28/centos8 package
+      - name: Publish fedora package
         if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
@@ -1453,7 +1457,7 @@ jobs:
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
             mkdir -p /opt/artifacts/rpm
             for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-fedora28-centos8.rpm" 
+                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm" 
             done
             # rpm suse package
             pushd /workspace
@@ -1568,7 +1572,7 @@ jobs:
           files: |
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
-      - name: Publish fedora28/centos8 package
+      - name: Publish fedora package
         if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
         with:
@@ -1587,7 +1591,7 @@ jobs:
   #     fail-fast: false
   #     matrix:
   #       job:
-  #         # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-18.04, arch: arm64 }
+  #         # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-20.04, arch: arm64 }
   #         - { target: aarch64-unknown-linux-gnu, os: ubuntu-20.04, arch: arm64  }
   #   steps:
   #     - name: Checkout source code
@@ -1608,7 +1612,7 @@ jobs:
   #       id: rpm
   #       with:
   #         arch: ${{ matrix.job.arch }}
-  #         distro: ubuntu18.04
+  #         distro: ubuntu20.04
   #         githubToken: ${{ github.token }}
   #         setup: |
   #           ls -l "${PWD}"

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
 import 'package:get/get.dart';
@@ -35,7 +36,9 @@ class ConnectionPage extends StatefulWidget implements PageShape {
 class _ConnectionPageState extends State<ConnectionPage> {
   /// Controller for the id input bar.
   final _idController = IDTextEditingController();
-  Timer? _updateTimer;
+  Timer? _updateTimer;  
+  final RxBool _idEmpty = true.obs;
+
   /// Update url. If it's not null, means an update is available.
   var _updateUrl = '';
 
@@ -60,6 +63,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
     }
     _updateTimer = periodic_immediate(Duration(minutes: 2), () async {
       HeartBeat();
+    });
+
+    _idController.addListener(() {
+      _idEmpty.value = _idController.text.isEmpty;
     });
   }
 
@@ -143,7 +150,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.only(left: 16, right: 16),
-                  child: TextField(
+                  child: AutoSizeTextField(
+                    minFontSize: 18,
                     autocorrect: false,
                     enableSuggestions: false,
                     keyboardType: TextInputType.visiblePassword,
@@ -175,6 +183,14 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   ),
                 ),
               ),
+              Obx(() => Offstage(
+                    offstage: _idEmpty.value,
+                    child: IconButton(
+                        onPressed: () {
+                          _idController.clear();
+                        },
+                        icon: Icon(Icons.clear, color: MyTheme.darkGray)),
+                  )),
               SizedBox(
                 width: 60,
                 height: 60,
@@ -279,7 +295,7 @@ class _WebMenuState extends State<WebMenu> {
             if (gFFI.userModel.userName.value.isEmpty) {
               loginDialog();
             } else {
-              gFFI.userModel.logOut();
+              logOutConfirmDialog();
             }
           }
           if (value == 'scan') {
