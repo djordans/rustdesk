@@ -5,6 +5,7 @@ import 'package:flutter_hbb/mobile/pages/settings_page.dart';
 import 'package:get/get.dart';
 import '../../common.dart';
 import 'connection_page.dart';
+import '../../common/widgets/chat_page.dart';
 
 abstract class PageShape extends Widget {
   final String title = "";
