@@ -91,7 +91,6 @@ class RustDeskMultiWindowManager {
       "id": remoteId,
       "password": password,
       "forceRelay": forceRelay,
-      "password": password,
     });
 
     try {
@@ -127,7 +126,6 @@ class RustDeskMultiWindowManager {
       "isRDP": isRDP,
       "password": password,
       "forceRelay": forceRelay,
-      "password": password,
     });
 
     try {
