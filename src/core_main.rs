@@ -245,8 +245,11 @@ pub fn core_main() -> Option<Vec<String>> {
                 if crate::platform::is_installed()
                     && crate::platform::check_super_user_permission().unwrap_or_default()
                 {
-                    crate::ipc::set_permanent_password(args[1].to_owned()).unwrap();
-                    my_println!("Done!");
+                    if let Err(err) = crate::ipc::set_permanent_password(args[1].to_owned()) {
+                        my_println!("{err}");
+                    } else {
+                        my_println!("Done!");
+                    }
                 } else {
                     my_println!("Installation and administrative privileges required!");
                 }
@@ -278,12 +281,11 @@ pub fn core_main() -> Option<Vec<String>> {
             }
             return None;
         } else if args[0] == "--config" {
-            if args.len() == 2 {
+            if args.len() == 2 && !args[0].contains("host=") {
                 if crate::platform::is_installed()
                     && crate::platform::check_super_user_permission().unwrap_or_default()
                 {
-                    // arg: starting with `host=`, e.g. `host=127.0.0.1,api=https://test.com,key=asfs`,
-                    // or the filename (without ext) used in renaming exe.
+                    // encrypted string used in renaming exe.
                     let name = if args[1].ends_with(".exe") {
                         args[1].to_owned()
                     } else {
