@@ -1284,6 +1284,15 @@ bool mainGetBoolOptionSync(String key) {
   return option2bool(key, bind.mainGetOptionSync(key: key));
 }
 
+mainSetLocalBoolOption(String key, bool value) async {
+  String v = bool2option(key, value);
+  await bind.mainSetLocalOption(key: key, value: v);
+}
+
+bool mainGetLocalBoolOptionSync(String key) {
+  return option2bool(key, bind.mainGetLocalOption(key: key));
+}
+
 Future<bool> matchPeer(String searchText, Peer peer) async {
   if (searchText.isEmpty) {
     return true;
@@ -1396,6 +1405,17 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
       sz = frame.size;
       isMaximized = await wc.isMaximized();
       break;
+  }
+  if (Platform.isWindows) {
+    const kMinOffset = -10000;
+    const kMaxOffset = 10000;
+    if (position.dx < kMinOffset ||
+        position.dy < kMinOffset ||
+        position.dx > kMaxOffset ||
+        position.dy > kMaxOffset) {
+      debugPrint("Invalid position: $position, ignore saving position");
+      return;
+    }
   }
 
   final pos = LastWindowPosition(

@@ -312,20 +312,23 @@ class _GeneralState extends State<_General> {
   }
 
   Widget other() {
-    return _Card(title: 'Other', children: [
+    final children = [
       _OptionCheckBox(context, 'Confirm before closing multiple tabs',
-          'enable-confirm-closing-tabs'),
-      _OptionCheckBox(context, 'Adaptive Bitrate', 'enable-abr'),
-      if (Platform.isLinux)
-        Tooltip(
-          message: translate('software_render_tip'),
-          child: _OptionCheckBox(
-            context,
-            "Always use software rendering",
-            'allow-always-software-render',
-          ),
-        )
-    ]);
+          'enable-confirm-closing-tabs',
+          isServer: false),
+      _OptionCheckBox(context, 'Adaptive Bitrate', 'enable-abr')
+    ];
+    // though this is related to GUI, but opengl problem affects all users, so put in config rather than local
+    children.add(Tooltip(
+      message: translate('software_render_tip'),
+      child: _OptionCheckBox(context, "Always use software rendering",
+          'allow-always-software-render'),
+    ));
+    if (bind.mainShowOption(key: 'allow-linux-headless')) {
+      children.add(_OptionCheckBox(
+          context, 'Allow linux headless', 'allow-linux-headless'));
+    }
+    return _Card(title: 'Other', children: children);
   }
 
   Widget hwcodec() {
@@ -1740,15 +1743,20 @@ Widget _OptionCheckBox(BuildContext context, String label, String key,
     bool reverse = false,
     bool enabled = true,
     Icon? checkedIcon,
-    bool? fakeValue}) {
-  bool value = mainGetBoolOptionSync(key);
+    bool? fakeValue,
+    bool isServer = true}) {
+  bool value =
+      isServer ? mainGetBoolOptionSync(key) : mainGetLocalBoolOptionSync(key);
   if (reverse) value = !value;
   var ref = value.obs;
   onChanged(option) async {
     if (option != null) {
+      ref.value = option;
       if (reverse) option = !option;
-      await mainSetBoolOption(key, option);
-      ref.value = mainGetBoolOptionSync(key);
+      isServer
+          ? await mainSetBoolOption(key, option)
+          : await mainSetLocalBoolOption(key, option);
+      ;
       update?.call();
     }
   }

@@ -44,7 +44,7 @@ class AbModel {
       abLoading.value = true;
       abError.value = "";
     }
-    final api = "${await bind.mainGetApiServer()}/api/ab/get";
+    final api = "${await bind.mainGetApiServer()}/api/ab";
     try {
       var authHeaders = getHttpHeaders();
       authHeaders['Content-Type'] = "application/json";
@@ -140,7 +140,8 @@ class AbModel {
       "data": jsonEncode({"tags": tags, "peers": peersJsonData})
     });
     var request = http.Request('POST', Uri.parse(api));
-    if (licensedDevices > 0) {
+    // support compression
+    if (licensedDevices > 0 && body.length > 1024) {
       authHeaders['Content-Encoding'] = "gzip";
       request.bodyBytes = GZipCodec().encode(utf8.encode(body));
     } else {

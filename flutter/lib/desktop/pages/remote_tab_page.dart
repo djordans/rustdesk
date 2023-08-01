@@ -171,7 +171,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
                     connectionType.secure.value == ConnectionType.strSecure;
                 bool direct =
                     connectionType.direct.value == ConnectionType.strDirect;
-                var msgConn = '';
+                String msgConn;
                 if (secure && direct) {
                   msgConn = translate("Direct and encrypted connection");
                 } else if (secure && !direct) {
@@ -359,7 +359,7 @@ class _ConnectionTabPageState extends State<ConnectionTabPage> {
     } else {
       final opt = "enable-confirm-closing-tabs";
       final bool res;
-      if (!option2bool(opt, await bind.mainGetOption(key: opt))) {
+      if (!option2bool(opt, await bind.mainGetLocalOption(key: opt))) {
         res = true;
       } else {
         res = await closeConfirmDialog();
