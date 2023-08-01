@@ -799,8 +799,7 @@ class RecentPeerCard extends BasePeerCard {
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
-      menuItems.add(_wolAction(peer.id));
-      if (Platform.isWindows) {
+        if (Platform.isWindows) {
         menuItems.add(_createShortCutAction(peer.id));
       }
       menuItems.add(MenuEntryDivider());
@@ -853,8 +852,7 @@ class FavoritePeerCard extends BasePeerCard {
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
-      menuItems.add(_wolAction(peer.id));
-      if (Platform.isWindows) {
+        if (Platform.isWindows) {
         menuItems.add(_createShortCutAction(peer.id));
       }
       menuItems.add(MenuEntryDivider());
@@ -957,8 +955,7 @@ class AddressBookPeerCard extends BasePeerCard {
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
-      menuItems.add(_wolAction(peer.id));
-      if (Platform.isWindows) {
+        if (Platform.isWindows) {
         menuItems.add(_createShortCutAction(peer.id));
       }
       menuItems.add(MenuEntryDivider());
@@ -1099,7 +1096,6 @@ class MyGroupPeerCard extends BasePeerCard {
     if (peer.platform == 'Windows') {
       menuItems.add(_rdpAction(context, peer.id));
     }
-    menuItems.add(_wolAction(peer.id));
     if (Platform.isWindows) {
       menuItems.add(_createShortCutAction(peer.id));
     }
