@@ -231,7 +231,8 @@ class AbModel {
           tags: p.tags,
           forceAlwaysRelay: r.forceAlwaysRelay,
           rdpPort: r.rdpPort,
-          rdpUsername: r.rdpUsername);
+          rdpUsername: r.rdpUsername,
+          password: r.password);
     }
 
     bool shouldSync(Peer a, Peer b) {
