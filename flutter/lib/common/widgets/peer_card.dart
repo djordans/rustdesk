@@ -70,10 +70,10 @@ class _PeerCardState extends State<_PeerCard>
               if (peerTabModel.multiSelectionMode) {
                 peerTabModel.togglePeerSelect(peer);
               } else {
-                if (!isWebDesktop) connect(context, peer.id);
+                if (!isWebDesktop) connect(context, peer.id,password: peer.password);
               }
             },
-            onDoubleTap: isWebDesktop ? () => connect(context, peer.id) : null,
+            onDoubleTap: isWebDesktop ? () => connect(context, peer.id , password: peer.password) : null,
             onLongPress: () {
               peerTabModel.togglePeerSelect(peer);
             },
