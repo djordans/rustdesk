@@ -61,7 +61,7 @@ class AbModel {
       authHeaders['Accept-Encoding'] = "gzip";
       final resp = await http.get(Uri.parse(api), headers: authHeaders);
       if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-        Map<String, dynamic> json = jsonDecode(resp.body);
+        Map<String, dynamic> json = jsonDecode(utf8.decode(resp.bodyBytes));
         if (json.containsKey('error')) {
           abError.value = json['error'];
         } else if (json.containsKey('data')) {
@@ -132,6 +132,12 @@ class AbModel {
     peers.add(peer);
   }
 
+  void addPeers(List<Peer> ps) {
+    for (var p in ps) {
+      addPeer(p);
+    }
+  }
+
   void addTag(String tag) async {
     if (tagContainBy(tag)) {
       return;
@@ -145,6 +151,14 @@ class AbModel {
       return;
     }
     it.first.tags = tags;
+  }
+
+  void changeTagForPeers(List<String> ids, List<dynamic> tags) {
+    peers.map((e) {
+      if (ids.contains(e.id)) {
+        e.tags = tags;
+      }
+    }).toList();
   }
 
   Future<void> pushAb() async {
@@ -191,6 +205,10 @@ class AbModel {
 
   void deletePeer(String id) {
     peers.removeWhere((element) => element.id == id);
+  }
+
+  void deletePeers(List<String> ids) {
+    peers.removeWhere((e) => ids.contains(e.id));
   }
 
   void deleteTag(String tag) {
