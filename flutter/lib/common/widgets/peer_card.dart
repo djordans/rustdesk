@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hbb/common/widgets/address_book.dart';
 import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/models/peer_tab_model.dart';
@@ -399,10 +398,15 @@ abstract class BasePeerCard extends StatelessWidget {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(BuildContext context);
 
   MenuEntryBase<String> _connectCommonAction(
-      BuildContext context, String id, String title,
-      {bool isFileTransfer = false,
-      bool isTcpTunneling = false,
-      bool isRDP = false, String password = ''}) {
+    BuildContext context,
+    String id,
+    String title, {
+    bool isFileTransfer = false,
+    bool isTcpTunneling = false,
+    bool isRDP = false, 
+    String password = '',
+    bool forceSeparateWindow = false,
+  }) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
         title,
@@ -416,6 +420,7 @@ abstract class BasePeerCard extends StatelessWidget {
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
           password: password,
+          forceSeparateWindow: forceSeparateWindow,
         );
       },
       padding: menuPadding,
@@ -424,14 +429,27 @@ abstract class BasePeerCard extends StatelessWidget {
   }
 
   @protected
-  MenuEntryBase<String> _connectAction(BuildContext context, Peer peer) {
+  List<MenuEntryBase<String>> _connectActions(BuildContext context, Peer peer) {
+    final actions = [_connectAction(context, peer, false)];
+    if (!mainGetLocalBoolOptionSync(kOptionSeparateRemoteWindow)) {
+      actions.add(_connectAction(context, peer, true));
+    }
+    return actions;
+  }
+
+  @protected
+  MenuEntryBase<String> _connectAction(
+      BuildContext context, Peer peer, bool forceSeparateWindow) {
     return _connectCommonAction(
-        context,
-        peer.id,
-        peer.alias.isEmpty
-            ? translate('Connect')
-            : "${translate('Connect')} ${peer.id}",
-        password: peer.password);
+      context,
+      peer.id,
+      (peer.alias.isEmpty
+              ? translate('Connect')
+              : '${translate('Connect')} ${peer.id}') +
+          (forceSeparateWindow ? ' (${translate('separate window')})' : ''),
+      forceSeparateWindow: forceSeparateWindow,
+      password: peer.password,
+    );
   }
 
   @protected
@@ -798,7 +816,7 @@ class RecentPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context, peer),
+      ..._connectActions(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
@@ -854,7 +872,7 @@ class FavoritePeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context, peer),
+      ..._connectActions(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
@@ -905,7 +923,7 @@ class DiscoveredPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context, peer),
+      ..._connectActions(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
@@ -957,7 +975,7 @@ class AddressBookPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context, peer),
+      ..._connectActions(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
@@ -1021,7 +1039,7 @@ class MyGroupPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      _connectAction(context, peer),
+      ..._connectActions(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if (isDesktop && peer.platform != 'Android') {

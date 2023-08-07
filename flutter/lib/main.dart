@@ -204,7 +204,7 @@ void runMultiWindow(
   switch (appType) {
     case kAppTypeDesktopRemote:
       await restoreWindowPosition(WindowType.RemoteDesktop,
-          windowId: kWindowId!);
+          windowId: kWindowId!, peerId: argument['id'] as String?);
       break;
     case kAppTypeDesktopFileTransfer:
       await restoreWindowPosition(WindowType.FileTransfer,
@@ -257,7 +257,7 @@ showCmWindow({bool isStartup = false}) async {
       await windowManager.minimize(); //needed
       await windowManager.setSizeAlignment(
           kConnectionManagerWindowSizeClosedChat, Alignment.topRight);
-      window_on_top(null);
+      windowOnTop(null);
     }
   }
 }

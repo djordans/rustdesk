@@ -15,7 +15,7 @@ use flutter_rust_bridge::{StreamSink, SyncReturn};
 use hbb_common::allow_err;
 use hbb_common::{
     config::{self, LocalConfig, PeerConfig, PeerInfoSerde},
-    fs, log,
+    fs, lazy_static, log,
     message_proto::KeyboardMode,
     ResultType,
 };
@@ -24,10 +24,18 @@ use std::{
     ffi::{CStr, CString},
     os::raw::c_char,
     str::FromStr,
+    sync::{
+        atomic::{AtomicI32, Ordering},
+        Arc,
+    },
     time::SystemTime,
 };
 
 pub type SessionID = uuid::Uuid;
+
+lazy_static::lazy_static! {
+    static ref TEXTURE_RENDER_KEY: Arc<AtomicI32> = Arc::new(AtomicI32::new(0));
+}
 
 fn initialize(app_dir: &str) {
     *config::APP_DIR.write().unwrap() = app_dir.to_owned();
@@ -197,6 +205,30 @@ pub fn session_set_flutter_config(session_id: SessionID, k: String, v: String) {
     }
 }
 
+pub fn session_get_flutter_config_by_peer_id(id: String, k: String) -> Option<String> {
+    if let Some((_, session)) = SESSIONS.read().unwrap().iter().find(|(_, s)| s.id == id) {
+        Some(session.get_flutter_config(k))
+    } else {
+        None
+    }
+}
+
+pub fn session_set_flutter_config_by_peer_id(id: String, k: String, v: String) {
+    if let Some((_, session)) = SESSIONS
+        .write()
+        .unwrap()
+        .iter_mut()
+        .find(|(_, s)| s.id == id)
+    {
+        session.save_flutter_config(k, v);
+    }
+}
+
+pub fn get_next_texture_key() -> SyncReturn<i32> {
+    let k = TEXTURE_RENDER_KEY.fetch_add(1, Ordering::SeqCst) + 1;
+    SyncReturn(k)
+}
+
 pub fn get_local_flutter_config(k: String) -> SyncReturn<String> {
     SyncReturn(ui_interface::get_local_flutter_config(k))
 }
@@ -357,6 +389,7 @@ pub fn session_enter_or_leave(_session_id: SessionID, _enter: bool) -> SyncRetur
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     if let Some(session) = SESSIONS.read().unwrap().get(&_session_id) {
         if _enter {
+            set_cur_session_id(_session_id);
             session.enter();
         } else {
             session.leave();
@@ -566,6 +599,14 @@ pub fn session_switch_sides(session_id: SessionID) {
 pub fn session_change_resolution(session_id: SessionID, display: i32, width: i32, height: i32) {
     if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
         session.change_resolution(display, width, height);
+    }
+}
+
+pub fn session_ready_to_new_window(session_id: SessionID) {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    if let Some(session) = SESSIONS.write().unwrap().get_mut(&session_id) {
+        session.restore_flutter_cache();
+        session.refresh_video();
     }
 }
 
@@ -914,15 +955,12 @@ pub fn main_remove_discovered(id: String) {
 }
 
 fn main_broadcast_message(data: &HashMap<&str, &str>) {
-    let apps = vec![
-        flutter::APP_TYPE_DESKTOP_REMOTE,
-        flutter::APP_TYPE_DESKTOP_FILE_TRANSFER,
-        flutter::APP_TYPE_DESKTOP_PORT_FORWARD,
-    ];
-
     let event = serde_json::ser::to_string(&data).unwrap_or("".to_owned());
-    for app in apps {
-        let _res = flutter::push_global_event(app, event.clone());
+    for app in flutter::get_global_event_channels() {
+        if app == flutter::APP_TYPE_MAIN || app == flutter::APP_TYPE_CM {
+            continue;
+        }
+        let _res = flutter::push_global_event(&app, event.clone());
     }
 }
 
