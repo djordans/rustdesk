@@ -852,8 +852,9 @@ class RecentPeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
+     }
     return menuItems;
-  }
+      }
 
   @protected
   @override
@@ -903,6 +904,7 @@ class FavoritePeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
+    }
     return menuItems;
   }
 
@@ -955,6 +957,7 @@ class DiscoveredPeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
+    }
     return menuItems;
   }
 
@@ -1000,8 +1003,8 @@ class AddressBookPeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
+    }
     return menuItems;
-    
   }
 
   @protected
@@ -1028,8 +1031,7 @@ class AddressBookPeerCard extends BasePeerCard {
 }
 
 class MyGroupPeerCard extends BasePeerCard {
-  MyGroupPeerCard({required Peer peer, EdgeInsets? menuPadding, Key? key})
-      : super(
+  MyGroupPeerCard({required Peer peer, EdgeInsets? menuPadding, Key? key}) : super(
             peer: peer,
             tab: PeerTabIndex.group,
             menuPadding: menuPadding,
