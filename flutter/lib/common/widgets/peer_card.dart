@@ -61,20 +61,19 @@ class _PeerCardState extends State<_PeerCard>
     final name =
         '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
     final PeerTabModel peerTabModel = Provider.of(context);
-    final selected = peerTabModel.isPeerSelected(peer.id);
     return Card(
         margin: EdgeInsets.symmetric(horizontal: 2),
         child: GestureDetector(
             onTap: () {
               if (peerTabModel.multiSelectionMode) {
-                peerTabModel.togglePeerSelect(peer);
+                peerTabModel.select(peer);
               } else {
                 if (!isWebDesktop) connect(context, peer.id,password: peer.password);
               }
             },
             onDoubleTap: isWebDesktop ? () => connect(context, peer.id , password: peer.password) : null,
             onLongPress: () {
-              peerTabModel.togglePeerSelect(peer);
+              peerTabModel.select(peer);
             },
             child: Container(
               padding: EdgeInsets.only(left: 12, top: 8, bottom: 8),
@@ -103,23 +102,7 @@ class _PeerCardState extends State<_PeerCard>
                       ],
                     ).paddingOnly(left: 8.0),
                   ),
-                  selected
-                      ? Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: checkBox(),
-                        )
-                      : InkWell(
-                          child: const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: Icon(Icons.more_vert)),
-                          onTapDown: (e) {
-                            final x = e.globalPosition.dx;
-                            final y = e.globalPosition.dy;
-                            _menuPos = RelativeRect.fromLTRB(x, y, x, y);
-                          },
-                          onTap: () {
-                            _showPeerMenu(peer.id);
-                          }),
+                  checkBoxOrActionMoreMobile(peer),
                 ],
               ),
             )));
@@ -156,18 +139,12 @@ class _PeerCardState extends State<_PeerCard>
         );
       },
       child: GestureDetector(
-          onDoubleTap: peerTabModel.multiSelectionMode
-              ? null
-              : () => widget.connect(context, peer.id),
-          onLongPress: () {
-            peerTabModel.togglePeerSelect(peer);
-          },
-          onSecondaryTapDown: (_) {
-            peerTabModel.togglePeerSelect(peer);
-          },
-          onTap: peerTabModel.multiSelectionMode
-              ? () => peerTabModel.togglePeerSelect(peer)
-              : null,
+          onDoubleTap:
+              peerTabModel.multiSelectionMode || peerTabModel.isShiftDown
+                  ? null
+                  : () => widget.connect(context, peer.id),
+          onTap: () => peerTabModel.select(peer),
+          onLongPress: () => peerTabModel.select(peer),
           child: Obx(() => peerCardUiType.value == PeerUiType.grid
               ? _buildPeerCard(context, peer, deco)
               : _buildPeerTile(context, peer, deco))),
@@ -176,8 +153,6 @@ class _PeerCardState extends State<_PeerCard>
 
   Widget _buildPeerTile(
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
-    final PeerTabModel peerTabModel = Provider.of(context);
-    final selected = peerTabModel.isPeerSelected(peer.id);
     final name =
         '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
     final greyStyle = TextStyle(
@@ -237,7 +212,7 @@ class _PeerCardState extends State<_PeerCard>
                         ],
                       ).marginOnly(top: 2),
                     ),
-                    selected ? checkBox() : _actionMore(peer),
+                    checkBoxOrActionMoreDesktop(peer),
                   ],
                 ).paddingOnly(left: 10.0, top: 3.0),
               ),
@@ -250,8 +225,6 @@ class _PeerCardState extends State<_PeerCard>
 
   Widget _buildPeerCard(
       BuildContext context, Peer peer, Rx<BoxDecoration?> deco) {
-    final PeerTabModel peerTabModel = Provider.of(context);
-    final selected = peerTabModel.isPeerSelected(peer.id);
     final name =
         '${peer.username}${peer.username.isNotEmpty && peer.hostname.isNotEmpty ? '@' : ''}${peer.hostname}';
     return Card(
@@ -321,7 +294,7 @@ class _PeerCardState extends State<_PeerCard>
                           style: Theme.of(context).textTheme.titleSmall,
                         )),
                       ]).paddingSymmetric(vertical: 8)),
-                      selected ? checkBox() : _actionMore(peer),
+                      checkBoxOrActionMoreDesktop(peer),
                     ],
                   ).paddingSymmetric(horizontal: 12.0),
                 )
@@ -333,11 +306,57 @@ class _PeerCardState extends State<_PeerCard>
     );
   }
 
-  Widget checkBox() {
-    return Icon(
-      Icons.check_box,
-      color: MyTheme.accent,
-    );
+  Widget checkBoxOrActionMoreMobile(Peer peer) {
+    final PeerTabModel peerTabModel = Provider.of(context);
+    final selected = peerTabModel.isPeerSelected(peer.id);
+    if (peerTabModel.multiSelectionMode) {
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: selected
+            ? Icon(
+                Icons.check_box,
+                color: MyTheme.accent,
+              )
+            : Icon(Icons.check_box_outline_blank),
+      );
+    } else {
+      return InkWell(
+          child: const Padding(
+              padding: EdgeInsets.all(12), child: Icon(Icons.more_vert)),
+          onTapDown: (e) {
+            final x = e.globalPosition.dx;
+            final y = e.globalPosition.dy;
+            _menuPos = RelativeRect.fromLTRB(x, y, x, y);
+          },
+          onTap: () {
+            _showPeerMenu(peer.id);
+          });
+    }
+  }
+
+  Widget checkBoxOrActionMoreDesktop(Peer peer) {
+    final PeerTabModel peerTabModel = Provider.of(context);
+    final selected = peerTabModel.isPeerSelected(peer.id);
+    if (peerTabModel.multiSelectionMode) {
+      final icon = selected
+          ? Icon(
+              Icons.check_box,
+              color: MyTheme.accent,
+            )
+          : Icon(Icons.check_box_outline_blank);
+      bool last = peerTabModel.isShiftDown && peer.id == peerTabModel.lastId;
+      if (last) {
+        return Container(
+          decoration: BoxDecoration(
+              border: Border.all(color: MyTheme.accent, width: 1)),
+          child: icon,
+        );
+      } else {
+        return icon;
+      }
+    } else {
+      return _actionMore(peer);
+    }
   }
 
   Widget _actionMore(Peer peer) => Listener(
@@ -405,7 +424,6 @@ abstract class BasePeerCard extends StatelessWidget {
     bool isTcpTunneling = false,
     bool isRDP = false, 
     String password = '',
-    bool forceSeparateWindow = false,
   }) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
@@ -420,7 +438,6 @@ abstract class BasePeerCard extends StatelessWidget {
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
           password: password,
-          forceSeparateWindow: forceSeparateWindow,
         );
       },
       padding: menuPadding,
@@ -429,25 +446,13 @@ abstract class BasePeerCard extends StatelessWidget {
   }
 
   @protected
-  List<MenuEntryBase<String>> _connectActions(BuildContext context, Peer peer) {
-    final actions = [_connectAction(context, peer, false)];
-    if (!mainGetLocalBoolOptionSync(kOptionSeparateRemoteWindow)) {
-      actions.add(_connectAction(context, peer, true));
-    }
-    return actions;
-  }
-
-  @protected
-  MenuEntryBase<String> _connectAction(
-      BuildContext context, Peer peer, bool forceSeparateWindow) {
+  MenuEntryBase<String> _connectAction(BuildContext context, Peer peer) {
     return _connectCommonAction(
       context,
       peer.id,
       (peer.alias.isEmpty
-              ? translate('Connect')
-              : '${translate('Connect')} ${peer.id}') +
-          (forceSeparateWindow ? ' (${translate('separate window')})' : ''),
-      forceSeparateWindow: forceSeparateWindow,
+          ? translate('Connect')
+          : '${translate('Connect')} ${peer.id}'),
       password: peer.password,
     );
   }
@@ -541,15 +546,40 @@ abstract class BasePeerCard extends StatelessWidget {
     );
   }
 
+  Future<MenuEntryBase<String>> _openNewConnInAction(
+      String id, String label, String key) async {
+    return MenuEntrySwitch<String>(
+      switchType: SwitchType.scheckbox,
+      text: translate(label),
+      getter: () async => mainGetPeerBoolOptionSync(id, key),
+      setter: (bool v) async {
+        await bind.mainSetPeerOption(
+            id: id, key: key, value: bool2option(key, v));
+      },
+      padding: menuPadding,
+      dismissOnClicked: true,
+    );
+  }
+
+  _openInTabsAction(String id) async =>
+      await _openNewConnInAction(id, 'Open in New Tab', kOptionOpenInTabs);
+
+  _openInWindowsAction(String id) async => await _openNewConnInAction(
+      id, 'Open in New Window', kOptionOpenInWindows);
+
+  _openNewConnInOptAction(String id) async =>
+      mainGetLocalBoolOptionSync(kOptionOpenNewConnInTabs)
+          ? await _openInWindowsAction(id)
+          : await _openInTabsAction(id);
+
   @protected
   Future<bool> _isForceAlwaysRelay(String id) async {
-    return (await bind.mainGetPeerOption(id: id, key: 'force-always-relay'))
+    return (await bind.mainGetPeerOption(id: id, key: kOptionForceAlwaysRelay))
         .isNotEmpty;
   }
 
   @protected
   Future<MenuEntryBase<String>> _forceAlwaysRelayAction(String id) async {
-    const option = 'force-always-relay';
     return MenuEntrySwitch<String>(
       switchType: SwitchType.scheckbox,
       text: translate('Always connect via relay'),
@@ -558,7 +588,9 @@ abstract class BasePeerCard extends StatelessWidget {
       },
       setter: (bool v) async {
         await bind.mainSetPeerOption(
-            id: id, key: option, value: bool2option(option, v));
+            id: id,
+            key: kOptionForceAlwaysRelay,
+            value: bool2option(kOptionForceAlwaysRelay, v));
       },
       padding: menuPadding,
       dismissOnClicked: true,
@@ -572,8 +604,16 @@ abstract class BasePeerCard extends StatelessWidget {
         translate('Rename'),
         style: style,
       ),
-      proc: () {
-        _rename(id);
+      proc: () async {
+        String oldName = await _getAlias(id);
+        renameDialog(
+            oldName: oldName,
+            onSubmit: (String newName) async {
+              if (newName != oldName) {
+                await bind.mainSetPeerAlias(id: id, alias: newName);
+                _update();
+              }
+            });
       },
       padding: menuPadding,
       dismissOnClicked: true,
@@ -626,7 +666,8 @@ abstract class BasePeerCard extends StatelessWidget {
           }
         }
 
-        deletePeerConfirmDialog(onSubmit);
+        deletePeerConfirmDialog(onSubmit,
+            '${translate('Delete')} "${peer.alias.isEmpty ? formatID(peer.id) : peer.alias}"?');
       },
       padding: menuPadding,
       dismissOnClicked: true,
@@ -742,64 +783,6 @@ abstract class BasePeerCard extends StatelessWidget {
   Future<String> _getAlias(String id) async =>
       await bind.mainGetPeerOption(id: id, key: 'alias');
 
-  void _rename(String id) async {
-    RxBool isInProgress = false.obs;
-    String name = await _getAlias(id);
-    var controller = TextEditingController(text: name);
-    gFFI.dialogManager.show((setState, close, context) {
-      submit() async {
-        isInProgress.value = true;
-        String name = controller.text.trim();
-        await bind.mainSetPeerAlias(id: id, alias: name);
-        _update();
-        close();
-        isInProgress.value = false;
-      }
-
-      return CustomAlertDialog(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.edit_rounded, color: MyTheme.accent),
-            Text(translate('Rename')).paddingOnly(left: 10),
-          ],
-        ),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              child: Form(
-                child: TextFormField(
-                  controller: controller,
-                  autofocus: true,
-                  decoration: InputDecoration(labelText: translate('Name')),
-                ),
-              ),
-            ),
-            Obx(() => Offstage(
-                offstage: isInProgress.isFalse,
-                child: const LinearProgressIndicator())),
-          ],
-        ),
-        actions: [
-          dialogButton(
-            "Cancel",
-            icon: Icon(Icons.close_rounded),
-            onPressed: close,
-            isOutline: true,
-          ),
-          dialogButton(
-            "OK",
-            icon: Icon(Icons.done_rounded),
-            onPressed: submit,
-          ),
-        ],
-        onSubmit: submit,
-        onCancel: close,
-      );
-    });
-  }
-
   @protected
   void _update();
 }
@@ -816,7 +799,7 @@ class RecentPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      ..._connectActions(context, peer),
+      _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
@@ -825,7 +808,8 @@ class RecentPeerCard extends BasePeerCard {
       if (isDesktop && peer.platform != 'Android') {
         menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    menuItems.add(await _forceAlwaysRelayAction(peer.id));
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
@@ -873,14 +857,15 @@ class FavoritePeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      ..._connectActions(context, peer),
+      _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
       if (isDesktop && peer.platform != 'Android') {
         menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    menuItems.add(await _forceAlwaysRelayAction(peer.id));
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
@@ -925,7 +910,7 @@ class DiscoveredPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      ..._connectActions(context, peer),
+      _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
@@ -934,7 +919,8 @@ class DiscoveredPeerCard extends BasePeerCard {
       if (isDesktop && peer.platform != 'Android') {
         menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    menuItems.add(await _forceAlwaysRelayAction(peer.id));
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
@@ -978,14 +964,15 @@ class AddressBookPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      ..._connectActions(context, peer),
+      _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if(gFFI.userModel.isAdmin.isTrue){
       if (isDesktop && peer.platform != 'Android') {
         menuItems.add(_tcpTunnelingAction(context, peer.id));
       }
-      menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    menuItems.add(await _forceAlwaysRelayAction(peer.id));
       if (peer.platform == 'Windows') {
         menuItems.add(_rdpAction(context, peer.id));
       }
@@ -1009,7 +996,7 @@ class AddressBookPeerCard extends BasePeerCard {
 
   @protected
   @override
-  void _update() => gFFI.abModel.pullAb();
+  void _update() => gFFI.abModel.pullAb(quiet: true);
 
   @protected
   MenuEntryBase<String> _editTagAction(String id) {
@@ -1041,12 +1028,13 @@ class MyGroupPeerCard extends BasePeerCard {
   Future<List<MenuEntryBase<String>>> _buildMenuItems(
       BuildContext context) async {
     final List<MenuEntryBase<String>> menuItems = [
-      ..._connectActions(context, peer),
+      _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
     if (isDesktop && peer.platform != 'Android') {
       menuItems.add(_tcpTunnelingAction(context, peer.id));
     }
+    // menuItems.add(await _openNewConnInOptAction(peer.id));
     menuItems.add(await _forceAlwaysRelayAction(peer.id));
     if (peer.platform == 'Windows') {
       menuItems.add(_rdpAction(context, peer.id));

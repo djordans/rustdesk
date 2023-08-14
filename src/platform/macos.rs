@@ -257,12 +257,11 @@ pub fn uninstall_service(show_new_window: bool) -> bool {
                             ))
                             .spawn()
                             .ok();
-                    } else {
-                        std::process::Command::new("pkill")
-                            .arg(crate::get_app_name())
-                            .status()
-                            .ok();
                     }
+                    std::process::Command::new("pkill")
+                        .arg(crate::get_app_name())
+                        .status()
+                        .ok();
                     quit_gui();
                 }
             }

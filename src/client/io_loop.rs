@@ -862,8 +862,10 @@ impl<T: InvokeUiSession> Remote<T> {
             transfer_metas.write_jobs.push(json_str);
         }
         log::info!("meta: {:?}", transfer_metas);
-        config.transfer = transfer_metas;
-        self.handler.save_config(config);
+        if config.transfer != transfer_metas {
+            config.transfer = transfer_metas;
+            self.handler.save_config(config);
+        }
         true
     }
 

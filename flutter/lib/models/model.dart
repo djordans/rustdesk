@@ -425,19 +425,19 @@ class FfiModel with ChangeNotifier {
       closeConnection();
     }
 
-    Future.delayed(Duration.zero, () async {
-      await dialogManager.show(
-        (setState, close, context) => CustomAlertDialog(
-            title: null,
-            content: SelectionArea(child: msgboxContent(type, title, text)),
-            actions: [
-              dialogButton("Cancel", onPressed: onClose, isOutline: true)
-            ],
-            onCancel: onClose),
-        tag: '$sessionId-waiting-for-image',
-      );
-      _waitForImageDialogShow[sessionId] = true;
-    });
+    if (_waitForFirstImage[sessionId] == false) return;
+    dialogManager.show(
+      (setState, close, context) => CustomAlertDialog(
+          title: null,
+          content: SelectionArea(child: msgboxContent(type, title, text)),
+          actions: [
+            dialogButton("Cancel", onPressed: onClose, isOutline: true)
+          ],
+          onCancel: onClose),
+      tag: '$sessionId-waiting-for-image',
+    );
+    _waitForImageDialogShow[sessionId] = true;
+    bind.sessionOnWaitingForImageDialogShow(sessionId: sessionId);
   }
 
   _updateSessionWidthHeight(SessionID sessionId) {
@@ -1532,12 +1532,13 @@ class RecordingModel with ChangeNotifier {
         sessionId: sessionId, start: true, width: width, height: height);
   }
 
-  toggle() {
+  toggle() async {
     if (isIOS) return;
     final sessionId = parent.target?.sessionId;
     if (sessionId == null) return;
     _start = !_start;
     notifyListeners();
+    await bind.sessionRecordStatus(sessionId: sessionId, status: _start);
     if (_start) {
       bind.sessionRefresh(sessionId: sessionId);
     } else {
@@ -1862,14 +1863,14 @@ Future<void> setCanvasConfig(
   p['yCanvas'] = yCanvas;
   p['scale'] = scale;
   p['currentDisplay'] = currentDisplay;
-  await bind.sessionSetFlutterConfig(
+  await bind.sessionSetFlutterOption(
       sessionId: sessionId, k: canvasKey, v: jsonEncode(p));
 }
 
 Future<Map<String, dynamic>?> getCanvasConfig(SessionID sessionId) async {
   if (!isWebDesktop) return null;
   var p =
-      await bind.sessionGetFlutterConfig(sessionId: sessionId, k: canvasKey);
+      await bind.sessionGetFlutterOption(sessionId: sessionId, k: canvasKey);
   if (p == null || p.isEmpty) return null;
   try {
     Map<String, dynamic> m = json.decode(p);
@@ -1901,10 +1902,5 @@ Future<void> initializeCursorAndCanvas(FFI ffi) async {
 }
 
 clearWaitingForImage(OverlayDialogManager? dialogManager, SessionID sessionId) {
-  final durations = [100, 500, 1000, 2000];
-  for (var duration in durations) {
-    Future.delayed(Duration(milliseconds: duration), () {
-      dialogManager?.dismissByTag('$sessionId-waiting-for-image');
-    });
-  }
+  dialogManager?.dismissByTag('$sessionId-waiting-for-image');
 }

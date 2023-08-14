@@ -68,6 +68,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
     _idController.addListener(() {
       _idEmpty.value = _idController.text.isEmpty;
     });
+    Get.put<IDTextEditingController>(_idController);
   }
 
   @override
@@ -215,6 +216,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
   void dispose() {
     _updateTimer?.cancel();
     _idController.dispose();
+    if (Get.isRegistered<IDTextEditingController>()) {
+      Get.delete<IDTextEditingController>();
+    }
     super.dispose();
   }
 }

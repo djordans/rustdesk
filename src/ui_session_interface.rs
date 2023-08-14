@@ -197,12 +197,12 @@ impl<T: InvokeUiSession> Session<T> {
         self.lc.write().unwrap().save_scroll_style(value);
     }
 
-    pub fn save_flutter_config(&mut self, k: String, v: String) {
+    pub fn save_flutter_option(&mut self, k: String, v: String) {
         self.lc.write().unwrap().save_ui_flutter(k, v);
     }
 
-    pub fn get_flutter_config(&self, k: String) -> String {
-        self.lc.write().unwrap().get_ui_flutter(&k)
+    pub fn get_flutter_option(&self, k: String) -> String {
+        self.lc.read().unwrap().get_ui_flutter(&k)
     }
 
     pub fn toggle_option(&mut self, name: String) {
@@ -238,6 +238,14 @@ impl<T: InvokeUiSession> Session<T> {
 
     pub fn record_screen(&self, start: bool, w: i32, h: i32) {
         self.send(Data::RecordScreen(start, w, h, self.id.clone()));
+    }
+
+    pub fn record_status(&self, status: bool) {
+        let mut misc = Misc::new();
+        misc.set_client_record_status(status);
+        let mut msg = Message::new();
+        msg.set_misc(misc);
+        self.send(Data::Message(msg));
     }
 
     pub fn save_custom_image_quality(&mut self, custom_image_quality: i32) {

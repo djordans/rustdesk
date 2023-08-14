@@ -64,7 +64,7 @@ class _PeerTabPageState extends State<PeerTabPage>
 
   @override
   void initState() {
-    final uiType = bind.getLocalFlutterConfig(k: 'peer-card-ui-type');
+    final uiType = bind.getLocalFlutterOption(k: 'peer-card-ui-type');
     if (uiType != '') {
       peerCardUiType.value = int.parse(uiType) == PeerUiType.list.index
           ? PeerUiType.list
@@ -103,6 +103,7 @@ class _PeerTabPageState extends State<PeerTabPage>
                 Expanded(child: _createSwitchBar(context)),
                 const PeerSearchBar().marginOnly(right: isMobile ? 0 : 13),
                 _createRefresh(),
+                _createMultiSelection(),
                 Offstage(
                     offstage: !isDesktop,
                     child: _createPeerViewTypeSwitch(context)),
@@ -131,10 +132,13 @@ class _PeerTabPageState extends State<PeerTabPage>
                             : BoxDecoration(
                                 color: Theme.of(context).colorScheme.background,
                                 borderRadius: BorderRadius.circular(6)),
-                        child: Icon(
-                          Icons.tag_rounded,
-                          size: 18,
-                        ))),
+                        child: Tooltip(
+                          message: translate('Toggle Tags'),
+                          child: Icon(
+                            Icons.tag_rounded,
+                            size: 18,
+                        ))
+                    )),
                     onTap: () async {
                       await bind.mainSetLocalOption(
                           key: "hideAbTagsPanel",
@@ -184,7 +188,7 @@ class _PeerTabPageState extends State<PeerTabPage>
                 ).paddingSymmetric(horizontal: 4),
                 onTap: () async {
                   await handleTabSelection(t);
-                  await bind.setLocalFlutterConfig(
+                  await bind.setLocalFlutterOption(
                       k: 'peer-tab-index', v: t.toString());
                 },
                 onHover: (value) => hover.value = value,
@@ -227,11 +231,14 @@ class _PeerTabPageState extends State<PeerTabPage>
             },
             child: RotatedBox(
                 quarterTurns: 2,
-                child: Icon(
-                  Icons.refresh,
-                  size: 18,
-                  color: textColor,
-                ))),
+                child: Tooltip(
+                  message: translate('Refresh'),
+                  child: Icon(
+                    Icons.refresh,
+                    size: 18,
+                    color: textColor,
+                ))
+            )),
       ),
     );
   }
@@ -254,17 +261,42 @@ class _PeerTabPageState extends State<PeerTabPage>
             onTap: () async {
               final type = types.elementAt(
                   peerCardUiType.value == types.elementAt(0) ? 1 : 0);
-              await bind.setLocalFlutterConfig(
+              await bind.setLocalFlutterOption(
                   k: 'peer-card-ui-type', v: type.index.toString());
               peerCardUiType.value = type;
             },
-            child: Icon(
-              peerCardUiType.value == PeerUiType.grid
-                  ? Icons.view_list_rounded
-                  : Icons.grid_view_rounded,
-              size: 18,
-              color: textColor,
-            )),
+            child: Tooltip(
+                message: peerCardUiType.value == PeerUiType.grid
+                    ? translate('List View')
+                    : translate('Grid View'),
+                child: Icon(
+                  peerCardUiType.value == PeerUiType.grid
+                      ? Icons.view_list_rounded
+                      : Icons.grid_view_rounded,
+                  size: 18,
+                  color: textColor,
+            ))
+        )),
+    );
+  }
+
+  Widget _createMultiSelection() {
+    final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final model = Provider.of<PeerTabModel>(context);
+    if (model.currentTabCachedPeers.isEmpty) return Offstage();
+    return Container(
+      padding: EdgeInsets.all(4.0),
+      child: InkWell(
+        onTap: () {
+          model.setMultiSelectionMode(true);
+        },
+        child: Tooltip(
+          message: translate('Select'),
+          child: Icon(
+            IconFont.checkbox,
+            size: 18,
+            color: textColor,
+          )),
       ),
     );
   }
@@ -319,11 +351,11 @@ class _PeerTabPageState extends State<PeerTabPage>
               default:
                 break;
             }
-            gFFI.peerTabModel.closeSelection();
+            gFFI.peerTabModel.setMultiSelectionMode(false);
             showToast(translate('Successful'));
           }
 
-          deletePeerConfirmDialog(onSubmit);
+          deletePeerConfirmDialog(onSubmit, translate('Delete'));
         },
         child: Tooltip(
             message: translate('Delete'),
@@ -345,7 +377,7 @@ class _PeerTabPageState extends State<PeerTabPage>
             }
           }
           await bind.mainStoreFav(favs: favs);
-          gFFI.peerTabModel.closeSelection();
+          model.setMultiSelectionMode(false);
           showToast(translate('Successful'));
         },
         child: Tooltip(
@@ -366,7 +398,7 @@ class _PeerTabPageState extends State<PeerTabPage>
           final peers = model.selectedPeers;
           gFFI.abModel.addPeers(peers);
           gFFI.abModel.pushAb();
-          gFFI.peerTabModel.closeSelection();
+          model.setMultiSelectionMode(false);
           showToast(translate('Successful'));
         },
         child: Tooltip(
@@ -390,7 +422,7 @@ class _PeerTabPageState extends State<PeerTabPage>
                   gFFI.abModel.changeTagForPeers(
                       peers.map((p) => p.id).toList(), selectedTags);
                   gFFI.abModel.pushAb();
-                  gFFI.peerTabModel.closeSelection();
+                  model.setMultiSelectionMode(false);
                   showToast(translate('Successful'));
                 });
               },
@@ -427,7 +459,7 @@ class _PeerTabPageState extends State<PeerTabPage>
     final model = Provider.of<PeerTabModel>(context);
     return InkWell(
             onTap: () {
-              model.closeSelection();
+              model.setMultiSelectionMode(false);
             },
             child:
                 Tooltip(message: translate('Close'), child: Icon(Icons.clear)))
@@ -457,10 +489,13 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
                 drawer = true;
               });
             },
-            icon: Icon(
-              Icons.search_rounded,
-              color: Theme.of(context).hintColor,
-            ));
+            icon: Tooltip(
+                message: translate('Search'),
+                child: Icon(
+                  Icons.search_rounded,
+                  color: Theme.of(context).hintColor,
+            ))
+          );
   }
 
   Widget _buildSearchBar() {
@@ -528,10 +563,14 @@ class _PeerSearchBarState extends State<PeerSearchBar> {
                             drawer = false;
                           });
                         },
-                        icon: Icon(
-                          Icons.close,
-                          color: Theme.of(context).hintColor,
+                        icon: Tooltip(
+                            message: translate('Close'),
+                            child:
+                            Icon(
+                              Icons.close,
+                              color: Theme.of(context).hintColor,
                         )),
+                    ),
                   ],
                 ),
               )
@@ -553,7 +592,7 @@ class _PeerSortDropdownState extends State<PeerSortDropdown> {
   void initState() {
     if (!PeerSortType.values.contains(peerSort.value)) {
       peerSort.value = PeerSortType.remoteId;
-      bind.setLocalFlutterConfig(
+      bind.setLocalFlutterOption(
         k: "peer-sorting",
         v: peerSort.value,
       );
@@ -583,7 +622,7 @@ class _PeerSortDropdownState extends State<PeerSortDropdown> {
                       dense: true, (String? v) async {
                     if (v != null) {
                       peerSort.value = v;
-                      await bind.setLocalFlutterConfig(
+                      await bind.setLocalFlutterOption(
                         k: "peer-sorting",
                         v: peerSort.value,
                       );
@@ -595,10 +634,12 @@ class _PeerSortDropdownState extends State<PeerSortDropdown> {
 
     var menuPos = RelativeRect.fromLTRB(0, 0, 0, 0);
     return InkWell(
-      child: Icon(
-        Icons.sort_rounded,
-        size: 18,
-      ),
+      child: Tooltip(
+          message: translate('Sort By'),
+          child: Icon(
+            Icons.sort_rounded,
+            size: 18,
+      )),
       onTapDown: (details) {
         final x = details.globalPosition.dx;
         final y = details.globalPosition.dy;

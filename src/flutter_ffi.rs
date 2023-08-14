@@ -174,6 +174,12 @@ pub fn session_record_screen(session_id: SessionID, start: bool, width: usize, h
     }
 }
 
+pub fn session_record_status(session_id: SessionID, status: bool) {
+    if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
+        session.record_status(status);
+    }
+}
+
 pub fn session_reconnect(session_id: SessionID, force_relay: bool) {
     if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
         session.reconnect(force_relay);
@@ -191,36 +197,25 @@ pub fn session_toggle_option(session_id: SessionID, value: String) {
     }
 }
 
-pub fn session_get_flutter_config(session_id: SessionID, k: String) -> Option<String> {
+pub fn session_get_flutter_option(session_id: SessionID, k: String) -> Option<String> {
     if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
-        Some(session.get_flutter_config(k))
+        Some(session.get_flutter_option(k))
     } else {
         None
     }
 }
 
-pub fn session_set_flutter_config(session_id: SessionID, k: String, v: String) {
+pub fn session_set_flutter_option(session_id: SessionID, k: String, v: String) {
     if let Some(session) = SESSIONS.write().unwrap().get_mut(&session_id) {
-        session.save_flutter_config(k, v);
+        session.save_flutter_option(k, v);
     }
 }
 
-pub fn session_get_flutter_config_by_peer_id(id: String, k: String) -> Option<String> {
+pub fn session_get_flutter_option_by_peer_id(id: String, k: String) -> Option<String> {
     if let Some((_, session)) = SESSIONS.read().unwrap().iter().find(|(_, s)| s.id == id) {
-        Some(session.get_flutter_config(k))
+        Some(session.get_flutter_option(k))
     } else {
         None
-    }
-}
-
-pub fn session_set_flutter_config_by_peer_id(id: String, k: String, v: String) {
-    if let Some((_, session)) = SESSIONS
-        .write()
-        .unwrap()
-        .iter_mut()
-        .find(|(_, s)| s.id == id)
-    {
-        session.save_flutter_config(k, v);
     }
 }
 
@@ -229,12 +224,12 @@ pub fn get_next_texture_key() -> SyncReturn<i32> {
     SyncReturn(k)
 }
 
-pub fn get_local_flutter_config(k: String) -> SyncReturn<String> {
-    SyncReturn(ui_interface::get_local_flutter_config(k))
+pub fn get_local_flutter_option(k: String) -> SyncReturn<String> {
+    SyncReturn(ui_interface::get_local_flutter_option(k))
 }
 
-pub fn set_local_flutter_config(k: String, v: String) {
-    ui_interface::set_local_flutter_config(k, v);
+pub fn set_local_flutter_option(k: String, v: String) {
+    ui_interface::set_local_flutter_option(k, v);
 }
 
 pub fn get_local_kb_layout_type() -> SyncReturn<String> {
@@ -631,8 +626,8 @@ pub fn main_get_default_sound_input() -> Option<String> {
     None
 }
 
-pub fn main_get_hostname() -> SyncReturn<String> {
-    SyncReturn(get_hostname())
+pub fn main_get_login_device_info() -> SyncReturn<String> {
+    SyncReturn(get_login_device_info_json())
 }
 
 pub fn main_change_id(new_id: String) {
@@ -798,6 +793,17 @@ pub fn main_get_peer_option(id: String, key: String) -> String {
 
 pub fn main_get_peer_option_sync(id: String, key: String) -> SyncReturn<String> {
     SyncReturn(get_peer_option(id, key))
+}
+
+// Sometimes we need to get the flutter option of a peer by reading the file.
+// Because the session may not be established yet.
+pub fn main_get_peer_flutter_option_sync(id: String, k: String) -> SyncReturn<String> {
+    SyncReturn(get_peer_flutter_option(id, k))
+}
+
+pub fn main_set_peer_flutter_option_sync(id: String, k: String, v: String) -> SyncReturn<()> {
+    set_peer_flutter_option(id, k, v);
+    SyncReturn(())
 }
 
 pub fn main_set_peer_option(id: String, key: String, value: String) {
@@ -1159,6 +1165,10 @@ pub fn main_clear_ab() {
     config::Ab::remove();
 }
 
+pub fn main_load_ab() -> String {
+    serde_json::to_string(&config::Ab::load()).unwrap_or_default()
+}
+
 pub fn session_send_pointer(session_id: SessionID, msg: String) {
     if let Ok(m) = serde_json::from_str::<HashMap<String, serde_json::Value>>(&msg) {
         let alt = m.get("alt").is_some();
@@ -1251,6 +1261,12 @@ pub fn session_alternative_codecs(session_id: SessionID) -> String {
 pub fn session_change_prefer_codec(session_id: SessionID) {
     if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
         session.change_prefer_codec();
+    }
+}
+
+pub fn session_on_waiting_for_image_dialog_show(session_id: SessionID) {
+    if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
+        session.ui_handler.on_waiting_for_image_dialog_show();
     }
 }
 
