@@ -127,6 +127,7 @@ void runMainApp(bool startService) async {
     bind.pluginListReload();
   }
   CheckLocalOptionFile();
+  gFFI.abModel.loadCache();
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
   // Set window option.
@@ -159,6 +160,7 @@ void runMobileApp() async {
   if (isAndroid) androidChannelInit();
   platformFFI.syncAndroidServiceAppDirConfigPath();
   gFFI.serverModel.startService();
+  gFFI.abModel.loadCache();
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
 }
