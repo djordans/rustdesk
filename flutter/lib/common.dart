@@ -1360,7 +1360,7 @@ Future<bool> matchPeer(String searchText, Peer peer) async {
     return true;
   }
   return false;
-  /*final alias = await bind.mainGetPeerOption(id: peer.id, key: 'alias');
+  /*final alias = peer.alias;
   if (alias.isEmpty) {
     return false;
   }*/

@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 
 import '../../common.dart';
 import 'dialog.dart';
-import 'loading_dot_widget.dart';
 import 'login.dart';
 
 final hideAbTagsPanel = false.obs;
@@ -47,14 +46,15 @@ class _AddressBookState extends State<AddressBook> {
           }
           return Column(
             children: [
-              _buildNotEmptyLoading(),
+              // NOT use Offstage to wrap LinearProgressIndicator
+              if (gFFI.abModel.retrying.value) LinearProgressIndicator(),
               _buildErrorBanner(
                   err: gFFI.abModel.pullError,
                   retry: null,
                   close: () => gFFI.abModel.pullError.value = ''),
               _buildErrorBanner(
                   err: gFFI.abModel.pushError,
-                  retry: () => gFFI.abModel.pushAb(),
+                  retry: () => gFFI.abModel.pushAb(isRetry: true),
                   close: () => gFFI.abModel.pushError.value = ''),
               Expanded(
                   child: isDesktop
@@ -117,22 +117,6 @@ class _AddressBookState extends State<AddressBook> {
               ],
             ),
           )).marginOnly(bottom: 14),
-        ));
-  }
-
-  Widget _buildNotEmptyLoading() {
-    double size = 15;
-    return Obx(() => Offstage(
-          offstage: !(gFFI.abModel.abLoading.value && !gFFI.abModel.emtpy),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                      height: size,
-                      child: Center(child: LoadingDotWidget(size: size)))
-                  .marginSymmetric(vertical: 10)
-            ],
-          ),
         ));
   }
 
@@ -339,7 +323,7 @@ class _AddressBookState extends State<AddressBook> {
             return;
           }
           gFFI.abModel.addId(id, aliasController.text.trim(), selectedTag);
-          await gFFI.abModel.pushAb();
+          gFFI.abModel.pushAb();
           this.setState(() {});
           // final currentPeers
         }
@@ -414,8 +398,8 @@ class _AddressBookState extends State<AddressBook> {
             const SizedBox(
               height: 4.0,
             ),
-            Offstage(
-                offstage: !isInProgress, child: const LinearProgressIndicator())
+            // NOT use Offstage to wrap LinearProgressIndicator
+            if (isInProgress) const LinearProgressIndicator(),
           ],
         ),
         actions: [
@@ -448,7 +432,7 @@ class _AddressBookState extends State<AddressBook> {
           for (final tag in tags) {
             gFFI.abModel.addTag(tag);
           }
-          await gFFI.abModel.pushAb();
+          gFFI.abModel.pushAb();
           // final currentPeers
         }
         close();
@@ -480,8 +464,8 @@ class _AddressBookState extends State<AddressBook> {
             const SizedBox(
               height: 4.0,
             ),
-            Offstage(
-                offstage: !isInProgress, child: const LinearProgressIndicator())
+            // NOT use Offstage to wrap LinearProgressIndicator
+            if (isInProgress) const LinearProgressIndicator(),
           ],
         ),
         actions: [

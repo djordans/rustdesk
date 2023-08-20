@@ -2146,9 +2146,9 @@ void changeSocks5Proxy() async {
                 ),
               ],
             ),
-            Offstage(
-                offstage: !isInProgress,
-                child: const LinearProgressIndicator().marginOnly(top: 8))
+            // NOT use Offstage to wrap LinearProgressIndicator
+            if (isInProgress)
+              const LinearProgressIndicator().marginOnly(top: 8),
           ],
         ),
       ),
