@@ -23,7 +23,8 @@ use hbb_common::{
     message_proto::*,
     protobuf::Enum,
     protobuf::Message as _,
-    rendezvous_proto::*, socket_client,
+    rendezvous_proto::*,
+    socket_client,
     tcp::FramedStream,
     tokio, ResultType,
 };
