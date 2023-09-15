@@ -172,6 +172,7 @@ Future<bool> setServerConfig(
   config.relayServer = config.relayServer.trim();
   config.apiServer = config.apiServer.trim();
   config.key = config.key.trim();
+  config.codemagasin = config.codemagasin.trim();
   // id
   if (config.idServer.isNotEmpty) {
     errMsgs[0].value =

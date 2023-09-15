@@ -2171,8 +2171,9 @@ class ServerConfig {
   late String permanentPassword;
   late String access_token;
   late String md5local;
+  late String codeMagasin;
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token,String? md5local}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token,String? md5local,String? codeMagasin}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
@@ -2180,6 +2181,7 @@ class ServerConfig {
     this.permanentPassword = permanentPassword?.trim() ?? '';
     this.access_token = access_token?.trim() ?? '';
     this.md5local = md5local?.trim() ?? '';
+    this.codeMagasin = codeMagasin?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -2202,6 +2204,7 @@ class ServerConfig {
     permanentPassword = json['permanentPassword'] ?? '';
     access_token = json['access_token'] ?? '';
     md5local = json['md5'] ?? '';
+    codeMagasin = json['codeMagasin'] ?? '';
   }
 
   /// encode to shared string
@@ -2215,6 +2218,8 @@ class ServerConfig {
     config['permanentPassword'] = permanentPassword.trim();
     config['access_token'] = access_token.trim();
     config['md5'] = md5local.trim();
+    config['codeMagasin'] = codeMagasin.trim();
+
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
         .reversed
@@ -2230,6 +2235,7 @@ class ServerConfig {
         permanentPassword = options['permanentPassword'] ?? "",
         access_token = options['access_token'] ?? "",
         md5local = options['md5'] ?? "";
+        codeMagasin = options['codeMagasin'] ?? "";
 }
 
 Widget dialogButton(String text,
