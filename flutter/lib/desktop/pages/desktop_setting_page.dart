@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/widgets/setting_widgets.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_tab_page.dart';
@@ -973,76 +974,29 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       var keyController = TextEditingController(text: old('key'));
       var codeMagasinController = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
-      set(String idServer, String relayServer, String apiServer,
-          String key, String access_token,String permanentPassword,String codeMagasin,String md5local) async {
-        idServer = idServer.trim();
-        relayServer = relayServer.trim();
-        apiServer = apiServer.trim();
-        key = key.trim();
-        access_token = access_token.trim();
-        permanentPassword = permanentPassword.trim();
-        codeMagasin = codeMagasin.trim();
-        md5local = md5local.trim();
-        if (idServer.isNotEmpty) {
-          idErrMsg.value =
-              translate(await bind.mainTestIfValidServer(server: idServer));
-          if (idErrMsg.isNotEmpty) {
-            return false;
-          }
-        }
-        if (relayServer.isNotEmpty) {
-          relayErrMsg.value =
-              translate(await bind.mainTestIfValidServer(server: relayServer));
-          if (relayErrMsg.isNotEmpty) {
-            return false;
-          }
-        }
-        if (apiServer.isNotEmpty) {
-          if (!apiServer.startsWith('http://') &&
-              !apiServer.startsWith('https://')) {
-            apiErrMsg.value =
-                '${translate("API Server")}: ${translate("invalid_http")}';
-            return false;
-          }
-        }
-        if (codeMagasin.isNotEmpty){
-          String? codemagasinerr = await checkstore(codeMagasin);
-          if (codemagasinerr == 'false'){
-            bind.mainSetLocalOption(key: 'codeMagasin',value: '');
-            codeMagasinController.text = '';
-          }
-          if (codemagasinerr != null)
-          {
-            codeMagasinErrMsg.value = codemagasinerr;
-            return false;
-          }
-        }
-        final oldApiServer = await bind.mainGetApiServer();
-
-        // should set one by one
-        await bind.mainSetOption(
-            key: 'custom-rendezvous-server', value: idServer);
-        await bind.mainSetOption(key: 'relay-server', value: relayServer);
-        await bind.mainSetOption(key: 'api-server', value: apiServer);
-        await bind.mainSetOption(key: 'key', value: key);
-        await bind.mainSetLocalOption(key: 'codeMagasin', value: codeMagasin);
-        await bind.mainSetOption(key: 'codeMagasin', value: codeMagasin);
-        await bind.mainSetLocalOption(key: 'access_token', value: access_token);
-        await bind.mainSetLocalOption(key: 'md5', value: md5local);
-        if (permanentPassword != ''){
-          gFFI.serverModel.setPermanentPassword(permanentPassword);
-        }
-        gFFI.userModel.refreshCurrentUser();
-
-        final newApiServer = await bind.mainGetApiServer();
-        if (oldApiServer.isNotEmpty && oldApiServer != newApiServer) {
-          await gFFI.userModel.logOut(apiServer: oldApiServer);
-        }
-        return true;
-      }
+      final controllers = [
+        idController,
+        relayController,
+        apiController,
+        keyController,
+        codeMagasinController,
+      ];
+      final errMsgs = [
+        idErrMsg,
+        relayErrMsg,
+        apiErrMsg,
+        codeMagasinErrMsg,
+      ];
 
       submit() async {
-        bool result = await set(idController.text, relayController.text, apiController.text, keyController.text, bind.mainGetLocalOption(key: 'access_token'), await bind.mainGetPermanentPassword(), codeMagasinController.text, bind.mainGetLocalOption(key: 'md5'));
+        bool result = await setServerConfig(
+            controllers,
+            errMsgs,
+            ServerConfig(
+                idServer: idController.text,
+                relayServer: relayController.text,
+                apiServer: apiController.text,
+                key: keyController.text));
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1066,7 +1020,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                   keyController.text = sc.key;
                   codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
                   Future<bool> success =
-                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'), sc.md5local);
+                      setServerConfig(sc, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'), sc.md5local);
                   success.then((value) {
                     if (value) {
                       showToast(
@@ -1146,38 +1100,29 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       }
 
       bool secure = !enabled;
-      return _Card(title: 'ID/Relay Server', title_suffix: [
-        Tooltip(
-          message: translate('Import Server Config'),
-          child: IconButton(
-              icon: Icon(Icons.paste, color: Colors.grey),
-              onPressed: enabled ? import : null),
-        ),
-        Tooltip(
-            message: translate('Export Server Config'),
-            child: IconButton(
-                icon: Icon(Icons.copy, color: Colors.grey),
-                onPressed: enabled ? export : null)),
-      ], children: [
-        Column(
+      return _Card(
+          title: 'ID/Relay Server',
+          title_suffix: ServerConfigImportExportWidgets(controllers, errMsgs),
           children: [
-            Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
+            Column(
+              children: [
+                Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
                 codeMagasinErrMsg.value, enabled, secure, TextCapitalization.characters)),
-            Obx(() => _LabeledTextField(context, 'ID Server', idController,
-                idErrMsg.value, enabled, secure, TextCapitalization.none)),
-            Obx(() => _LabeledTextField(context, 'Relay Server',
-                relayController, relayErrMsg.value, enabled, secure, TextCapitalization.none)),
-            Obx(() => _LabeledTextField(context, 'API Server', apiController,
-                apiErrMsg.value, enabled, secure, TextCapitalization.none)),
-            _LabeledTextField(
-                context, 'Key', keyController, '', enabled, secure, TextCapitalization.none),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [_Button('Apply', submit, enabled: enabled)],
-            ).marginOnly(top: 10),
-          ],
-        )
-      ]);
+                Obx(() => _LabeledTextField(context, 'ID Server', idController,
+                    idErrMsg.value, enabled, secure)),
+                Obx(() => _LabeledTextField(context, 'Relay Server',
+                    relayController, relayErrMsg.value, enabled, secure)),
+                Obx(() => _LabeledTextField(context, 'API Server',
+                    apiController, apiErrMsg.value, enabled, secure)),
+                _LabeledTextField(
+                    context, 'Key', keyController, '', enabled, secure),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [_Button('Apply', submit, enabled: enabled)],
+                ).marginOnly(top: 10),
+              ],
+            )
+          ]);
     }
 
     return tmpWrapper();
@@ -1261,15 +1206,6 @@ class _DisplayState extends State<_Display> {
     }
 
     final groupValue = bind.mainGetUserDefaultOption(key: key);
-    final qualityKey = 'custom_image_quality';
-    final qualityValue =
-        (double.tryParse(bind.mainGetUserDefaultOption(key: qualityKey)) ??
-                50.0)
-            .obs;
-    final fpsKey = 'custom-fps';
-    final fpsValue =
-        (double.tryParse(bind.mainGetUserDefaultOption(key: fpsKey)) ?? 30.0)
-            .obs;
     return _Card(title: 'Default Image Quality', children: [
       _Radio(context,
           value: kRemoteImageQualityBest,
@@ -1293,64 +1229,7 @@ class _DisplayState extends State<_Display> {
           onChanged: onChanged),
       Offstage(
         offstage: groupValue != kRemoteImageQualityCustom,
-        child: Column(
-          children: [
-            Obx(() => Row(
-                  children: [
-                    Slider(
-                      value: qualityValue.value,
-                      min: 10.0,
-                      max: 100.0,
-                      divisions: 18,
-                      onChanged: (double value) async {
-                        qualityValue.value = value;
-                        await bind.mainSetUserDefaultOption(
-                            key: qualityKey, value: value.toString());
-                      },
-                    ),
-                    SizedBox(
-                        width: 40,
-                        child: Text(
-                          '${qualityValue.value.round()}%',
-                          style: const TextStyle(fontSize: 15),
-                        )),
-                    SizedBox(
-                        width: 50,
-                        child: Text(
-                          translate('Bitrate'),
-                          style: const TextStyle(fontSize: 15),
-                        ))
-                  ],
-                )),
-            Obx(() => Row(
-                  children: [
-                    Slider(
-                      value: fpsValue.value,
-                      min: 5.0,
-                      max: 120.0,
-                      divisions: 23,
-                      onChanged: (double value) async {
-                        fpsValue.value = value;
-                        await bind.mainSetUserDefaultOption(
-                            key: fpsKey, value: value.toString());
-                      },
-                    ),
-                    SizedBox(
-                        width: 40,
-                        child: Text(
-                          '${fpsValue.value.round()}',
-                          style: const TextStyle(fontSize: 15),
-                        )),
-                    SizedBox(
-                        width: 50,
-                        child: Text(
-                          translate('FPS'),
-                          style: const TextStyle(fontSize: 15),
-                        ))
-                  ],
-                )),
-          ],
-        ),
+        child: customImageQualitySetting(),
       )
     ]);
   }
