@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../common.dart';
 import '../../common/widgets/dialog.dart';
@@ -44,10 +45,12 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
   var _enableDirectIPAccess = false;
   var _enableRecordSession = false;
   var _autoRecordIncomingSession = false;
+  var _allowAutoDisconnect = false;
   var _localIP = "";
   var _directAccessPort = "";
   var _fingerprint = "";
   var _buildDate = "";
+  var _autoDisconnectTimeout = "";
 
   @override
   void initState() {
@@ -148,6 +151,20 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
       if (_buildDate != buildDate) {
         update = true;
         _buildDate = buildDate;
+      }
+
+      final allowAutoDisconnect = option2bool('allow-auto-disconnect',
+          await bind.mainGetOption(key: 'allow-auto-disconnect'));
+      if (allowAutoDisconnect != _allowAutoDisconnect) {
+        update = true;
+        _allowAutoDisconnect = allowAutoDisconnect;
+      }
+
+      final autoDisconnectTimeout =
+          await bind.mainGetOption(key: 'auto-disconnect-timeout');
+      if (autoDisconnectTimeout != _autoDisconnectTimeout) {
+        update = true;
+        _autoDisconnectTimeout = autoDisconnectTimeout;
       }
 
       if (update) {
@@ -303,6 +320,48 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
           _enableDirectIPAccess = !_enableDirectIPAccess;
           String value = bool2option('direct-server', _enableDirectIPAccess);
           await bind.mainSetOption(key: 'direct-server', value: value);
+          setState(() {});
+        },
+      ),
+      SettingsTile.switchTile(
+        title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(translate("auto_disconnect_option_tip")),
+                    Offstage(
+                        offstage: !_allowAutoDisconnect,
+                        child: Text(
+                          '${_autoDisconnectTimeout.isEmpty ? '10' : _autoDisconnectTimeout} min',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        )),
+                  ])),
+              Offstage(
+                  offstage: !_allowAutoDisconnect,
+                  child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.edit,
+                        size: 20,
+                      ),
+                      onPressed: () async {
+                        final timeout = await changeAutoDisconnectTimeout(
+                            _autoDisconnectTimeout);
+                        setState(() {
+                          _autoDisconnectTimeout = timeout;
+                        });
+                      }))
+            ]),
+        initialValue: _allowAutoDisconnect,
+        onToggle: (_) async {
+          _allowAutoDisconnect = !_allowAutoDisconnect;
+          String value =
+              bool2option('allow-auto-disconnect', _allowAutoDisconnect);
+          await bind.mainSetOption(key: 'allow-auto-disconnect', value: value);
           setState(() {});
         },
       )
@@ -498,6 +557,12 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
                     child: Text(_fingerprint),
                   ),
                   leading: Icon(Icons.fingerprint)),
+            SettingsTile(
+              title: Text(translate("Privacy Statement")),
+              onPressed: (context) =>
+                  launchUrlString('https://rustdesk.com/privacy.html'),
+              leading: Icon(Icons.privacy_tip),
+            )
           ],
         ),
       ],

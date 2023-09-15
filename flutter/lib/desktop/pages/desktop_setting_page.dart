@@ -330,6 +330,10 @@ class _GeneralState extends State<_General> {
       child: _OptionCheckBox(context, "Always use software rendering",
           'allow-always-software-render'),
     ));
+     children.add(
+        _OptionCheckBox(context, 'Check for software update on startup','enable-check-update',
+        isServer: false,
+    ));
     if (bind.mainShowOption(key: 'allow-linux-headless')) {
       children.add(_OptionCheckBox(
           context, 'Allow linux headless', 'allow-linux-headless'));
@@ -733,6 +737,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
           reverse: true, enabled: enabled),
       ...directIp(context),
       whitelist(),
+      ...autoDisconnect(context),
     ]);
   }
 
@@ -911,6 +916,63 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
               ));
         }));
   }
+
+  List<Widget> autoDisconnect(BuildContext context) {
+    TextEditingController controller = TextEditingController();
+    update() => setState(() {});
+    RxBool applyEnabled = false.obs;
+    final optionKey = 'allow-auto-disconnect';
+    final timeoutKey = 'auto-disconnect-timeout';
+    return [
+      _OptionCheckBox(context, 'auto_disconnect_option_tip', optionKey,
+          update: update, enabled: !locked),
+      () {
+        bool enabled =
+            option2bool(optionKey, bind.mainGetOptionSync(key: optionKey));
+        if (!enabled) applyEnabled.value = false;
+        controller.text = bind.mainGetOptionSync(key: timeoutKey);
+        return Offstage(
+          offstage: !enabled,
+          child: _SubLabeledWidget(
+            context,
+            'Timeout in minutes',
+            Row(children: [
+              SizedBox(
+                width: 95,
+                child: TextField(
+                  controller: controller,
+                  enabled: enabled && !locked,
+                  onChanged: (_) => applyEnabled.value = true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(
+                        r'^([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')),
+                  ],
+                  decoration: const InputDecoration(
+                    hintText: '10',
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  ),
+                ).marginOnly(right: 15),
+              ),
+              Obx(() => ElevatedButton(
+                    onPressed: applyEnabled.value && enabled && !locked
+                        ? () async {
+                            applyEnabled.value = false;
+                            await bind.mainSetOption(
+                                key: timeoutKey, value: controller.text);
+                          }
+                        : null,
+                    child: Text(
+                      translate('Apply'),
+                    ),
+                  ))
+            ]),
+            enabled: enabled && !locked,
+          ),
+        );
+      }(),
+    ];
+  }
 }
 
 class _Network extends StatefulWidget {
@@ -967,8 +1029,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       RxString relayErrMsg = ''.obs;
       RxString apiErrMsg = ''.obs;
       RxString codeMagasinErrMsg = ''.obs;
-      var idController =
-          TextEditingController(text: old('custom-rendezvous-server'));
+      var idController = TextEditingController(text: old('custom-rendezvous-server'));
       var relayController = TextEditingController(text: old('relay-server'));
       var apiController = TextEditingController(text: old('api-server'));
       var keyController = TextEditingController(text: old('key'));
@@ -996,7 +1057,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 idServer: idController.text,
                 relayServer: relayController.text,
                 apiServer: apiController.text,
-                key: keyController.text));
+                key: keyController.text,
+                codeMagasin: codeMagasinController.text));
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1004,101 +1066,6 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           showToast(translate('Failed'));
         }
       }
-
-      import() async {
-        FilePickerResult? result = await FilePicker.platform.pickFiles();
-        if (result != null) {
-          File file = File(result.files.single.path.toString());
-          final text = file.readAsStringSync();
-            if (text.isNotEmpty) {
-              try {
-                final sc = ServerConfig.decode(text);
-                if (sc.idServer.isNotEmpty) {
-                  idController.text = sc.idServer;
-                  relayController.text = sc.relayServer;
-                  apiController.text = sc.apiServer;
-                  keyController.text = sc.key;
-                  codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
-                  Future<bool> success =
-                      setServerConfig(sc, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'), sc.md5local);
-                  success.then((value) {
-                    if (value) {
-                      showToast(
-                          translate('Import server configuration successfully'));
-                    } else {
-                      showToast(translate('Invalid server configuration'));
-                    }
-                  });
-                } else {
-                  showToast(translate('Invalid server configuration'));
-                }
-              } catch (e) {
-                showToast(translate('Invalid server configuration'));
-              }
-            } else {
-              showToast(translate('file is empty'));
-            }
-        } else {
-  // User canceled the picker
-          Clipboard.getData(Clipboard.kTextPlain).then((value) {
-            final text = value?.text;
-            if (text != null && text.isNotEmpty) {
-              try {
-                final sc = ServerConfig.decode(text);
-                if (sc.idServer.isNotEmpty) {
-                  idController.text = sc.idServer;
-                  relayController.text = sc.relayServer;
-                  apiController.text = sc.apiServer;
-                  keyController.text = sc.key;
-                  codeMagasinController.text = bind.mainGetLocalOption(key: 'codeMagasin');
-                  Future<bool> success =
-                      set(sc.idServer, sc.relayServer, sc.apiServer, sc.key, sc.access_token, sc.permanentPassword, bind.mainGetLocalOption(key: 'codeMagasin'),sc.md5local);
-                  success.then((value) {
-                    if (value) {
-                      showToast(
-                          translate('Import server configuration successfully'));
-                    } else {
-                      showToast(translate('Invalid server configuration'));
-                    }
-                  });
-                } else {
-                  showToast(translate('Invalid server configuration'));
-                }
-              } catch (e) {
-                showToast(translate('Invalid server configuration'));
-              }
-            } else {
-              showToast(translate('Clipboard is empty'));
-            }
-        });
-      }
-      }
-
-      export() async {
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Please select an output file:',
-          fileName: 'rustdeskconfig.txt',
-        );
-        final text = ServerConfig(
-                idServer: idController.text,
-                relayServer: relayController.text,
-                apiServer: apiController.text,
-                key: keyController.text,
-                access_token: bind.mainGetLocalOption(key: 'access_token'),
-                permanentPassword: await bind.mainGetPermanentPassword(),
-                md5local: bind.mainGetLocalOption(key: 'md5'),
-                )
-            .encode();
-        debugPrint("ServerConfig export: $text");
-        if (outputFile == null) {
-          Clipboard.setData(ClipboardData(text: text));
-        }else{
-           File file = File(outputFile.toString());
-           file.writeAsStringSync(text);
-        }
-        showToast(translate('Export server configuration successfully'));
-      }
-
       bool secure = !enabled;
       return _Card(
           title: 'ID/Relay Server',
@@ -1109,13 +1076,13 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
                 codeMagasinErrMsg.value, enabled, secure, TextCapitalization.characters)),
                 Obx(() => _LabeledTextField(context, 'ID Server', idController,
-                    idErrMsg.value, enabled, secure)),
+                    idErrMsg.value, enabled, secure, TextCapitalization.none)),
                 Obx(() => _LabeledTextField(context, 'Relay Server',
-                    relayController, relayErrMsg.value, enabled, secure)),
+                    relayController, relayErrMsg.value, enabled, secure, TextCapitalization.none)),
                 Obx(() => _LabeledTextField(context, 'API Server',
-                    apiController, apiErrMsg.value, enabled, secure)),
+                    apiController, apiErrMsg.value, enabled, secure, TextCapitalization.none)),
                 _LabeledTextField(
-                    context, 'Key', keyController, '', enabled, secure),
+                    context, 'Key', keyController, '', enabled, secure, TextCapitalization.none),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [_Button('Apply', submit, enabled: enabled)],
@@ -1322,6 +1289,7 @@ class _DisplayState extends State<_Display> {
       otherRow('Disable clipboard', 'disable_clipboard'),
       otherRow('Lock after session end', 'lock_after_session_end'),
       otherRow('Privacy mode', 'privacy_mode'),
+      otherRow('Reverse mouse wheel', 'reverse_mouse_wheel'),
     ]);
   }
 }
@@ -1642,9 +1610,14 @@ Widget _OptionCheckBox(BuildContext context, String label, String key,
       isServer
           ? await mainSetBoolOption(key, option)
           : await mainSetLocalBoolOption(key, option);
-      ref.value = isServer
+      final readOption = isServer
           ? mainGetBoolOptionSync(key)
           : mainGetLocalBoolOptionSync(key);
+      if (reverse) {
+        ref.value = !readOption;
+      } else {
+        ref.value = readOption;
+      }
       update?.call();
     }
   }

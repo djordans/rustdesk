@@ -1073,13 +1073,11 @@ mod desktop {
         }
 
         pub fn refresh(&mut self) {
-            let seat0_values = get_values_of_seat0(&[0, 1, 2]);
-            if !self.sid.is_empty() && is_active(&self.sid) {
-                if self.sid == seat0_values[0] {
-                     return;
-                 }
+            if !self.sid.is_empty() && is_active_and_seat0(&self.sid) {
+                return;
             }
 
+            let seat0_values = get_values_of_seat0(&[0, 1, 2]);
             if seat0_values[0].is_empty() {
                 *self = Self::default();
                 self.is_rustdesk_subprocess = false;
@@ -1185,6 +1183,7 @@ pub fn uninstall_service(show_new_window: bool) -> bool {
 }
 
 pub fn install_service() -> bool {
+    let _installing = crate::platform::InstallingService::new();
     if !has_cmd("systemctl") {
         return false;
     }

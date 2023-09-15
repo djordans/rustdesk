@@ -103,6 +103,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     required this.highlight,
     required this.drag_indicator,
     required this.shadow,
+    required this.errorBannerBg,
   });
 
   final Color? border;
@@ -110,6 +111,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
   final Color? highlight;
   final Color? drag_indicator;
   final Color? shadow;
+  final Color? errorBannerBg;
 
   static final light = ColorThemeExtension(
     border: Color(0xFFCCCCCC),
@@ -117,6 +119,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     highlight: Color(0xFFE5E5E5),
     drag_indicator: Colors.grey[800],
     shadow: Colors.black,
+    errorBannerBg: Color(0xFFFDEEEB),
   );
 
   static final dark = ColorThemeExtension(
@@ -125,6 +128,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     highlight: Color(0xFF3F3F3F),
     drag_indicator: Colors.grey,
     shadow: Colors.grey,
+    errorBannerBg: Color(0xFF470F2D),
   );
 
   @override
@@ -134,6 +138,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     Color? highlight,
     Color? drag_indicator,
     Color? shadow,
+    Color? errorBannerBg,
   }) {
     return ColorThemeExtension(
       border: border ?? this.border,
@@ -141,6 +146,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
       highlight: highlight ?? this.highlight,
       drag_indicator: drag_indicator ?? this.drag_indicator,
       shadow: shadow ?? this.shadow,
+      errorBannerBg: errorBannerBg ?? this.errorBannerBg,
     );
   }
 
@@ -156,6 +162,7 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
       highlight: Color.lerp(highlight, other.highlight, t),
       drag_indicator: Color.lerp(drag_indicator, other.drag_indicator, t),
       shadow: Color.lerp(shadow, other.shadow, t),
+      errorBannerBg: Color.lerp(shadow, other.errorBannerBg, t),
     );
   }
 }
@@ -260,6 +267,14 @@ class MyTheme {
       ? EdgeInsets.only(left: dialogPadding)
       : EdgeInsets.only(left: dialogPadding / 3);
 
+  static ScrollbarThemeData scrollbarTheme = ScrollbarThemeData(
+    thickness: MaterialStateProperty.all(kScrollbarThickness),
+  );
+
+  static ScrollbarThemeData scrollbarThemeDark = scrollbarTheme.copyWith(
+    thumbColor: MaterialStateProperty.all(Colors.grey[500]),
+  );
+
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     hoverColor: Color.fromARGB(255, 224, 224, 224),
@@ -275,6 +290,7 @@ class MyTheme {
         ),
       ),
     ),
+    scrollbarTheme: scrollbarTheme,
     inputDecorationTheme: isDesktop
         ? InputDecorationTheme(
             fillColor: grayBg,
@@ -359,6 +375,7 @@ class MyTheme {
         ),
       ),
     ),
+    scrollbarTheme: scrollbarThemeDark,
     inputDecorationTheme: isDesktop
         ? InputDecorationTheme(
             fillColor: Color(0xFF24252B),
@@ -384,9 +401,6 @@ class MyTheme {
     visualDensity: VisualDensity.adaptivePlatformDensity,
     tabBarTheme: const TabBarTheme(
       labelColor: Colors.white70,
-    ),
-    scrollbarTheme: ScrollbarThemeData(
-      thumbColor: MaterialStateProperty.all(Colors.grey[500]),
     ),
     tooltipTheme: tooltipTheme(),
     splashColor: isDesktop ? Colors.transparent : null,
@@ -616,6 +630,7 @@ class OverlayDialogManager {
   int _tagCount = 0;
 
   OverlayEntry? _mobileActionsOverlayEntry;
+  RxBool mobileActionsOverlayVisible = false.obs;
 
   void setOverlayState(OverlayKeyState overlayKeyState) {
     _overlayKeyState = overlayKeyState;
@@ -782,12 +797,14 @@ class OverlayDialogManager {
     });
     overlayState.insert(overlay);
     _mobileActionsOverlayEntry = overlay;
+    mobileActionsOverlayVisible.value = true;
   }
 
   void hideMobileActionsOverlay() {
     if (_mobileActionsOverlayEntry != null) {
       _mobileActionsOverlayEntry!.remove();
       _mobileActionsOverlayEntry = null;
+      mobileActionsOverlayVisible.value = false;
       return;
     }
   }
@@ -1397,9 +1414,10 @@ class LastWindowPosition {
   double? offsetWidth;
   double? offsetHeight;
   bool? isMaximized;
+  bool? isFullscreen;
 
   LastWindowPosition(this.width, this.height, this.offsetWidth,
-      this.offsetHeight, this.isMaximized);
+      this.offsetHeight, this.isMaximized, this.isFullscreen);
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -1408,6 +1426,7 @@ class LastWindowPosition {
       "offsetWidth": offsetWidth,
       "offsetHeight": offsetHeight,
       "isMaximized": isMaximized,
+      "isFullscreen": isFullscreen,
     };
   }
 
@@ -1423,7 +1442,7 @@ class LastWindowPosition {
     try {
       final m = jsonDecode(content);
       return LastWindowPosition(m["width"], m["height"], m["offsetWidth"],
-          m["offsetHeight"], m["isMaximized"]);
+          m["offsetHeight"], m["isMaximized"], m["isFullscreen"]);
     } catch (e) {
       debugPrintStack(
           label:
@@ -1444,6 +1463,8 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
   late Offset position;
   late Size sz;
   late bool isMaximized;
+  bool isFullscreen = stateGlobal.fullscreen ||
+      (Platform.isMacOS && stateGlobal.closeOnFullscreen);
   setFrameIfMaximized() {
     if (isMaximized) {
       final pos = bind.getLocalFlutterOption(k: kWindowPrefix + type.name);
@@ -1489,20 +1510,21 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
   }
 
   final pos = LastWindowPosition(
-      sz.width, sz.height, position.dx, position.dy, isMaximized);
+      sz.width, sz.height, position.dx, position.dy, isMaximized, isFullscreen);
   debugPrint(
-      "Saving frame: $windowId: ${pos.width}/${pos.height}, offset:${pos.offsetWidth}/${pos.offsetHeight}, isMaximized:${pos.isMaximized}");
+      "Saving frame: $windowId: ${pos.width}/${pos.height}, offset:${pos.offsetWidth}/${pos.offsetHeight}, isMaximized:${pos.isMaximized}, isFullscreen:${pos.isFullscreen}");
 
   await bind.setLocalFlutterOption(
       k: kWindowPrefix + type.name, v: pos.toString());
 
   if (type == WindowType.RemoteDesktop && windowId != null) {
-    await _saveSessionWindowPosition(type, windowId, isMaximized, pos);
+    await _saveSessionWindowPosition(
+        type, windowId, isMaximized, isFullscreen, pos);
   }
 }
 
 Future _saveSessionWindowPosition(WindowType windowType, int windowId,
-    bool isMaximized, LastWindowPosition pos) async {
+    bool isMaximized, bool isFullscreen, LastWindowPosition pos) async {
   final remoteList = await DesktopMultiWindow.invokeMethod(
       windowId, kWindowEventGetRemoteList, null);
   getPeerPos(String peerId) {
@@ -1515,7 +1537,8 @@ Future _saveSessionWindowPosition(WindowType windowType, int windowId,
               lpos?.height ?? pos.offsetHeight,
               lpos?.offsetWidth ?? pos.offsetWidth,
               lpos?.offsetHeight ?? pos.offsetHeight,
-              isMaximized)
+              isMaximized,
+              isFullscreen)
           .toString();
     } else {
       return pos.toString();
@@ -1705,9 +1728,18 @@ Future<bool> restoreWindowPosition(WindowType type,
           await wc.setFrame(frame);
         }
       }
-      if (lpos.isMaximized == true) {
+      if (lpos.isFullscreen == true) {
         await restoreFrame();
-        await wc.maximize();
+        // An duration is needed to avoid the window being restored after fullscreen.
+        Future.delayed(Duration(milliseconds: 300), () async {
+          stateGlobal.setFullscreen(true);
+        });
+      } else if (lpos.isMaximized == true) {
+        await restoreFrame();
+        // An duration is needed to avoid the window being restored after maximized.
+        Future.delayed(Duration(milliseconds: 300), () async {
+          await wc.maximize();
+        });
       } else {
         await restoreFrame();
       }
@@ -2234,7 +2266,7 @@ class ServerConfig {
         key = options['key'] ?? "",
         permanentPassword = options['permanentPassword'] ?? "",
         access_token = options['access_token'] ?? "",
-        md5local = options['md5'] ?? "";
+        md5local = options['md5'] ?? "",
         codeMagasin = options['codeMagasin'] ?? "";
 }
 

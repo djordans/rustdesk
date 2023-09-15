@@ -279,7 +279,10 @@ class _RemotePageState extends State<RemotePage>
                   _ffi.ffiModel.pi.isSet.isTrue &&
                           _ffi.ffiModel.waitForFirstImage.isTrue
                       ? emptyOverlay()
-                      : Offstage(),
+                      : () {
+                          _ffi.ffiModel.tryShowAndroidActionsOverlay();
+                          return Offstage();
+                        }(),
                   // Use Overlay to enable rebuild every time on menu button click.
                   _ffi.ffiModel.pi.isSet.isTrue
                       ? Overlay(initialEntries: [
@@ -691,6 +694,7 @@ class _ImagePaintState extends State<ImagePaint> {
         enableCustomMouseWheelScrolling: cursorOverImage.isFalse,
         customMouseWheelScrollConfig: scrollConfig,
         child: RawScrollbar(
+          thickness: kScrollbarThickness,
           thumbColor: Colors.grey,
           controller: _horizontal,
           thumbVisibility: false,
@@ -708,6 +712,7 @@ class _ImagePaintState extends State<ImagePaint> {
         enableCustomMouseWheelScrolling: cursorOverImage.isFalse,
         customMouseWheelScrollConfig: scrollConfig,
         child: RawScrollbar(
+          thickness: kScrollbarThickness,
           thumbColor: Colors.grey,
           controller: _vertical,
           thumbVisibility: false,

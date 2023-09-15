@@ -172,7 +172,7 @@ Future<bool> setServerConfig(
   config.relayServer = config.relayServer.trim();
   config.apiServer = config.apiServer.trim();
   config.key = config.key.trim();
-  config.codemagasin = config.codemagasin.trim();
+  config.codeMagasin = config.codeMagasin.trim();
   // id
   if (config.idServer.isNotEmpty) {
     errMsgs[0].value =
@@ -231,6 +231,7 @@ List<Widget> ServerConfigImportExportWidgets(
             controllers[1].text = sc.relayServer;
             controllers[2].text = sc.apiServer;
             controllers[3].text = sc.key;
+            controllers[4].text = sc.codeMagasin;
             Future<bool> success = setServerConfig(controllers, errMsgs, sc);
             success.then((value) {
               if (value) {

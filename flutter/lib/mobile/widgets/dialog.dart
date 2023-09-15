@@ -152,7 +152,7 @@ void showServerSettingsWithValue(
   final relayCtrl = TextEditingController(text: serverConfig.relayServer);
   final apiCtrl = TextEditingController(text: serverConfig.apiServer);
   final keyCtrl = TextEditingController(text: serverConfig.key);
-  final codeMagasinCtrl = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
+  final codeMagasinCtrl = TextEditingController(text: serverConfig.codeMagasin);
 
   RxString idServerMsg = ''.obs;
   RxString relayServerMsg = ''.obs;
@@ -164,7 +164,7 @@ void showServerSettingsWithValue(
     idServerMsg,
     relayServerMsg,
     apiServerMsg,
-    codeMagasinCtrl,
+    codeMagasinMsg,
   ];
 
   dialogManager.show((setState, close, context) {
@@ -202,7 +202,7 @@ void showServerSettingsWithValue(
                       controller: codeMagasinCtrl,
                       decoration: InputDecoration(
                           labelText: translate('Code Magasin'),
-                          errorText: codeMagasinMsg),
+                          errorText: codeMagasinMsg.value),
                           textCapitalization: TextCapitalization.characters,
                     )
                   ] +

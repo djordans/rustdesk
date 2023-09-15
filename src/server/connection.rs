@@ -188,6 +188,7 @@ pub struct Connection {
     lr: LoginRequest,
     last_recv_time: Arc<Mutex<Instant>>,
     chat_unanswered: bool,
+    file_transferred: bool,
     #[cfg(windows)]
     portable: PortableState,
     from_switch: bool,
@@ -203,6 +204,7 @@ pub struct Connection {
     delay_response_instant: Instant,
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     start_cm_ipc_para: Option<StartCmIpcPara>,
+    auto_disconnect_timer: Option<(Instant, u64)>,
 }
 
 impl ConnInner {
@@ -320,6 +322,7 @@ impl Connection {
             lr: Default::default(),
             last_recv_time: Arc::new(Mutex::new(Instant::now())),
             chat_unanswered: false,
+            file_transferred: false,
             #[cfg(windows)]
             portable: Default::default(),
             from_switch: false,
@@ -341,6 +344,7 @@ impl Connection {
                 rx_desktop_ready,
                 tx_cm_stream_ready,
             }),
+            auto_disconnect_timer: None,
         };
         let addr = hbb_common::try_into_v4(addr);
         if !conn.on_open(addr).await {
@@ -399,6 +403,7 @@ impl Connection {
                         }
                         ipc::Data::Close => {
                             conn.chat_unanswered = false; // seen
+                            conn.file_transferred = false; //seen
                             conn.send_close_reason_no_retry("").await;
                             conn.on_close("connection manager", true).await;
                             break;
@@ -536,9 +541,17 @@ impl Connection {
                 },
                 _ = conn.file_timer.tick() => {
                     if !conn.read_jobs.is_empty() {
-                        if let Err(err) = fs::handle_read_jobs(&mut conn.read_jobs, &mut conn.stream).await {
-                            conn.on_close(&err.to_string(), false).await;
-                            break;
+                        conn.send_to_cm(ipc::Data::FileTransferLog(fs::serialize_transfer_jobs(&conn.read_jobs)));
+                        match fs::handle_read_jobs(&mut conn.read_jobs, &mut conn.stream).await {
+                            Ok(log) => {
+                                if !log.is_empty() {
+                                    conn.send_to_cm(ipc::Data::FileTransferLog(log));
+                                }
+                            }
+                            Err(err) =>  {
+                                conn.on_close(&err.to_string(), false).await;
+                                break;
+                            }
                         }
                     } else {
                         conn.file_timer = time::interval_at(Instant::now() + SEC30, SEC30);
@@ -594,6 +607,13 @@ impl Connection {
                 _ = second_timer.tick() => {
                     #[cfg(windows)]
                     conn.portable_check();
+                    if let Some((instant, minute)) = conn.auto_disconnect_timer.as_ref() {
+                        if instant.elapsed().as_secs() > minute * 60 {
+                            conn.send_close_reason_no_retry("Connection failed due to inactivity").await;
+                            conn.on_close("auto disconnect", true).await;
+                            break;
+                        }
+                    }
                 }
                 _ = test_delay_timer.tick() => {
                     if last_recv_time.elapsed() >= SEC30 {
@@ -1128,6 +1148,7 @@ impl Connection {
                 let mut s = s.write().unwrap();
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]
                 let _h = try_start_record_cursor_pos();
+                self.auto_disconnect_timer = Self::get_auto_disconenct_timer();
                 s.add_connection(self.inner.clone(), &noperms);
             }
         }
@@ -1338,6 +1359,12 @@ impl Connection {
                 .await
                 {
                     log::error!("ipc to connection manager exit: {}", err);
+                }
+            });
+            #[cfg(all(windows, feature = "flutter"))]
+            std::thread::spawn(|| {
+                if crate::is_server() && !crate::check_process("--tray", false) {
+                    crate::platform::run_as_user(vec!["--tray"]).ok();
                 }
             });
         }
@@ -1595,6 +1622,7 @@ impl Connection {
                         }
                         self.input_mouse(me, self.inner.id());
                     }
+                    self.update_auto_disconnect_timer();
                 }
                 Some(message::Union::PointerDeviceEvent(pde)) => {
                     #[cfg(any(target_os = "android", target_os = "ios"))]
@@ -1630,6 +1658,7 @@ impl Connection {
                         MOUSE_MOVE_TIME.store(get_time(), Ordering::SeqCst);
                         self.input_pointer(pde, self.inner.id());
                     }
+                    self.update_auto_disconnect_timer();
                 }
                 #[cfg(any(target_os = "android", target_os = "ios"))]
                 Some(message::Union::KeyEvent(..)) => {}
@@ -1685,6 +1714,7 @@ impl Connection {
                             self.input_key(me, false);
                         }
                     }
+                    self.update_auto_disconnect_timer();
                 }
                 Some(message::Union::Clipboard(_cb)) =>
                 {
@@ -1717,6 +1747,7 @@ impl Connection {
                                 }
                             }
                             Some(file_action::Union::Send(s)) => {
+                                // server to client
                                 let id = s.id;
                                 let od = can_enable_overwrite_detection(get_version_number(
                                     &self.lr.version,
@@ -1734,10 +1765,12 @@ impl Connection {
                                     Err(err) => {
                                         self.send(fs::new_error(id, err, 0)).await;
                                     }
-                                    Ok(job) => {
+                                    Ok(mut job) => {
                                         self.send(fs::new_dir(id, path, job.files().to_vec()))
                                             .await;
                                         let mut files = job.files().to_owned();
+                                        job.is_remote = true;
+                                        job.conn_id = self.inner.id();
                                         self.read_jobs.push(job);
                                         self.file_timer = time::interval(MILLI1);
                                         self.post_file_audit(
@@ -1751,8 +1784,10 @@ impl Connection {
                                         );
                                     }
                                 }
+                                self.file_transferred = true;
                             }
                             Some(file_action::Union::Receive(r)) => {
+                                // client to server
                                 // note: 1.1.10 introduced identical file detection, which breaks original logic of send/recv files
                                 // whenever got send/recv request, check peer version to ensure old version of rustdesk
                                 let od = can_enable_overwrite_detection(get_version_number(
@@ -1769,6 +1804,8 @@ impl Connection {
                                         .map(|f| (f.name, f.modified_time))
                                         .collect(),
                                     overwrite_detection: od,
+                                    total_size: r.total_size,
+                                    conn_id: self.inner.id(),
                                 });
                                 self.post_file_audit(
                                     FileAuditType::RemoteReceive,
@@ -1780,6 +1817,7 @@ impl Connection {
                                         .collect(),
                                     json!({}),
                                 );
+                                self.file_transferred = true;
                             }
                             Some(file_action::Union::RemoveDir(d)) => {
                                 self.send_fs(ipc::FS::RemoveDir {
@@ -1803,6 +1841,11 @@ impl Connection {
                             }
                             Some(file_action::Union::Cancel(c)) => {
                                 self.send_fs(ipc::FS::CancelWrite { id: c.id });
+                                if let Some(job) = fs::get_job_immutable(c.id, &self.read_jobs) {
+                                    self.send_to_cm(ipc::Data::FileTransferLog(
+                                        fs::serialize_transfer_job(job, false, true, ""),
+                                    ));
+                                }
                                 fs::remove_job(c.id, &mut self.read_jobs);
                             }
                             Some(file_action::Union::SendConfirm(r)) => {
@@ -1860,6 +1903,7 @@ impl Connection {
                     Some(misc::Union::ChatMessage(c)) => {
                         self.send_to_cm(ipc::Data::ChatMessage { text: c.text });
                         self.chat_unanswered = true;
+                        self.update_auto_disconnect_timer();
                     }
                     Some(misc::Union::Option(o)) => {
                         self.update_options(&o).await;
@@ -1868,6 +1912,7 @@ impl Connection {
                         if r {
                             super::video_service::refresh();
                         }
+                        self.update_auto_disconnect_timer();
                     }
                     Some(misc::Union::VideoReceived(_)) => {
                         video_service::notify_video_frame_fetched(
@@ -1997,6 +2042,7 @@ impl Connection {
         let mut msg = Message::new();
         msg.set_misc(misc);
         self.send(msg).await;
+        self.update_auto_disconnect_timer();
     }
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -2254,7 +2300,7 @@ impl Connection {
             lock_screen().await;
         }
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
-        let data = if self.chat_unanswered {
+        let data = if self.chat_unanswered || self.file_transferred && cfg!(feature = "flutter") {
             ipc::Data::Disconnected
         } else {
             ipc::Data::Close
@@ -2354,6 +2400,26 @@ impl Connection {
         }
         self.pressed_modifiers.clear();
     }
+
+    fn get_auto_disconenct_timer() -> Option<(Instant, u64)> {
+        if Config::get_option("allow-auto-disconnect") == "Y" {
+            let mut minute: u64 = Config::get_option("auto-disconnect-timeout")
+                .parse()
+                .unwrap_or(10);
+            if minute == 0 {
+                minute = 10;
+            }
+            Some((Instant::now(), minute))
+        } else {
+            None
+        }
+    }
+
+    fn update_auto_disconnect_timer(&mut self) {
+        self.auto_disconnect_timer
+            .as_mut()
+            .map(|t| t.0 = Instant::now());
+    }
 }
 
 pub fn insert_switch_sides_uuid(id: String, uuid: uuid::Uuid) {
@@ -2382,6 +2448,8 @@ async fn start_ipc(
     if let Ok(s) = crate::ipc::connect(1000, "_cm").await {
         stream = Some(s);
     } else {
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
         let mut args = vec!["--cm"];
         if crate::hbbs_http::sync::is_pro() && password::hide_cm() {
             args.push("--hide");

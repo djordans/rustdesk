@@ -308,11 +308,12 @@ packages:
   dash_chat_2:
     dependency: "direct main"
     description:
-      name: dash_chat_2
-      sha256: e9e08b2a030d340d60f7adbeb977d3d6481db1f172b51440bfa02488b92fa19c
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.17"
+      path: "."
+      ref: HEAD
+      resolved-ref: bd6b5b41254e57c5bcece202ebfb234de63e6487
+      url: "https://github.com/rustdesk-org/Dash-Chat-2"
+    source: git
+    version: "0.0.18"
   debounce_throttle:
     dependency: "direct main"
     description:
@@ -490,7 +491,7 @@ packages:
       sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.0.1"
   flex_color_picker:
     dependency: "direct main"
     description:
@@ -1510,10 +1511,10 @@ packages:
     dependency: transitive
     description:
       name: video_player
-      sha256: "3fd106c74da32f336dc7feb65021da9b0207cb3124392935f1552834f7cce822"
+      sha256: d3910a8cefc0de8a432a4411dcf85030e885d8fef3ddea291f162253a05dbf01
       url: "https://pub.dev"
     source: hosted
-    version: "2.7.0"
+    version: "2.7.1"
   video_player_android:
     dependency: transitive
     description:
@@ -1534,10 +1535,10 @@ packages:
     dependency: transitive
     description:
       name: video_player_platform_interface
-      sha256: "1ca9acd7a0fb15fb1a990cb554e6f004465c6f37c99d2285766f08a4b2802988"
+      sha256: be72301bf2c0150ab35a8c34d66e5a99de525f6de1e8d27c0672b836fe48f73a
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.0"
+    version: "6.2.1"
   video_player_web:
     dependency: transitive
     description:
@@ -1686,4 +1687,4 @@ packages:
     version: "0.2.0"
 sdks:
   dart: ">=3.0.0 <4.0.0"
-  flutter: ">=3.7.0-0"
+  flutter: ">=3.10.0"

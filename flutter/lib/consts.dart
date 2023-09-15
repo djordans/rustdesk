@@ -13,6 +13,8 @@ const String kPeerPlatformLinux = "Linux";
 const String kPeerPlatformMacOS = "Mac OS";
 const String kPeerPlatformAndroid = "Android";
 
+const double kScrollbarThickness = 12.0;
+
 /// [kAppTypeMain] used by 'Desktop Main Page' , 'Mobile (Client and Server)', "Install Page"
 const String kAppTypeMain = "main";
 
@@ -137,6 +139,11 @@ const kRemoteScrollStyleAuto = 'scrollauto';
 
 /// [kRemoteScrollStyleBar] Scroll image with scroll bar.
 const kRemoteScrollStyleBar = 'scrollbar';
+
+/// [kScrollModeDefault] Mouse or touchpad, the default scroll mode.
+const kScrollModeDefault = 'default';
+/// [kScrollModeReverse] Mouse or touchpad, the reverse scroll mode.
+const kScrollModeReverse = 'reverse';
 
 /// [kRemoteImageQualityBest] Best image quality.
 const kRemoteImageQualityBest = 'best';
