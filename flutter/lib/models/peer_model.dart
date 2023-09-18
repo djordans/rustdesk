@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'platform_model.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
@@ -7,7 +8,7 @@ import 'package:collection/collection.dart';
 class Peer {
   final String id;
   String hash;
-  String username;
+  String username; // pc username
   String hostname;
   String platform;
   String password;
@@ -17,6 +18,7 @@ class Peer {
   String rdpPort;
   String rdpUsername;
   bool online = false;
+  String loginName; //login username
 
   String getId() {
     if (alias != '') {
@@ -36,7 +38,8 @@ class Peer {
         forceAlwaysRelay = json['forceAlwaysRelay'] == 'true',
         rdpPort = json['rdpPort'] ?? '',
         rdpUsername = json['rdpUsername'] ?? '',
-        password = json['password'] ?? '';
+        password = json['password'] ?? '',
+        loginName = json['loginName'] ?? '';
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -51,6 +54,7 @@ class Peer {
       "rdpPort": rdpPort,
       "rdpUsername": rdpUsername,
       "password": password,
+      'loginName': loginName,
     };
   }
 
@@ -66,6 +70,16 @@ class Peer {
     };
   }
 
+  Map<String, dynamic> toGroupCacheJson() {
+    return <String, dynamic>{
+      "id": id,
+      "username": username,
+      "hostname": hostname,
+      "platform": platform,
+      "login_name": loginName,
+    };
+  }
+
   Peer({
     required this.id,
     required this.hash,
@@ -78,6 +92,7 @@ class Peer {
     required this.rdpPort,
     required this.rdpUsername,
     required this.password,
+    required this.loginName,
   });
 
   Peer.loading()
@@ -93,6 +108,7 @@ class Peer {
           rdpPort: '',
           rdpUsername: '',
           password: '',
+          loginName: '',
         );
   bool equal(Peer other) {
     return id == other.id &&
@@ -104,22 +120,25 @@ class Peer {
         tags.equals(other.tags) &&
         forceAlwaysRelay == other.forceAlwaysRelay &&
         rdpPort == other.rdpPort &&
-        rdpUsername == other.rdpUsername;
+        rdpUsername == other.rdpUsername &&
+        loginName == other.loginName;
   }
 
   Peer.copy(Peer other)
       : this(
-            id: other.id,
-            hash: other.hash,
-            username: other.username,
-            hostname: other.hostname,
-            platform: other.platform,
-            alias: other.alias,
-            tags: other.tags.toList(),
-            forceAlwaysRelay: other.forceAlwaysRelay,
-            rdpPort: other.rdpPort,
-            rdpUsername: other.rdpUsername,
-            password: other.password);
+          id: other.id,
+          hash: other.hash,
+          username: other.username,
+          hostname: other.hostname,
+          platform: other.platform,
+          alias: other.alias,
+          tags: other.tags.toList(),
+          forceAlwaysRelay: other.forceAlwaysRelay,
+          rdpPort: other.rdpPort,
+          rdpUsername: other.rdpUsername,
+            password: other.password,
+          loginName: other.loginName,
+        );
 }
 
 enum UpdateEvent { online, load }
@@ -127,11 +146,14 @@ enum UpdateEvent { online, load }
 class Peers extends ChangeNotifier {
   final String name;
   final String loadEvent;
-  List<Peer> peers;
+  List<Peer> peers = List.empty(growable: true);
+  final RxList<Peer>? initPeers;
   UpdateEvent event = UpdateEvent.load;
   static const _cbQueryOnlines = 'callback_query_onlines';
 
-  Peers({required this.name, required this.peers, required this.loadEvent}) {
+  Peers(
+      {required this.name, required this.initPeers, required this.loadEvent}) {
+    peers = initPeers ?? [];
     platformFFI.registerEventHandler(_cbQueryOnlines, name, (evt) async {
       _updateOnlineState(evt);
     });
@@ -182,7 +204,11 @@ class Peers extends ChangeNotifier {
 
   void _updatePeers(Map<String, dynamic> evt) {
     final onlineStates = _getOnlineStates();
-    peers = _decodePeers(evt['peers']);
+    if (initPeers != null) {
+      peers = initPeers!;
+    } else {
+      peers = _decodePeers(evt['peers']);
+    }
     for (var peer in peers) {
       final state = onlineStates[peer.id];
       peer.online = state != null && state != false;
