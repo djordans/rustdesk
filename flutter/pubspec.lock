@@ -336,7 +336,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "e51fddf7f3b46d4423b7aa79ba824a45a1ea1b7a"
+      resolved-ref: e51fddf7f3b46d4423b7aa79ba824a45a1ea1b7a
       url: "https://github.com/rustdesk-org/rustdesk_desktop_multi_window"
     source: git
     version: "0.1.0"
@@ -403,7 +403,16 @@ packages:
       sha256: bee4103caa1517fcc623bd5efbe1743956a276b3db3738aa9342afe23be48b48
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.8"
+    version: "2.0.0"
+  dynamic_layouts:
+    dependency: "direct main"
+    description:
+      path: "packages/dynamic_layouts"
+      ref: "0023d01996576e494094793a6552463f01c5627a"
+      resolved-ref: "0023d01996576e494094793a6552463f01c5627a"
+      url: "https://github.com/flutter/packages.git"
+    source: git
+    version: "0.0.1+1"
   event_bus:
     dependency: transitive
     description:
