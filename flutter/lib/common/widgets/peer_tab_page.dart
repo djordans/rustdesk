@@ -157,7 +157,7 @@ class _PeerTabPageState extends State<PeerTabPage>
               ],
             )),
           ),
-        ),
+        ).paddingOnly(right: isDesktop ? 12 : 0),
         _createPeersView(),
       ],
     );

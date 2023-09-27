@@ -520,6 +520,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
+    Timer(const Duration(seconds: 1), () async {
+      updateUrl = await bind.mainGetSoftwareUpdateUrl();
+      if (updateUrl.isNotEmpty) setState(() {});
+    });
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final url = await GetUpdate();//bind.mainGetSoftwareUpdateUrl();

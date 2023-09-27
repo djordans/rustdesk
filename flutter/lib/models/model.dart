@@ -8,6 +8,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/consts.dart';
+import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/generated_bridge.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
@@ -202,11 +203,11 @@ class FfiModel with ChangeNotifier {
     }, sessionId, peerId);
     updatePrivacyMode(data.updatePrivacyMode, sessionId, peerId);
     setConnectionType(peerId, data.secure, data.direct);
-    handlePeerInfo(data.peerInfo, peerId);
+    await handlePeerInfo(data.peerInfo, peerId);
     for (var element in data.cursorDataList) {
-      handleCursorData(element);
+      await handleCursorData(element);
     }
-    handleCursorId(data.lastCursorId);
+    await handleCursorId(data.lastCursorId);
   }
 
   // todo: why called by two position
@@ -353,9 +354,13 @@ class FfiModel with ChangeNotifier {
   }
 
   handleAliasChanged(Map<String, dynamic> evt) {
-    final rxAlias = PeerStringOption.find(evt['id'], 'alias');
-    if (rxAlias.value != evt['alias']) {
-      rxAlias.value = evt['alias'];
+    if (!isDesktop) return;
+    final String peerId = evt['id'];
+    final String alias = evt['alias'];
+    String label = getDesktopTabLabel(peerId, alias);
+    final rxTabLabel = PeerStringOption.find(evt['id'], 'tabLabel');
+    if (rxTabLabel.value != label) {
+      rxTabLabel.value = label;
     }
   }
 
@@ -1797,7 +1802,7 @@ class FFI {
             debugPrint('Unreachable, the cached data cannot be decoded.');
             return;
           }
-          ffiModel.handleCachedPeerData(data, id);
+          await ffiModel.handleCachedPeerData(data, id);
           await bind.sessionRefresh(sessionId: sessionId);
         });
         isToNewWindowNotified.value = true;

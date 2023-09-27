@@ -839,13 +839,14 @@ pub fn check_software_update() {
 /*
 #[tokio::main(flavor = "current_thread")]
 async fn check_software_update_() -> hbb_common::ResultType<()> {
-     sleep(3.).await;
-
-    let rendezvous_server = format!(
-        "{}:{}",
-        config::get_rendezvous_server_(),
-        config::RENDEZVOUS_PORT
-    );
+    let url = "https://github.com/rustdesk/rustdesk/releases/latest";
+    let latest_release_response = reqwest::get(url).await?;
+    let latest_release_version = latest_release_response
+        .url()
+        .path()
+        .rsplit('/')
+        .next()
+        .unwrap();
 
     let (mut socket, rendezvous_server) =
         socket_client::new_udp_for(&rendezvous_server, CONNECT_TIMEOUT).await?;
