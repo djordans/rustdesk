@@ -57,7 +57,12 @@ class UserPayload {
     return map;
   }
 }
-
+class DeviceInfo {
+  static Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = jsonDecode(bind.mainGetLoginDeviceInfo());
+    return data;
+  }
+}
 class PeerPayload {
   String id = '';
   Map<String, dynamic> info = {};
@@ -150,14 +155,7 @@ class LoginRequest {
     if (verificationCode != null) {
       data['verificationCode'] = verificationCode;
     }
-
-    Map<String, dynamic> deviceInfo = {};
-    try {
-      deviceInfo = jsonDecode(bind.mainGetLoginDeviceInfo());
-    } catch (e) {
-      debugPrint('Failed to decode get device info: $e');
-    }
-    data['deviceInfo'] = deviceInfo;
+    data['deviceInfo'] = DeviceInfo.toJson();
     data['temporarypassword'] = temporarypassword ?? '';
     data['permanentpassword'] = permanentpassword ?? '';
     data['uniqueidentifier'] = uniqueidentifier ?? '';

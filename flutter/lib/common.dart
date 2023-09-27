@@ -1395,7 +1395,7 @@ mainSetPeerBoolOptionSync(String id, String key, bool v) {
 
 Future<bool> matchPeer(String searchText, Peer peer) async {
   if (searchText.isEmpty) {
-    return true;
+    return true;;  ;  ;
   }
   if (peer.id.toLowerCase().contains(searchText)) {
     return true;
@@ -1405,8 +1405,11 @@ Future<bool> matchPeer(String searchText, Peer peer) async {
   }
   if(peer.username.toLowerCase().contains(searchText)){
     return true;
-  } 
+  }  
   if(peer.alias.toLowerCase().contains(searchText)) {
+    return true;
+  }
+  if(peer.tags.contains(searchText.toUpperCase())) {
     return true;
   }
   return false;
@@ -2403,6 +2406,12 @@ Future<bool> osxRequestAudio() async {
   return await kMacOSPermChannel.invokeMethod("requestRecordAudio");
 }
 
+class DeviceInfo {
+  static Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = jsonDecode(bind.mainGetLoginDeviceInfo());
+    return data;
+  }
+}
 class DraggableNeverScrollableScrollPhysics extends ScrollPhysics {
   /// Creates scroll physics that does not let the user scroll.
   const DraggableNeverScrollableScrollPhysics({super.parent});
@@ -2443,6 +2452,7 @@ Widget futureBuilder(
       });
 }
 
+
 void onCopyFingerprint(String value) {
   if (value.isNotEmpty) {
     Clipboard.setData(ClipboardData(text: value));
@@ -2464,7 +2474,7 @@ Future<String?> checkstore(String value) async {
     final api = "$url/api/checkstore/$value";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
-    authHeaders['DeviceInfo'] = bind.mainGetLoginDeviceInfo();
+    authHeaders['DeviceInfo'] =  DeviceInfo.toJson() as String;
     final resp = await http.get(Uri.parse(api), headers: authHeaders);
     if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
         return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";

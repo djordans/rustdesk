@@ -13,6 +13,12 @@ import 'platform_model.dart';
 
 bool refreshingUser = false;
 
+class DeviceInfo {
+  static Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = jsonDecode(bind.mainGetLoginDeviceInfo());
+    return data;
+  }
+}
 class UserModel {
   final RxString userName = ''.obs;
   final RxBool isAdmin = false.obs;
@@ -37,7 +43,7 @@ class UserModel {
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
       'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin'),
-      'deviceInfo': bind.mainGetLoginDeviceInfo()
+      'deviceInfo': DeviceInfo.toJson() as String
     };
     if (refreshingUser) return;
     try {
