@@ -121,6 +121,7 @@ class Peer {
         forceAlwaysRelay == other.forceAlwaysRelay &&
         rdpPort == other.rdpPort &&
         rdpUsername == other.rdpUsername &&
+        password == other.password &&
         loginName == other.loginName;
   }
 
@@ -136,7 +137,7 @@ class Peer {
           forceAlwaysRelay: other.forceAlwaysRelay,
           rdpPort: other.rdpPort,
           rdpUsername: other.rdpUsername,
-            password: other.password,
+          password: other.password,
           loginName: other.loginName,
         );
 }

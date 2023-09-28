@@ -120,7 +120,7 @@ class AbModel {
     }
   }
 
-  void addId(String id, String alias, List<dynamic> tags) {
+  void addId(String id, String alias, List<dynamic> tags,String password) {
     if (idContainBy(id)) {
       return;
     }
@@ -128,6 +128,7 @@ class AbModel {
       'id': id,
       'alias': alias,
       'tags': tags,
+      'password': password,
     });
     _mergePeerFromGroup(peer);
     peers.add(peer);

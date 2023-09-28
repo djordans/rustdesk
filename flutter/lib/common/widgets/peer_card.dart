@@ -500,6 +500,7 @@ abstract class BasePeerCard extends StatelessWidget {
       id,
       translate('Transfer File'),
       isFileTransfer: true,
+      password: gFFI.abModel.getPeerPassword(id),
     );
   }
 
@@ -510,6 +511,7 @@ abstract class BasePeerCard extends StatelessWidget {
       id,
       translate('TCP Tunneling'),
       isTcpTunneling: true,
+      password: gFFI.abModel.getPeerPassword(id),
     );
   }
 
@@ -1327,10 +1329,13 @@ void connectInPeerTab(BuildContext context, String id, PeerTabIndex tab,
         id: id,
         alias: p.alias,
       );
+      password = p.password;
     }
   }
+  
   connect(context, id,
       isFileTransfer: isFileTransfer,
       isTcpTunneling: isTcpTunneling,
-      isRDP: isRDP,password: password);
+      isRDP: isRDP,
+      password: password);
 }

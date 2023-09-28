@@ -1395,7 +1395,7 @@ mainSetPeerBoolOptionSync(String id, String key, bool v) {
 
 Future<bool> matchPeer(String searchText, Peer peer) async {
   if (searchText.isEmpty) {
-    return true;;  ;  ;
+    return true;
   }
   if (peer.id.toLowerCase().contains(searchText)) {
     return true;

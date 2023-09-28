@@ -283,7 +283,7 @@ class _AddressBookState extends State<AddressBook> {
             });
             return;
           }
-          gFFI.abModel.addId(id, aliasController.text.trim(), selectedTag);
+          gFFI.abModel.addId(id, aliasController.text.trim(), selectedTag,"");
           gFFI.abModel.pushAb();
           this.setState(() {});
           // final currentPeers
