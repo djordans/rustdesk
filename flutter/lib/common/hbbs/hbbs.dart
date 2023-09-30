@@ -155,7 +155,7 @@ class LoginRequest {
     if (verificationCode != null) {
       data['verificationCode'] = verificationCode;
     }
-    data['deviceInfo'] = DeviceInfo.toJson();
+    data['deviceInfo'] = DeviceInfo.toJson() as String;
     data['temporarypassword'] = temporarypassword ?? '';
     data['permanentpassword'] = permanentpassword ?? '';
     data['uniqueidentifier'] = uniqueidentifier ?? '';
