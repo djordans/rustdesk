@@ -539,6 +539,7 @@ class AbModel {
     if (data['peers'] is List) {
       for (final peer in data['peers']) {
         peers.add(Peer.fromJson(peer));
+        
       }
     }
     if (isFull(false)) {

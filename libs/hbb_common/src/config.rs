@@ -1572,6 +1572,12 @@ pub struct AbPeer {
         deserialize_with = "deserialize_string",
         skip_serializing_if = "String::is_empty"
     )]
+    pub password: String,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_string",
+        skip_serializing_if = "String::is_empty"
+    )]
     pub alias: String,
     #[serde(default, deserialize_with = "deserialize_vec_string")]
     pub tags: Vec<String>,
@@ -1676,6 +1682,12 @@ pub struct GroupPeer {
         skip_serializing_if = "String::is_empty"
     )]
     pub platform: String,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_string",
+        skip_serializing_if = "String::is_empty"
+    )]
+    pub password: String,
     #[serde(
         default,
         deserialize_with = "deserialize_string",
