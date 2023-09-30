@@ -8,7 +8,6 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/consts.dart';
-import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/generated_bridge.dart';
 import 'package:flutter_hbb/models/ab_model.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
@@ -266,8 +265,6 @@ class FfiModel with ChangeNotifier {
         updateBlockInputState(evt, peerId);
       } else if (name == 'update_privacy_mode') {
         updatePrivacyMode(evt, sessionId, peerId);
-      } else if (name == 'alias') {
-        handleAliasChanged(evt);
       } else if (name == 'show_elevation') {
         final show = evt['show'].toString() == 'true';
         parent.target?.serverModel.setShowElevation(show);
@@ -351,17 +348,6 @@ class FfiModel with ChangeNotifier {
   /// Bind the event listener to receive events from the Rust core.
   updateEventListener(SessionID sessionId, String peerId) {
     platformFFI.setEventCallback(startEventListener(sessionId, peerId));
-  }
-
-  handleAliasChanged(Map<String, dynamic> evt) {
-    if (!isDesktop) return;
-    final String peerId = evt['id'];
-    final String alias = evt['alias'];
-    String label = getDesktopTabLabel(peerId, alias);
-    final rxTabLabel = PeerStringOption.find(evt['id'], 'tabLabel');
-    if (rxTabLabel.value != label) {
-      rxTabLabel.value = label;
-    }
   }
 
   _updateCurDisplay(SessionID sessionId, Display newDisplay) {
@@ -1673,6 +1659,7 @@ class ElevationModel with ChangeNotifier {
   bool get showRequestMenu => _canElevate && !_running;
   onPeerInfo(PeerInfo pi) {
     _canElevate = pi.platform == kPeerPlatformWindows && pi.sasEnabled == false;
+    _running = false;
   }
 
   onPortableServiceRunning(Map<String, dynamic> evt) {

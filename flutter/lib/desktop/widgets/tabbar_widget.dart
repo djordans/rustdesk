@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
@@ -9,7 +8,6 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide TabBarTheme;
 import 'package:flutter_hbb/common.dart';
-import 'package:flutter_hbb/common/shared_state.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/main.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
@@ -269,11 +267,8 @@ class DesktopTab extends StatelessWidget {
   }
 
   static RxString tablabelGetter(String peerId) {
-    PeerStringOption.init(peerId, 'tabLabel', () {
-      final alias = bind.mainGetPeerOptionSync(id: peerId, key: 'alias');
-      return getDesktopTabLabel(peerId, alias);
-    });
-    return PeerStringOption.find(peerId, 'tabLabel');
+    final alias = bind.mainGetPeerOptionSync(id: peerId, key: 'alias');
+    return RxString(getDesktopTabLabel(peerId, alias));
   }
 
   @override
