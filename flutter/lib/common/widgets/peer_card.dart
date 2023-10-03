@@ -868,12 +868,12 @@ class RecentPeerCard extends BasePeerCard {
     if(gFFI.userModel.isAdmin.isTrue){
       final List favs = (await bind.mainGetFav()).toList();
 
-      if (isDesktop && peer.platform != 'Android') {
-        menuItems.add(_tcpTunnelingAction(context, peer.id));
-      }
-      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    if (isDesktop && peer.platform != kPeerPlatformAndroid) {
+      menuItems.add(_tcpTunnelingAction(context, peer.id));
+    }
+    // menuItems.add(await _openNewConnInOptAction(peer.id));
     menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (Platform.isWindows && peer.platform == 'Windows') {
+    if (Platform.isWindows && peer.platform == kPeerPlatformWindows) {
       menuItems.add(_rdpAction(context, peer.id));
     }
     if (Platform.isWindows) {
@@ -923,13 +923,12 @@ class FavoritePeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
-    if(gFFI.userModel.isAdmin.isTrue){
-      if (isDesktop && peer.platform != 'Android') {
-        menuItems.add(_tcpTunnelingAction(context, peer.id));
-      }
-      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    if (isDesktop && peer.platform != kPeerPlatformAndroid) {
+      menuItems.add(_tcpTunnelingAction(context, peer.id));
+    }
+    // menuItems.add(await _openNewConnInOptAction(peer.id));
     menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (Platform.isWindows && peer.platform == 'Windows') {
+    if (Platform.isWindows && peer.platform == kPeerPlatformWindows) {
       menuItems.add(_rdpAction(context, peer.id));
     }
     if (Platform.isWindows) {
@@ -952,7 +951,6 @@ class FavoritePeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
-    }
     return menuItems;
   }
 
@@ -976,15 +974,14 @@ class DiscoveredPeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
-    if(gFFI.userModel.isAdmin.isTrue){
       final List favs = (await bind.mainGetFav()).toList();
 
-      if (isDesktop && peer.platform != 'Android') {
-        menuItems.add(_tcpTunnelingAction(context, peer.id));
-      }
-      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    if (isDesktop && peer.platform != kPeerPlatformAndroid) {
+      menuItems.add(_tcpTunnelingAction(context, peer.id));
+    }
+    // menuItems.add(await _openNewConnInOptAction(peer.id));
     menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (Platform.isWindows && peer.platform == 'Windows') {
+    if (Platform.isWindows && peer.platform == kPeerPlatformWindows) {
       menuItems.add(_rdpAction(context, peer.id));
     }
     menuItems.add(_wolAction(peer.id));
@@ -1006,7 +1003,6 @@ class DiscoveredPeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
-    }
     return menuItems;
   }
 
@@ -1030,13 +1026,12 @@ class AddressBookPeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
-    if(gFFI.userModel.isAdmin.isTrue){
-      if (isDesktop && peer.platform != 'Android') {
-        menuItems.add(_tcpTunnelingAction(context, peer.id));
-      }
-      // menuItems.add(await _openNewConnInOptAction(peer.id));
+    if (isDesktop && peer.platform != kPeerPlatformAndroid) {
+      menuItems.add(_tcpTunnelingAction(context, peer.id));
+    }
+    // menuItems.add(await _openNewConnInOptAction(peer.id));
     menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (Platform.isWindows && peer.platform == 'Windows') {
+    if (Platform.isWindows && peer.platform == kPeerPlatformWindows) {
       menuItems.add(_rdpAction(context, peer.id));
     }
     if (Platform.isWindows) {
@@ -1053,7 +1048,6 @@ class AddressBookPeerCard extends BasePeerCard {
 
     menuItems.add(MenuEntryDivider());
     menuItems.add(_removeAction(peer.id));
-    }
     return menuItems;
   }
 
@@ -1099,12 +1093,12 @@ class MyGroupPeerCard extends BasePeerCard {
       _connectAction(context, peer),
       _transferFileAction(context, peer.id),
     ];
-    if (isDesktop && peer.platform != 'Android') {
+    if (isDesktop && peer.platform != kPeerPlatformAndroid) {
       menuItems.add(_tcpTunnelingAction(context, peer.id));
     }
     // menuItems.add(await _openNewConnInOptAction(peer.id));
     // menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    if (Platform.isWindows && peer.platform == 'Windows') {
+    if (Platform.isWindows && peer.platform == kPeerPlatformWindows) {
       menuItems.add(_rdpAction(context, peer.id));
     }
     if (Platform.isWindows) {
