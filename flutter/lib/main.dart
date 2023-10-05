@@ -127,7 +127,7 @@ void runMainApp(bool startService) async {
     bind.pluginListReload();
   }
   CheckLocalOptionFile();
-  //await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
+  await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
   // Set window option.

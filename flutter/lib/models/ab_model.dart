@@ -485,11 +485,12 @@ class AbModel {
       _cacheLoadOnceFlag = true;
       final access_token = bind.mainGetLocalOption(key: 'access_token');
       if (access_token.isEmpty) return;
-      final cache = await bind.mainLoadAb();
+      pullAb();
+      /*final cache = pullAb();// bind.mainLoadAb();
       if (abLoading.value) return;
       final data = jsonDecode(cache);
       if (data == null || data['access_token'] != access_token) return;
-      _deserialize(data);
+      _deserialize(data);*/
     } catch (e) {
       debugPrint("load ab cache: $e");
     }
