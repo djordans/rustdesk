@@ -485,7 +485,7 @@ class AbModel {
       _cacheLoadOnceFlag = true;
       final access_token = bind.mainGetLocalOption(key: 'access_token');
       if (access_token.isEmpty) return;
-      pullAb();
+      pullAb(force:true);
       /*final cache = pullAb();// bind.mainLoadAb();
       if (abLoading.value) return;
       final data = jsonDecode(cache);
