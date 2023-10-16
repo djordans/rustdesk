@@ -365,7 +365,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Audio Input Device", "جهاز ادخال الصوت"),
         ("Use IP Whitelisting", "استخدام قائمة الـ IP البيضاء"),
         ("Network", "الشبكة"),
-        ("Enable RDP", "تفعيل RDP"),
         ("Pin Toolbar", "تثبيت شريط الادوات"),
         ("Unpin Toolbar", "الغاء تثبيت شريط الادوات"),
         ("Recording", "التسجيل"),
@@ -556,6 +555,14 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", ""),
         ("upgrade_rustdesk_server_pro_to_{}_tip", ""),
         ("pull_group_failed_tip", ""),
-        ("Filter by intersection", "")
+        ("Filter by intersection", ""),
+        ("Remove wallpaper during incoming sessions", ""),
+        ("Test", ""),
+        ("switch_display_elevated_connections_tip", ""),
+        ("display_is_plugged_out_msg", ""),
+        ("No displays", ""),
+        ("elevated_switch_display_msg", ""),
+        ("Open in new window", ""),
+        ("Show displays as individual windows", ""),
     ].iter().cloned().collect();
 }

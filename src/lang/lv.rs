@@ -365,7 +365,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Audio Input Device", "Audio ievades ierīce"),
         ("Use IP Whitelisting", "Izmantot balto IP sarakstu"),
         ("Network", "Tīkls"),
-        ("Enable RDP", "Iespējot RDP"),
         ("Pin Toolbar", "Piespraust rīkjoslu"),
         ("Unpin Toolbar", "Atspraust rīkjoslu"),
         ("Recording", "Ierakstīšana"),
@@ -556,6 +555,14 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", "Startējot pārbaudīt, vai nav programmatūras atjauninājumu"),
         ("upgrade_rustdesk_server_pro_to_{}_tip", "Lūdzu, jauniniet RustDesk Server Pro uz versiju {} vai jaunāku!"),
         ("pull_group_failed_tip", "Neizdevās atsvaidzināt grupu"),
-        ("Filter by intersection", "")
+        ("Filter by intersection", "Filtrēt pēc krustpunkta"),
+        ("Remove wallpaper during incoming sessions", "Noņemt fona tapeti ienākošo sesiju laikā"),
+        ("Test", "Pārbaudīt"),
+        ("switch_display_elevated_connections_tip", "Pārslēgšanās uz ne primāro displeju netiek atbalstīta paaugstinātajā režīmā, ja ir vairāki savienojumi. Lūdzu, mēģiniet vēlreiz pēc instalēšanas, ja vēlaties kontrolēt vairākus displejus."),
+        ("display_is_plugged_out_msg", "Displejs ir atvienots, pārslēdzieties uz pirmo displeju."),
+        ("No displays", "Nav displeju"),
+        ("elevated_switch_display_msg", "Pārslēdzieties uz primāro displeju, jo paaugstinātajā režīmā netiek atbalstīti vairāki displeji."),
+        ("Open in new window", "Atvērt jaunā logā"),
+        ("Show displays as individual windows", "Rādīt displejus kā atsevišķus logus"),
     ].iter().cloned().collect();
 }

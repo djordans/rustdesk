@@ -365,7 +365,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Audio Input Device", "音訊輸入裝置"),
         ("Use IP Whitelisting", "只允許白名單上的 IP 進行連線"),
         ("Network", "網路"),
-        ("Enable RDP", "允許 RDP 存取"),
         ("Pin Toolbar", "釘選工具列"),
         ("Unpin Toolbar", "取消釘選工具列"),
         ("Recording", "錄製"),
@@ -556,6 +555,14 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", ""),
         ("upgrade_rustdesk_server_pro_to_{}_tip", ""),
         ("pull_group_failed_tip", ""),
-        ("Filter by intersection", "")
+        ("Filter by intersection", ""),
+        ("Remove wallpaper during incoming sessions", ""),
+        ("Test", ""),
+        ("switch_display_elevated_connections_tip", ""),
+        ("display_is_plugged_out_msg", ""),
+        ("No displays", ""),
+        ("elevated_switch_display_msg", ""),
+        ("Open in new window", ""),
+        ("Show displays as individual windows", ""),
     ].iter().cloned().collect();
 }
