@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/widgets/toolbar.dart';
-import 'package:flutter_hbb/main.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:flutter_hbb/models/desktop_render_texture.dart';
@@ -353,10 +351,10 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
 
   int get windowId => stateGlobal.windowId;
 
-  bool get isFullscreen => stateGlobal.fullscreen;
   void _setFullscreen(bool v) {
     stateGlobal.setFullscreen(v);
-    setState(() {});
+    // stateGlobal.fullscreen is RxBool now, no need to call setState.
+    // setState(() {});
   }
 
   RxBool get show => widget.state.show;
@@ -480,7 +478,7 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
       toolbarItems.add(_ChatMenu(id: widget.id, ffi: widget.ffi));
       toolbarItems.add(_VoiceCallMenu(id: widget.id, ffi: widget.ffi));
     }
-    toolbarItems.add(_RecordMenu(ffi: widget.ffi));
+    toolbarItems.add(_RecordMenu());
     toolbarItems.add(_CloseMenu(id: widget.id, ffi: widget.ffi));
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -744,42 +742,14 @@ class _MonitorMenu extends StatelessWidget {
     );
   }
 
-  // Open new tab or window to show this monitor.
-  // For now just open new window.
-  openMonitorInNewTabOrWindow(int i, PeerInfo pi) {
-    if (kWindowId == null) {
-      // unreachable
-      debugPrint('openMonitorInNewTabOrWindow, unreachable! kWindowId is null');
-      return;
-    }
-    DesktopMultiWindow.invokeMethod(
-        kMainWindowId,
-        kWindowEventOpenMonitorSession,
-        jsonEncode({
-          'window_id': kWindowId!,
-          'peer_id': ffi.id,
-          'display': i,
-          'display_count': pi.displays.length,
-        }));
-  }
-
-  openMonitorInTheSameTab(int i, PeerInfo pi) {
-    final displays = i == kAllDisplayValue
-        ? List.generate(pi.displays.length, (index) => index)
-        : [i];
-    bind.sessionSwitchDisplay(
-        sessionId: ffi.sessionId, value: Int32List.fromList(displays));
-    ffi.ffiModel.switchToNewDisplay(i, ffi.sessionId, id);
-  }
-
   onPressed(int i, PeerInfo pi) {
     _menuDismissCallback(ffi);
     RxInt display = CurrentDisplayState.find(id);
     if (display.value != i) {
       if (isChooseDisplayToOpenInNewWindow(pi, ffi.sessionId)) {
-        openMonitorInNewTabOrWindow(i, pi);
+        openMonitorInNewTabOrWindow(i, ffi.id, pi);
       } else {
-        openMonitorInTheSameTab(i, pi);
+        openMonitorInTheSameTab(i, ffi, pi);
       }
     }
   }
@@ -827,7 +797,7 @@ class ScreenAdjustor {
     required this.cbExitFullscreen,
   });
 
-  bool get isFullscreen => stateGlobal.fullscreen;
+  bool get isFullscreen => stateGlobal.fullscreen.isTrue;
   int get windowId => stateGlobal.windowId;
 
   adjustWindow(BuildContext context) {
@@ -981,7 +951,6 @@ class _DisplayMenuState extends State<_DisplayMenu> {
     cbExitFullscreen: () => widget.setFullscreen(false),
   );
 
-  bool get isFullscreen => stateGlobal.fullscreen;
   int get windowId => stateGlobal.windowId;
   Map<String, bool> get perms => widget.ffi.ffiModel.permissions;
   PeerInfo get pi => widget.ffi.ffiModel.pi;
@@ -1677,17 +1646,17 @@ class _VoiceCallMenu extends StatelessWidget {
 }
 
 class _RecordMenu extends StatelessWidget {
-  final FFI ffi;
-  const _RecordMenu({Key? key, required this.ffi}) : super(key: key);
+  const _RecordMenu({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    var ffiModel = Provider.of<FfiModel>(context);
+    var ffi = Provider.of<FfiModel>(context);
     var recordingModel = Provider.of<RecordingModel>(context);
     final visible =
-        recordingModel.start || ffiModel.permissions['recording'] != false;
+        (recordingModel.start || ffi.permissions['recording'] != false) &&
+            ffi.pi.currentDisplay != kAllDisplayValue;
     if (!visible) return Offstage();
-    final menuButton = _IconMenuButton(
+    return _IconMenuButton(
       assetName: 'assets/rec.svg',
       tooltip: recordingModel.start
           ? 'Stop session recording'
@@ -1700,14 +1669,6 @@ class _RecordMenu extends StatelessWidget {
           ? _ToolbarTheme.hoverRedColor
           : _ToolbarTheme.hoverBlueColor,
     );
-    return ChangeNotifierProvider.value(
-        value: ffi.qualityMonitorModel,
-        child: Consumer<QualityMonitorModel>(
-            builder: (context, model, child) => Offstage(
-                  // If already started, AV1->Hidden/Stop, Other->Start, same as actual
-                  offstage: model.data.codecFormat == 'AV1',
-                  child: menuButton,
-                )));
   }
 }
 
@@ -2090,32 +2051,34 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildDraggable(context),
-        TextButton(
-          onPressed: () {
-            widget.setFullscreen(!isFullscreen);
-            setState(() {});
-          },
-          child: Tooltip(
-            message: translate(isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'),
-            child: Icon(
-              isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-              size: iconSize,
-            ),
-          ),
-        ),
-        Offstage(
-          offstage: !isFullscreen,
-          child: TextButton(
-            onPressed: () => widget.setMinimize(),
-            child: Tooltip(
-              message: translate('Minimize'),
-              child: Icon(
-                Icons.remove,
-                size: iconSize,
+        Obx(() => TextButton(
+              onPressed: () {
+                widget.setFullscreen(!isFullscreen.value);
+              },
+              child: Tooltip(
+                message: translate(
+                    isFullscreen.isTrue ? 'Exit Fullscreen' : 'Fullscreen'),
+                child: Icon(
+                  isFullscreen.isTrue
+                      ? Icons.fullscreen_exit
+                      : Icons.fullscreen,
+                  size: iconSize,
+                ),
               ),
-            ),
-          ),
-        ),
+            )),
+        Obx(() => Offstage(
+              offstage: isFullscreen.isFalse,
+              child: TextButton(
+                onPressed: () => widget.setMinimize(),
+                child: Tooltip(
+                  message: translate('Minimize'),
+                  child: Icon(
+                    Icons.remove,
+                    size: iconSize,
+                  ),
+                ),
+              ),
+            )),
         TextButton(
           onPressed: () => setState(() {
             widget.show.value = !widget.show.value;

@@ -1335,6 +1335,8 @@ class _DisplayState extends State<_Display> {
     if (useTextureRender) {
       children.add(otherRow('Show displays as individual windows',
           kKeyShowDisplaysAsIndividualWindows));
+      children.add(otherRow('Use all my displays for the remote session',
+          kKeyUseAllMyDisplaysForTheRemoteSession));
     }
     return _Card(title: 'Other Default Options', children: children);
   }

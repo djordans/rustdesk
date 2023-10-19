@@ -39,11 +39,15 @@ fn initialize(app_dir: &str) {
     *config::APP_DIR.write().unwrap() = app_dir.to_owned();
     #[cfg(target_os = "android")]
     {
+        // flexi_logger can't work when android_logger initialized.
+        #[cfg(debug_assertions)]
         android_logger::init_once(
             android_logger::Config::default()
                 .with_max_level(log::LevelFilter::Debug) // limit log level
                 .with_tag("ffi"), // logs will show under mytag tag
         );
+        #[cfg(not(debug_assertions))]
+        hbb_common::init_log(false, "");
         #[cfg(feature = "mediacodec")]
         scrap::mediacodec::check_mediacodec();
         crate::common::test_rendezvous_server();
@@ -339,7 +343,9 @@ pub fn session_set_reverse_mouse_wheel(session_id: SessionID, value: String) {
     }
 }
 
-pub fn session_get_displays_as_individual_windows(session_id: SessionID) -> SyncReturn<Option<String>> {
+pub fn session_get_displays_as_individual_windows(
+    session_id: SessionID,
+) -> SyncReturn<Option<String>> {
     if let Some(session) = sessions::get_session_by_session_id(&session_id) {
         SyncReturn(Some(session.get_displays_as_individual_windows()))
     } else {
@@ -350,6 +356,27 @@ pub fn session_get_displays_as_individual_windows(session_id: SessionID) -> Sync
 pub fn session_set_displays_as_individual_windows(session_id: SessionID, value: String) {
     if let Some(session) = sessions::get_session_by_session_id(&session_id) {
         session.save_displays_as_individual_windows(value);
+    }
+}
+
+pub fn session_get_use_all_my_displays_for_the_remote_session(
+    session_id: SessionID,
+) -> SyncReturn<Option<String>> {
+    if let Some(session) = sessions::get_session_by_session_id(&session_id) {
+        SyncReturn(Some(
+            session.get_use_all_my_displays_for_the_remote_session(),
+        ))
+    } else {
+        SyncReturn(None)
+    }
+}
+
+pub fn session_set_use_all_my_displays_for_the_remote_session(
+    session_id: SessionID,
+    value: String,
+) {
+    if let Some(session) = sessions::get_session_by_session_id(&session_id) {
+        session.save_use_all_my_displays_for_the_remote_session(value);
     }
 }
 
@@ -1065,6 +1092,29 @@ pub fn main_get_main_display() -> SyncReturn<String> {
             ]))
             .unwrap_or_default();
         }
+    }
+    SyncReturn(display_info)
+}
+
+pub fn main_get_displays() -> SyncReturn<String> {
+    #[cfg(target_os = "ios")]
+    let display_info = "".to_owned();
+    #[cfg(not(target_os = "ios"))]
+    let mut display_info = "".to_owned();
+    #[cfg(not(target_os = "ios"))]
+    if let Ok(displays) = crate::display_service::try_get_displays() {
+        let displays = displays
+            .iter()
+            .map(|d| {
+                HashMap::from([
+                    ("x", d.origin().0),
+                    ("y", d.origin().1),
+                    ("w", d.width() as i32),
+                    ("h", d.height() as i32),
+                ])
+            })
+            .collect::<Vec<_>>();
+        display_info = serde_json::to_string(&displays).unwrap_or_default();
     }
     SyncReturn(display_info)
 }
