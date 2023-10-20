@@ -254,6 +254,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                           rdpPort: '',
                           rdpUsername: '',
                           loginName: '',
+                          password: '',
                         );
                         return [emptyPeer];
                       }
