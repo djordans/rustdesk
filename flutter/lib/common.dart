@@ -1506,7 +1506,7 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
   late Size sz;
   late bool isMaximized;
   bool isFullscreen = stateGlobal.fullscreen.isTrue ||
-      (Platform.isMacOS && stateGlobal.closeOnFullscreen);
+      (Platform.isMacOS && stateGlobal.closeOnFullscreen == true);
   setFrameIfMaximized() {
     if (isMaximized) {
       final pos = bind.getLocalFlutterOption(k: kWindowPrefix + type.name);
