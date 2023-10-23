@@ -37,8 +37,8 @@ const url = 'https://rustdesk.com/';
 
 class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
   final _hasIgnoreBattery = androidVersion >= 26;
-  var _ignoreBatteryOpt = false;
-  var _enableStartOnBoot = false;
+  var _ignoreBatteryOpt = true;
+  var _enableStartOnBoot = true;
   var _enableAbr = false;
   var _denyLANDiscovery = false;
   var _onlyWhiteList = false;

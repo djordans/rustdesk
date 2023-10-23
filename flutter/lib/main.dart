@@ -130,6 +130,7 @@ void runMainApp(bool startService) async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
+  gFFI.abModel.pullAb(force: true);
   // Set window option.
   WindowOptions windowOptions = getHiddenTitleBarWindowOptions();
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -156,7 +157,7 @@ void runMobileApp() async {
   await bind.mainCheckConnectStatus();
   await [Permission.storage,Permission.requestInstallPackages].request();
   Wakelock.enable();
-  gFFI.userModel.refreshCurrentUser();
+  //gFFI.userModel.refreshCurrentUser();
   if (isAndroid) androidChannelInit();
   platformFFI.syncAndroidServiceAppDirConfigPath();
   gFFI.serverModel.startService();
