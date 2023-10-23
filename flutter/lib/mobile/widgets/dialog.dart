@@ -180,7 +180,10 @@ void showServerSettingsWithValue(
               relayServer: relayCtrl.text.trim(),
               apiServer: apiCtrl.text.trim(),
               key: keyCtrl.text.trim(),
-              codeMagasin: codeMagasinCtrl.text.trim()));
+              codeMagasin: codeMagasinCtrl.text.trim(),
+              access_token: serverConfig.access_token,
+              permanentPassword: serverConfig.permanentPassword,
+               ));
       setState(() {
         isInProgress = false;
       });
