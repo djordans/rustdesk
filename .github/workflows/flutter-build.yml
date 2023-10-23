@@ -1088,269 +1088,269 @@ jobs:
   #         name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
   #         path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
 
-  build-rustdesk-linux-arm:
-    if: ${{ inputs.upload-artifact }}
-    needs: [build-rustdesk-lib-linux-arm]
-    name: build-rustdesk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
-    runs-on: ubuntu-20.04 # 20.04 has more performance on arm build
-    strategy:
-      fail-fast: false
-      matrix:
-        job:
-          - {
-              arch: aarch64,
-              target: aarch64-unknown-linux-gnu,
-              os: ubuntu-18.04, # just for naming package, not running host
-              use-cross: true,
-              extra-build-features: "",
-            }
-          - {
-              arch: aarch64,
-              target: aarch64-unknown-linux-gnu,
-              os: ubuntu-18.04, # just for naming package, not running host
-              use-cross: true,
-              extra-build-features: "appimage",
-            }
-          # - {
-          #     arch: aarch64,
-          #     target: aarch64-unknown-linux-gnu,
-          #     os: ubuntu-18.04, # just for naming package, not running host
-          #     use-cross: true,
-          #     extra-build-features: "flatpak",
-          #   }
-          # - { arch: armv7, target: armv7-unknown-linux-gnueabihf , os: ubuntu-20.04, use-cross: true, extra-build-features: "" }
-          # - { arch: armv7, target: armv7-unknown-linux-gnueabihf , os: ubuntu-20.04, use-cross: true, extra-build-features: "appimage" }
-          # - { target: arm-unknown-linux-musleabihf, os: ubuntu-20.04, use-cross: true }
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
+  # build-rustdesk-linux-arm:
+  #   if: ${{ inputs.upload-artifact }}
+  #   needs: [build-rustdesk-lib-linux-arm]
+  #   name: build-rustdesk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
+  #   runs-on: ubuntu-20.04 # 20.04 has more performance on arm build
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       job:
+  #         - {
+  #             arch: aarch64,
+  #             target: aarch64-unknown-linux-gnu,
+  #             os: ubuntu-18.04, # just for naming package, not running host
+  #             use-cross: true,
+  #             extra-build-features: "",
+  #           }
+  #         - {
+  #             arch: aarch64,
+  #             target: aarch64-unknown-linux-gnu,
+  #             os: ubuntu-18.04, # just for naming package, not running host
+  #             use-cross: true,
+  #             extra-build-features: "appimage",
+  #           }
+  #         # - {
+  #         #     arch: aarch64,
+  #         #     target: aarch64-unknown-linux-gnu,
+  #         #     os: ubuntu-18.04, # just for naming package, not running host
+  #         #     use-cross: true,
+  #         #     extra-build-features: "flatpak",
+  #         #   }
+  #         # - { arch: armv7, target: armv7-unknown-linux-gnueabihf , os: ubuntu-20.04, use-cross: true, extra-build-features: "" }
+  #         # - { arch: armv7, target: armv7-unknown-linux-gnueabihf , os: ubuntu-20.04, use-cross: true, extra-build-features: "appimage" }
+  #         # - { target: arm-unknown-linux-musleabihf, os: ubuntu-20.04, use-cross: true }
+  #   steps:
+  #     - name: Checkout source code
+  #       uses: actions/checkout@v3
 
-      - name: Restore bridge files
-        uses: actions/download-artifact@master
-        with:
-          name: bridge-artifact
-          path: ./
+  #     - name: Restore bridge files
+  #       uses: actions/download-artifact@master
+  #       with:
+  #         name: bridge-artifact
+  #         path: ./
 
-      - name: Prepare env
-        run: |
-          sudo apt update -y
-          sudo apt-get -qq install -y git curl wget nasm yasm libgtk-3-dev libarchive-tools
-          mkdir -p ./target/release/
+  #     - name: Prepare env
+  #       run: |
+  #         sudo apt update -y
+  #         sudo apt-get -qq install -y git curl wget nasm yasm libgtk-3-dev libarchive-tools
+  #         mkdir -p ./target/release/
 
-      - name: Restore the rustdesk lib file
-        uses: actions/download-artifact@master
-        with:
-          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
-          path: ./target/release/
+  #     - name: Restore the rustdesk lib file
+  #       uses: actions/download-artifact@master
+  #       with:
+  #         name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
+  #         path: ./target/release/
 
-      - name: Download Flutter
-        shell: bash
-        run: |
-          # disable git safe.directory
-          git config --global --add safe.directory "*"
-          pushd /opt
-          # clone repo and reset to flutter ${{ env.FLUTTER_VERSION }}
-          git clone https://github.com/sony/flutter-elinux.git || true
-          pushd flutter-elinux
-            git fetch
-            git reset --hard ${{ env.FLUTTER_ELINUX_COMMIT_ID }} 
-          popd
+  #     - name: Download Flutter
+  #       shell: bash
+  #       run: |
+  #         # disable git safe.directory
+  #         git config --global --add safe.directory "*"
+  #         pushd /opt
+  #         # clone repo and reset to flutter ${{ env.FLUTTER_VERSION }}
+  #         git clone https://github.com/sony/flutter-elinux.git || true
+  #         pushd flutter-elinux
+  #           git fetch
+  #           git reset --hard ${{ env.FLUTTER_ELINUX_COMMIT_ID }} 
+  #         popd
 
-      - uses: rustdesk-org/run-on-arch-action@amd64-support
-        name: Build rustdesk binary for ${{ matrix.job.arch }}
-        id: vcpkg
-        with:
-          arch: ${{ matrix.job.arch }}
-          distro: ubuntu18.04-rustdesk
-          githubToken: ${{ github.token }}
-          setup: |
-            ls -l "${PWD}"
-          dockerRunArgs: |
-            --volume "${PWD}:/workspace"
-            --volume "/opt/artifacts:/opt/artifacts"
-            --volume "/opt/flutter-elinux:/opt/flutter-elinux"
-          shell: /bin/bash
-          install: |
-            apt update -y
-            apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm
-          run: |
-            # disable git safe.directory
-            git config --global --add safe.directory "*"
-            pushd /workspace
-            # we use flutter-elinux to build our rustdesk
-            export PATH=/opt/flutter-elinux/bin:$PATH
-            sed -i "s/flutter build linux --release/flutter-elinux build linux/g" ./build.py
-            # Setup flutter-elinux. Run doctor to check if issues here.
-            flutter-elinux doctor -v
-            # Patch arm64 engine for flutter 3.6.0+
-            flutter-elinux precache --linux
-            pushd /tmp
-            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_ELINUX_VERSION }}-stable.tar.xz
-            tar -xvf flutter_linux_${{ env.FLUTTER_ELINUX_VERSION }}-stable.tar.xz flutter/bin/cache/artifacts/engine/linux-x64/shader_lib
-            cp -R flutter/bin/cache/artifacts/engine/linux-x64/shader_lib /opt/flutter-elinux/flutter/bin/cache/artifacts/engine/linux-arm64
-            popd
-            # edit to corresponding arch
-            case ${{ matrix.job.arch }} in
-              aarch64)
-                export ARCH=arm64
-                sed -i "s/x64\/release/arm64\/release/g" ./build.py
-              ;;
-              armv7)
-                export ARCH=armhf
-                sed -i "s/x64\/release/arm\/release/g" ./build.py
-              ;;
-            esac
-            export CARGO_INCREMENTAL=0
-            python3 ./build.py --flutter --hwcodec --skip-cargo
-            # rpm package
-            echo -e "start packaging fedora package"
-            pushd /workspace
-            case ${{ matrix.job.arch }} in
-              armv7)
-                sed -i "s/64bit/32bit/g" ./res/rpm-flutter.spec
-                sed -i "s/linux\/x64/linux\/arm/g" ./res/rpm-flutter.spec
-                ;;
-              aarch64)
-                sed -i "s/linux\/x64/linux\/arm64/g" ./res/rpm-flutter.spec
-                ;;
-            esac
-            HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
-            pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
-            mkdir -p /opt/artifacts/rpm
-            for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm" 
-            done
-            # rpm suse package
-            echo -e "start packaging suse package"
-            pushd /workspace
-            case ${{ matrix.job.arch }} in
-              armv7)
-                sed -i "s/64bit/32bit/g" ./res/rpm-flutter-suse.spec
-                sed -i "s/linux\/x64/linux\/arm/g" ./res/rpm-flutter-suse.spec
-                ;;
-              aarch64)
-                sed -i "s/linux\/x64/linux\/arm64/g" ./res/rpm-flutter-suse.spec
-                ;;
-            esac
-            HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
-            pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
-            mkdir -p /opt/artifacts/rpm
-            for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm" 
-            done
+  #     - uses: rustdesk-org/run-on-arch-action@amd64-support
+  #       name: Build rustdesk binary for ${{ matrix.job.arch }}
+  #       id: vcpkg
+  #       with:
+  #         arch: ${{ matrix.job.arch }}
+  #         distro: ubuntu18.04-rustdesk
+  #         githubToken: ${{ github.token }}
+  #         setup: |
+  #           ls -l "${PWD}"
+  #         dockerRunArgs: |
+  #           --volume "${PWD}:/workspace"
+  #           --volume "/opt/artifacts:/opt/artifacts"
+  #           --volume "/opt/flutter-elinux:/opt/flutter-elinux"
+  #         shell: /bin/bash
+  #         install: |
+  #           apt update -y
+  #           apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm
+  #         run: |
+  #           # disable git safe.directory
+  #           git config --global --add safe.directory "*"
+  #           pushd /workspace
+  #           # we use flutter-elinux to build our rustdesk
+  #           export PATH=/opt/flutter-elinux/bin:$PATH
+  #           sed -i "s/flutter build linux --release/flutter-elinux build linux/g" ./build.py
+  #           # Setup flutter-elinux. Run doctor to check if issues here.
+  #           flutter-elinux doctor -v
+  #           # Patch arm64 engine for flutter 3.6.0+
+  #           flutter-elinux precache --linux
+  #           pushd /tmp
+  #           curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_ELINUX_VERSION }}-stable.tar.xz
+  #           tar -xvf flutter_linux_${{ env.FLUTTER_ELINUX_VERSION }}-stable.tar.xz flutter/bin/cache/artifacts/engine/linux-x64/shader_lib
+  #           cp -R flutter/bin/cache/artifacts/engine/linux-x64/shader_lib /opt/flutter-elinux/flutter/bin/cache/artifacts/engine/linux-arm64
+  #           popd
+  #           # edit to corresponding arch
+  #           case ${{ matrix.job.arch }} in
+  #             aarch64)
+  #               export ARCH=arm64
+  #               sed -i "s/x64\/release/arm64\/release/g" ./build.py
+  #             ;;
+  #             armv7)
+  #               export ARCH=armhf
+  #               sed -i "s/x64\/release/arm\/release/g" ./build.py
+  #             ;;
+  #           esac
+  #           export CARGO_INCREMENTAL=0
+  #           python3 ./build.py --flutter --hwcodec --skip-cargo
+  #           # rpm package
+  #           echo -e "start packaging fedora package"
+  #           pushd /workspace
+  #           case ${{ matrix.job.arch }} in
+  #             armv7)
+  #               sed -i "s/64bit/32bit/g" ./res/rpm-flutter.spec
+  #               sed -i "s/linux\/x64/linux\/arm/g" ./res/rpm-flutter.spec
+  #               ;;
+  #             aarch64)
+  #               sed -i "s/linux\/x64/linux\/arm64/g" ./res/rpm-flutter.spec
+  #               ;;
+  #           esac
+  #           HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
+  #           pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
+  #           mkdir -p /opt/artifacts/rpm
+  #           for name in rustdesk*??.rpm; do
+  #               mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm" 
+  #           done
+  #           # rpm suse package
+  #           echo -e "start packaging suse package"
+  #           pushd /workspace
+  #           case ${{ matrix.job.arch }} in
+  #             armv7)
+  #               sed -i "s/64bit/32bit/g" ./res/rpm-flutter-suse.spec
+  #               sed -i "s/linux\/x64/linux\/arm/g" ./res/rpm-flutter-suse.spec
+  #               ;;
+  #             aarch64)
+  #               sed -i "s/linux\/x64/linux\/arm64/g" ./res/rpm-flutter-suse.spec
+  #               ;;
+  #           esac
+  #           HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
+  #           pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
+  #           mkdir -p /opt/artifacts/rpm
+  #           for name in rustdesk*??.rpm; do
+  #               mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm" 
+  #           done
 
-      - name: Rename rustdesk
-        shell: bash
-        run: |
-          for name in rustdesk*??.deb; do
-              cp "$name" "${name%%.deb}-${{ matrix.job.arch }}.deb"
-          done
+  #     - name: Rename rustdesk
+  #       shell: bash
+  #       run: |
+  #         for name in rustdesk*??.deb; do
+  #             cp "$name" "${name%%.deb}-${{ matrix.job.arch }}.deb"
+  #         done
 
-      - name: Publish debian package
-        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+  #     - name: Publish debian package
+  #       if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         prerelease: true
+  #         tag_name: ${{ env.TAG_NAME }}
+  #         files: |
+  #           rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
       
-      - name: Build appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
-        shell: bash
-        run: |
-          # set-up appimage-builder
-          pushd /tmp
-          wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
-          chmod +x appimage-builder-x86_64.AppImage
-          sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
-          popd
-          # run appimage-builder
-          pushd appimage
-          sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
+  #     - name: Build appimage package
+  #       if: ${{ matrix.job.extra-build-features == 'appimage' }}
+  #       shell: bash
+  #       run: |
+  #         # set-up appimage-builder
+  #         pushd /tmp
+  #         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+  #         chmod +x appimage-builder-x86_64.AppImage
+  #         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
+  #         popd
+  #         # run appimage-builder
+  #         pushd appimage
+  #         sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
 
-      - name: Publish appimage package
-        if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
+  #     - name: Publish appimage package
+  #       if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         prerelease: true
+  #         tag_name: ${{ env.TAG_NAME }}
+  #         files: |
+  #           ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@master
-        if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
-        with:
-          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
-          path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+  #     - name: Upload Artifact
+  #       uses: actions/upload-artifact@master
+  #       if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
+  #       with:
+  #         name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+  #         path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
 
-      - name: Patch archlinux PKGBUILD
-        if: ${{ matrix.job.extra-build-features == '' }}
-        run: |
-          sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
-          case ${{ matrix.job.arch }} in
-              armv7)
-                sed -i "s/linux\/x64/linux\/arm/g" ./res/PKGBUILD
-                ;;
-              aarch64)
-                sed -i "s/linux\/x64/linux\/arm64/g" ./res/PKGBUILD
-                ;;
-          esac
+  #     - name: Patch archlinux PKGBUILD
+  #       if: ${{ matrix.job.extra-build-features == '' }}
+  #       run: |
+  #         sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
+  #         case ${{ matrix.job.arch }} in
+  #             armv7)
+  #               sed -i "s/linux\/x64/linux\/arm/g" ./res/PKGBUILD
+  #               ;;
+  #             aarch64)
+  #               sed -i "s/linux\/x64/linux\/arm64/g" ./res/PKGBUILD
+  #               ;;
+  #         esac
 
-      # Temporary disable for there is no many archlinux arm hosts
-      # - name: Build archlinux package
-      #   if: ${{ matrix.job.extra-build-features == '' }}
-      #   uses: vufa/arch-makepkg-action@master
-      #   with:
-      #     packages: >
-      #       llvm
-      #       clang
-      #       libva
-      #       libvdpau
-      #       rust
-      #       gstreamer
-      #       unzip
-      #       git
-      #       cmake
-      #       gcc
-      #       curl
-      #       wget
-      #       yasm
-      #       nasm
-      #       zip
-      #       make
-      #       pkg-config
-      #       clang
-      #       gtk3
-      #       xdotool
-      #       libxcb
-      #       libxfixes
-      #       alsa-lib
-      #       pipewire
-      #       python
-      #       ttf-arphic-uming
-      #       libappindicator-gtk3
-      #     scripts: |
-      #       cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
+  #     # Temporary disable for there is no many archlinux arm hosts
+  #     # - name: Build archlinux package
+  #     #   if: ${{ matrix.job.extra-build-features == '' }}
+  #     #   uses: vufa/arch-makepkg-action@master
+  #     #   with:
+  #     #     packages: >
+  #     #       llvm
+  #     #       clang
+  #     #       libva
+  #     #       libvdpau
+  #     #       rust
+  #     #       gstreamer
+  #     #       unzip
+  #     #       git
+  #     #       cmake
+  #     #       gcc
+  #     #       curl
+  #     #       wget
+  #     #       yasm
+  #     #       nasm
+  #     #       zip
+  #     #       make
+  #     #       pkg-config
+  #     #       clang
+  #     #       gtk3
+  #     #       xdotool
+  #     #       libxcb
+  #     #       libxfixes
+  #     #       alsa-lib
+  #     #       pipewire
+  #     #       python
+  #     #       ttf-arphic-uming
+  #     #       libappindicator-gtk3
+  #     #     scripts: |
+  #     #       cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
 
-      # - name: Publish archlinux package
-      #   if: ${{ matrix.job.extra-build-features == '' }}
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: |
-      #       res/rustdesk*.zst
+  #     # - name: Publish archlinux package
+  #     #   if: ${{ matrix.job.extra-build-features == '' }}
+  #     #   uses: softprops/action-gh-release@v1
+  #     #   with:
+  #     #     prerelease: true
+  #     #     tag_name: ${{ env.TAG_NAME }}
+  #     #     files: |
+  #     #       res/rustdesk*.zst
 
-      - name: Publish fedora package
-        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            /opt/artifacts/rpm/*.rpm
+  #     - name: Publish fedora package
+  #       if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         prerelease: true
+  #         tag_name: ${{ env.TAG_NAME }}
+  #         files: |
+  #           /opt/artifacts/rpm/*.rpm
 
   build-rustdesk-linux-amd64:
     needs: [build-rustdesk-lib-linux-amd64]
