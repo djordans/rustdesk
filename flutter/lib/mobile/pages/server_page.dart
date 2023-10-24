@@ -597,7 +597,7 @@ class PermissionRow extends StatelessWidget {
         title: Text(name),
         value: isOk,
         onChanged: (bool value) {
-          onPressed();
+          gFFI.serverModel.clients.isNotEmpty ? onPressed() : null;
         });
   }
 }
