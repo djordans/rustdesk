@@ -482,8 +482,8 @@ Future<bool?> loginDialog() async {
         }
       } on RequestException catch (err) {
         passwordMsg = translate(err.cause);
-      } catch (err) {
-        passwordMsg = "Unknown Error: $err";
+      } catch (err, stacktrace) {
+        passwordMsg = "Unknown Error: $err $stacktrace";
       }
       curOP.value = '';
       setState(() => isInProgress = false);
