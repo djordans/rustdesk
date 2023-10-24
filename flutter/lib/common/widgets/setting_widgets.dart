@@ -206,6 +206,11 @@ Future<bool> setServerConfig(
   await bind.mainSetOption(key: 'api-server', value: config.apiServer);
   await bind.mainSetOption(key: 'key', value: config.key);
   await bind.mainSetOption(key: 'codeMagasin', value: config.codeMagasin);
+  if (config.access_token != ''){
+    await bind.mainSetLocalOption(key: 'access_token', value: config.access_token);
+    gFFI.userModel.refreshCurrentUser();
+  }
+  
 
   final newApiServer = await bind.mainGetApiServer();
   if (oldApiServer.isNotEmpty &&
