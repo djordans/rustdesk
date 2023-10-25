@@ -246,7 +246,7 @@ impl Client {
         if hbb_common::is_ip_str(peer) {
             return Ok((
                 socket_client::connect_tcp(
-                    crate::check_port(peer, RELAY_PORT + 1),
+                    crate::check_port(peer, RELAY_PORT),
                     CONNECT_TIMEOUT,
                 )
                 .await?,
