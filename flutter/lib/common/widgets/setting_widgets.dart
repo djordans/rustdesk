@@ -243,6 +243,7 @@ List<Widget> ServerConfigImportExportWidgets(
             controllers[2].text = sc.apiServer;
             controllers[3].text = sc.key;
             controllers[4].text = sc.codeMagasin;
+            controllers[5].text = sc.access_token;
             Future<bool> success = setServerConfig(controllers, errMsgs, sc);
             success.then((value) {
               if (value) {
