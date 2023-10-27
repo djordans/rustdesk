@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:debounce_throttle/debounce_throttle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
 
 customImageQualityWidget(
     {required double initQuality,
@@ -68,7 +71,7 @@ customImageQualityWidget(
                     translate('Bitrate'),
                     style: const TextStyle(fontSize: 15),
                   )),
-              // mobile doesn't have enough space
+// mobile doesn't have enough space
               if (!isMobile)
                 Expanded(
                     flex: 1,
@@ -173,7 +176,7 @@ Future<bool> setServerConfig(
   config.apiServer = config.apiServer.trim();
   config.key = config.key.trim();
   config.codeMagasin = config.codeMagasin.trim();
-  // id
+// id
   if (config.idServer.isNotEmpty) {
     errMsgs[0].value =
         translate(await bind.mainTestIfValidServer(server: config.idServer));
@@ -181,7 +184,7 @@ Future<bool> setServerConfig(
       return false;
     }
   }
-  // relay
+// relay
   if (config.relayServer.isNotEmpty) {
     errMsgs[1].value =
         translate(await bind.mainTestIfValidServer(server: config.relayServer));
@@ -189,7 +192,7 @@ Future<bool> setServerConfig(
       return false;
     }
   }
-  // api
+// api
   if (config.apiServer.isNotEmpty) {
     if (!config.apiServer.startsWith('http://') &&
         !config.apiServer.startsWith('https://')) {
@@ -200,17 +203,18 @@ Future<bool> setServerConfig(
   }
   final oldApiServer = await bind.mainGetApiServer();
 
-  // should set one by one
-  await bind.mainSetOption(key: 'custom-rendezvous-server', value: config.idServer);
+// should set one by one
+  await bind.mainSetOption(
+      key: 'custom-rendezvous-server', value: config.idServer);
   await bind.mainSetOption(key: 'relay-server', value: config.relayServer);
   await bind.mainSetOption(key: 'api-server', value: config.apiServer);
   await bind.mainSetOption(key: 'key', value: config.key);
   await bind.mainSetOption(key: 'codeMagasin', value: config.codeMagasin);
-  if (config.access_token != ''){
-    await bind.mainSetLocalOption(key: 'access_token', value: config.access_token);
+  if (config.access_token != '') {
+    await bind.mainSetLocalOption(
+        key: 'access_token', value: config.access_token);
     gFFI.userModel.refreshCurrentUser();
   }
-  
 
   final newApiServer = await bind.mainGetApiServer();
   if (oldApiServer.isNotEmpty &&
@@ -225,10 +229,12 @@ List<Widget> ServerConfigImportExportWidgets(
   List<TextEditingController> controllers,
   List<RxString> errMsgs,
 ) {
-  import() {
-    Clipboard.getData(Clipboard.kTextPlain).then((value) {
-      final text = value?.text;
-      if (text != null && text.isNotEmpty) {
+  import() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      File file = File(result.files.single.path.toString());
+      final text = file.readAsStringSync();
+      if (text.isNotEmpty) {
         try {
           final sc = ServerConfig.decode(text);
           if (sc.idServer.isNotEmpty) {
@@ -253,12 +259,48 @@ List<Widget> ServerConfigImportExportWidgets(
           showToast(translate('Invalid server configuration'));
         }
       } else {
-        showToast(translate('Clipboard is empty'));
+        showToast(translate('file is empty'));
       }
-    });
+    } else {
+      Clipboard.getData(Clipboard.kTextPlain).then((value) {
+        final text = value?.text;
+        if (text != null && text.isNotEmpty) {
+          try {
+            final sc = ServerConfig.decode(text);
+            if (sc.idServer.isNotEmpty) {
+              controllers[0].text = sc.idServer;
+              controllers[1].text = sc.relayServer;
+              controllers[2].text = sc.apiServer;
+              controllers[3].text = sc.key;
+              controllers[4].text = sc.codeMagasin;
+              controllers[5].text = sc.access_token;
+              Future<bool> success = setServerConfig(controllers, errMsgs, sc);
+              success.then((value) {
+                if (value) {
+                  showToast(
+                      translate('Import server configuration successfully'));
+                } else {
+                  showToast(translate('Invalid server configuration'));
+                }
+              });
+            } else {
+              showToast(translate('Invalid server configuration'));
+            }
+          } catch (e) {
+            showToast(translate('Invalid server configuration'));
+          }
+        } else {
+          showToast(translate('Clipboard is empty'));
+        }
+      });
+    }
   }
 
-  export() {
+  export() async {
+    String? outputFile = await FilePicker.platform.saveFile(
+      dialogTitle: 'Please select an output file:',
+      fileName: 'rustdeskconfig.txt',
+    );
     final text = ServerConfig(
             idServer: controllers[0].text.trim(),
             relayServer: controllers[1].text.trim(),
@@ -266,7 +308,12 @@ List<Widget> ServerConfigImportExportWidgets(
             key: controllers[3].text.trim())
         .encode();
     debugPrint("ServerConfig export: $text");
-    Clipboard.setData(ClipboardData(text: text));
+    if (outputFile == null) {
+      Clipboard.setData(ClipboardData(text: text));
+    } else {
+      File file = File(outputFile.toString());
+      file.writeAsStringSync(text);
+    }
     showToast(translate('Export server configuration successfully'));
   }
 
