@@ -1401,6 +1401,12 @@ pub fn session_on_waiting_for_image_dialog_show(session_id: SessionID) {
     super::flutter::session_on_waiting_for_image_dialog_show(session_id);
 }
 
+pub fn session_toggle_virtual_display(session_id: SessionID, index: i32, on: bool) {
+    if let Some(session) = sessions::get_session_by_session_id(&session_id) {
+        session.toggle_virtual_display(index, on);
+    }
+}
+
 pub fn main_set_home_dir(_home: String) {
     #[cfg(any(target_os = "android", target_os = "ios"))]
     {
@@ -1717,6 +1723,17 @@ pub fn main_use_texture_render() -> SyncReturn<bool> {
     {
         SyncReturn(true)
     }
+}
+
+pub fn main_has_file_clipboard() -> SyncReturn<bool> {
+    let ret = cfg!(any(
+        target_os = "windows",
+        all(
+            feature = "unix-file-copy-paste",
+            any(target_os = "linux", target_os = "macos")
+        )
+    ));
+    SyncReturn(ret)
 }
 
 pub fn cm_init() {
