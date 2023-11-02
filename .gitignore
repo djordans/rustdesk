@@ -51,3 +51,4 @@ lib/generated_bridge.dart
 # build cache in examples
 examples/**/target/
 resources/WindowsInjection.dll
+libsciter.dylib
