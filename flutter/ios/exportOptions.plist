@@ -5,10 +5,10 @@
  <key>method</key>
  <string>app-store</string>
  <key>teamID</key>
- <string>HZF9JMC8YN</string>
+ <string>3VNFEMPM2Z</string>
  <key>provisioningProfiles</key>
  <dict>
- <key>com.carriez.flutterHbb</key>
+ <key>com.afflelou.flutterHbb</key>
  <string>rustdesk-ios-prod-app-store</string>
  </dict>
  </dict>
