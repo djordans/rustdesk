@@ -13,7 +13,11 @@ customImageQualityWidget(
     required double initFps,
     required Function(double) setQuality,
     required Function(double) setFps,
-    required bool showFps}) {
+    required bool showFps,
+    required bool showMoreQuality}) {
+  if (!showMoreQuality && initQuality > 100) {
+    initQuality = 50;
+  }
   final qualityValue = initQuality.obs;
   final fpsValue = initFps.obs;
 
@@ -71,8 +75,8 @@ customImageQualityWidget(
                     translate('Bitrate'),
                     style: const TextStyle(fontSize: 15),
                   )),
-// mobile doesn't have enough space
-              if (!isMobile)
+              // mobile doesn't have enough space
+              if (showMoreQuality && !isMobile)
                 Expanded(
                     flex: 1,
                     child: Row(
@@ -88,7 +92,7 @@ customImageQualityWidget(
                     ))
             ],
           )),
-      if (isMobile)
+      if (showMoreQuality && isMobile)
         Obx(() => Row(
               children: [
                 Expanded(
@@ -163,7 +167,8 @@ customImageQualitySetting() {
       setFps: (v) {
         bind.mainSetUserDefaultOption(key: fpsKey, value: v.toString());
       },
-      showFps: true);
+      showFps: true,
+      showMoreQuality: true);
 }
 
 Future<bool> setServerConfig(
