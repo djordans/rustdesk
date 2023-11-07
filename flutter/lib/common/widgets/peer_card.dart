@@ -498,7 +498,7 @@ abstract class BasePeerCard extends StatelessWidget {
     return _connectCommonAction(
       context,
       id,
-      translate('Transfer File'),
+      translate('Transfer file'),
       isFileTransfer: true,
       password: gFFI.abModel.getPeerPassword(id),
     );
@@ -509,7 +509,7 @@ abstract class BasePeerCard extends StatelessWidget {
     return _connectCommonAction(
       context,
       id,
-      translate('TCP Tunneling'),
+      translate('TCP tunneling'),
       isTcpTunneling: true,
       password: gFFI.abModel.getPeerPassword(id),
     );
@@ -573,7 +573,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _createShortCutAction(String id) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
-        translate('Create Desktop Shortcut'),
+        translate('Create desktop shortcut'),
         style: style,
       ),
       proc: () {
@@ -823,7 +823,7 @@ abstract class BasePeerCard extends StatelessWidget {
   MenuEntryBase<String> _addToAb(Peer peer) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
-        translate('Add to Address Book'),
+        translate('Add to address book'),
         style: style,
       ),
       proc: () {

@@ -217,7 +217,7 @@ class ServiceNotRunningNotification extends StatelessWidget {
                     serverModel.toggleService();
                   }
                 },
-                label: Text(translate("Start Service")))
+                label: Text(translate("Start service")))
           ],
         ));
   }
@@ -564,7 +564,7 @@ class _PermissionCheckerState extends State<PermissionChecker> {
               serverModel.toggleService),
           PermissionRow(translate("Input Control"), serverModel.inputOk,
               serverModel.toggleInput),
-          PermissionRow(translate("Transfer File"), serverModel.fileOk,
+          PermissionRow(translate("Transfer file"), serverModel.fileOk,
               serverModel.toggleFile),
           hasAudioPermission
               ? PermissionRow(translate("Audio Capture"), serverModel.audioOk,

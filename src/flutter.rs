@@ -863,7 +863,6 @@ pub fn session_add(
     LocalConfig::set_remote_id(&id);
 
     let session: Session<FlutterHandler> = Session {
-        id: id.to_owned(),
         password,
         server_keyboard_enabled: Arc::new(RwLock::new(true)),
         server_file_transfer_enabled: Arc::new(RwLock::new(true)),
@@ -1031,8 +1030,8 @@ pub mod connection_manager {
             self.push_event("update_voice_call_state", vec![("client", &client_json)]);
         }
 
-        fn file_transfer_log(&self, log: String) {
-            self.push_event("cm_file_transfer_log", vec![("log", &log.to_string())]);
+        fn file_transfer_log(&self, action: &str, log: &str) {
+            self.push_event("cm_file_transfer_log", vec![(action, log)]);
         }
     }
 
@@ -1544,7 +1543,7 @@ pub mod sessions {
         SESSIONS
             .write()
             .unwrap()
-            .entry((session.id.clone(), conn_type))
+            .entry((session.get_id(), conn_type))
             .or_insert(session)
             .ui_handler
             .session_handlers

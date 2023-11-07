@@ -38,16 +38,20 @@ use hbb_common::{
         sync::mpsc,
         time::{self, Duration, Instant, Interval},
     },
-    tokio_util::codec::{BytesCodec, Framed},
+    tokio_util::codec::{BytesCodec, Framed}, protobuf::EnumOrUnknown,
 };
 #[cfg(any(target_os = "android", target_os = "ios"))]
-use scrap::android::call_main_service_pointer_input;
+use scrap::android::{call_main_service_pointer_input, call_main_service_key_event};
+#[cfg(target_os = "android")]
+use crate::keyboard::client::map_key_to_control_key;
+use serde_derive::Serialize;
 use serde_json::{json, value::Value};
 use sha2::{Digest, Sha256};
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use std::sync::atomic::Ordering;
 use std::{
     num::NonZeroI64,
+    path::PathBuf,
     sync::{atomic::AtomicI64, mpsc as std_mpsc},
 };
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -55,7 +59,7 @@ use system_shutdown;
 
 #[cfg(all(windows, feature = "virtual_display_driver"))]
 use crate::virtual_display_manager;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(not(any(target_os = "ios")))]
 use std::collections::HashSet;
 pub type Sender = mpsc::UnboundedSender<(Instant, Arc<Message>)>;
 
@@ -179,6 +183,7 @@ pub struct Connection {
     file: bool,
     restart: bool,
     recording: bool,
+    block_input: bool,
     last_test_delay: i64,
     network_delay: Option<u32>,
     lock_after_session_end: bool,
@@ -212,7 +217,7 @@ pub struct Connection {
     voice_call_request_timestamp: Option<NonZeroI64>,
     audio_input_device_before_voice_call: Option<String>,
     options_in_login: Option<OptionMessage>,
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(not(any(target_os = "ios")))]
     pressed_modifiers: HashSet<rdev::Key>,
     #[cfg(all(target_os = "linux", feature = "linux_headless"))]
     #[cfg(not(any(feature = "flatpak", feature = "appimage")))]
@@ -223,6 +228,7 @@ pub struct Connection {
     start_cm_ipc_para: Option<StartCmIpcPara>,
     auto_disconnect_timer: Option<(Instant, u64)>,
     authed_conn_id: Option<self::raii::AuthedConnID>,
+    file_remove_log_control: FileRemoveLogControl,
 }
 
 impl ConnInner {
@@ -324,6 +330,7 @@ impl Connection {
             file: Connection::permission("enable-file-transfer"),
             restart: Connection::permission("enable-remote-restart"),
             recording: Connection::permission("enable-record-session"),
+            block_input: Connection::permission("enable-block-input"),
             last_test_delay: 0,
             network_delay: None,
             lock_after_session_end: false,
@@ -349,7 +356,7 @@ impl Connection {
             voice_call_request_timestamp: None,
             audio_input_device_before_voice_call: None,
             options_in_login: None,
-            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            #[cfg(not(any(target_os = "ios")))]
             pressed_modifiers: Default::default(),
             #[cfg(all(target_os = "linux", feature = "linux_headless"))]
             #[cfg(not(any(feature = "flatpak", feature = "appimage")))]
@@ -365,6 +372,7 @@ impl Connection {
             }),
             auto_disconnect_timer: None,
             authed_conn_id: None,
+            file_remove_log_control: FileRemoveLogControl::new(id),
         };
         let addr = hbb_common::try_into_v4(addr);
         if !conn.on_open(addr).await {
@@ -392,6 +400,9 @@ impl Connection {
         }
         if !conn.recording {
             conn.send_permission(Permission::Recording, false).await;
+        }
+        if !conn.block_input {
+            conn.send_permission(Permission::BlockInput, false).await;
         }
         let mut test_delay_timer =
             time::interval_at(Instant::now() + TEST_DELAY_TIMEOUT, TEST_DELAY_TIMEOUT);
@@ -474,6 +485,9 @@ impl Connection {
                             } else if &name == "recording" {
                                 conn.recording = enabled;
                                 conn.send_permission(Permission::Recording, enabled).await;
+                            } else if &name == "block_input" {
+                                conn.block_input = enabled;
+                                conn.send_permission(Permission::BlockInput, enabled).await;
                             }
                         }
                         ipc::Data::RawMessage(bytes) => {
@@ -556,11 +570,11 @@ impl Connection {
                 },
                 _ = conn.file_timer.tick() => {
                     if !conn.read_jobs.is_empty() {
-                        conn.send_to_cm(ipc::Data::FileTransferLog(fs::serialize_transfer_jobs(&conn.read_jobs)));
+                        conn.send_to_cm(ipc::Data::FileTransferLog(("transfer".to_string(), fs::serialize_transfer_jobs(&conn.read_jobs))));
                         match fs::handle_read_jobs(&mut conn.read_jobs, &mut conn.stream).await {
                             Ok(log) => {
                                 if !log.is_empty() {
-                                    conn.send_to_cm(ipc::Data::FileTransferLog(log));
+                                    conn.send_to_cm(ipc::Data::FileTransferLog(("transfer".to_string(), log)));
                                 }
                             }
                             Err(err) =>  {
@@ -632,6 +646,7 @@ impl Connection {
                             break;
                         }
                     }
+                    conn.file_remove_log_control.on_timer().drain(..).map(|x| conn.send_to_cm(x)).count();
                 }
                 _ = test_delay_timer.tick() => {
                     if last_recv_time.elapsed() >= SEC30 {
@@ -1267,6 +1282,7 @@ impl Connection {
             file_transfer_enabled: self.file,
             restart: self.restart,
             recording: self.recording,
+            block_input: self.block_input,
             from_switch: self.from_switch,
         });
     }
@@ -1749,8 +1765,59 @@ impl Connection {
                     }
                     self.update_auto_disconnect_timer();
                 }
-                #[cfg(any(target_os = "android", target_os = "ios"))]
+                #[cfg(any(target_os = "ios"))]
                 Some(message::Union::KeyEvent(..)) => {}
+                #[cfg(any(target_os = "android"))]
+                Some(message::Union::KeyEvent(mut me)) => {
+                    let is_press = (me.press || me.down) && !crate::is_modifier(&me);
+
+                    let key = match me.mode.enum_value() {
+                        Ok(KeyboardMode::Map) => {
+                            Some(crate::keyboard::keycode_to_rdev_key(me.chr()))
+                        }
+                        Ok(KeyboardMode::Translate) => {
+                            if let Some(key_event::Union::Chr(code)) = me.union {
+                                Some(crate::keyboard::keycode_to_rdev_key(code & 0x0000FFFF))
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    }
+                    .filter(crate::keyboard::is_modifier);
+
+                    if let Some(key) = key {
+                        if is_press {
+                            self.pressed_modifiers.insert(key);
+                        } else {
+                            self.pressed_modifiers.remove(&key);
+                        }
+                    }
+
+                    let mut modifiers = vec![];
+
+                    for key in self.pressed_modifiers.iter() {
+                        if let Some(control_key) = map_key_to_control_key(key) {
+                            modifiers.push(EnumOrUnknown::new(control_key));
+                        }
+                    }
+
+                    me.modifiers = modifiers;
+
+                    let encode_result = me.write_to_bytes();
+
+                    match encode_result {
+                        Ok(data) => {
+                            let result = call_main_service_key_event(&data);
+                            if let Err(e) = result {
+                                log::debug!("call_main_service_key_event fail: {}", e);
+                            }
+                        }
+                        Err(e) => {
+                            log::debug!("encode key event fail: {}", e);
+                        }
+                    }
+                }
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]
                 Some(message::Union::KeyEvent(me)) => {
                     if self.peer_keyboard_enabled() {
@@ -1911,30 +1978,43 @@ impl Connection {
                             }
                             Some(file_action::Union::RemoveDir(d)) => {
                                 self.send_fs(ipc::FS::RemoveDir {
-                                    path: d.path,
+                                    path: d.path.clone(),
                                     id: d.id,
                                     recursive: d.recursive,
                                 });
+                                self.file_remove_log_control.on_remove_dir(d);
                             }
                             Some(file_action::Union::RemoveFile(f)) => {
                                 self.send_fs(ipc::FS::RemoveFile {
-                                    path: f.path,
+                                    path: f.path.clone(),
                                     id: f.id,
                                     file_num: f.file_num,
                                 });
+                                self.file_remove_log_control.on_remove_file(f);
                             }
                             Some(file_action::Union::Create(c)) => {
                                 self.send_fs(ipc::FS::CreateDir {
-                                    path: c.path,
+                                    path: c.path.clone(),
                                     id: c.id,
                                 });
+                                self.send_to_cm(ipc::Data::FileTransferLog((
+                                    "create_dir".to_string(),
+                                    serde_json::to_string(&FileActionLog {
+                                        id: c.id,
+                                        conn_id: self.inner.id(),
+                                        path: c.path,
+                                        dir: true,
+                                    })
+                                    .unwrap_or_default(),
+                                )));
                             }
                             Some(file_action::Union::Cancel(c)) => {
                                 self.send_fs(ipc::FS::CancelWrite { id: c.id });
                                 if let Some(job) = fs::get_job_immutable(c.id, &self.read_jobs) {
-                                    self.send_to_cm(ipc::Data::FileTransferLog(
+                                    self.send_to_cm(ipc::Data::FileTransferLog((
+                                        "transfer".to_string(),
                                         fs::serialize_transfer_job(job, false, true, ""),
-                                    ));
+                                    )));
                                 }
                                 fs::remove_job(c.id, &mut self.read_jobs);
                             }
@@ -2508,8 +2588,8 @@ impl Connection {
                 }
             }
         }
-        if self.keyboard {
-            if let Ok(q) = o.block_input.enum_value() {
+        if let Ok(q) = o.block_input.enum_value() {
+            if self.keyboard && self.block_input {
                 match q {
                     BoolOption::Yes => {
                         self.tx_input.send(MessageInput::BlockOn).ok();
@@ -2518,6 +2598,17 @@ impl Connection {
                         self.tx_input.send(MessageInput::BlockOff).ok();
                     }
                     _ => {}
+                }
+            } else {
+                if q != BoolOption::NotSet {
+                    let state = if q == BoolOption::Yes {
+                        back_notification::BlockInputState::BlkOnFailed
+                    } else {
+                        back_notification::BlockInputState::BlkOffFailed
+                    };
+                    if let Some(tx) = &self.inner.tx {
+                        Self::send_block_input_error(tx, state, "No permission".to_string());
+                    }
                 }
             }
         }
@@ -2871,6 +2962,114 @@ pub enum AlarmAuditType {
 pub enum FileAuditType {
     RemoteSend = 0,
     RemoteReceive = 1,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FileActionLog {
+    id: i32,
+    conn_id: i32,
+    path: String,
+    dir: bool,
+}
+
+struct FileRemoveLogControl {
+    conn_id: i32,
+    instant: Instant,
+    removed_files: Vec<FileRemoveFile>,
+    removed_dirs: Vec<FileRemoveDir>,
+}
+
+impl FileRemoveLogControl {
+    fn new(conn_id: i32) -> Self {
+        FileRemoveLogControl {
+            conn_id,
+            instant: Instant::now(),
+            removed_files: vec![],
+            removed_dirs: vec![],
+        }
+    }
+
+    fn on_remove_file(&mut self, f: FileRemoveFile) -> Option<ipc::Data> {
+        self.instant = Instant::now();
+        self.removed_files.push(f.clone());
+        Some(ipc::Data::FileTransferLog((
+            "remove".to_string(),
+            serde_json::to_string(&FileActionLog {
+                id: f.id,
+                conn_id: self.conn_id,
+                path: f.path,
+                dir: false,
+            })
+            .unwrap_or_default(),
+        )))
+    }
+
+    fn on_remove_dir(&mut self, d: FileRemoveDir) -> Option<ipc::Data> {
+        self.instant = Instant::now();
+        let direct_child = |parent: &str, child: &str| {
+            PathBuf::from(child).parent().map(|x| x.to_path_buf()) == Some(PathBuf::from(parent))
+        };
+        self.removed_files
+            .retain(|f| !direct_child(&f.path, &d.path));
+        self.removed_dirs
+            .retain(|x| !direct_child(&d.path, &x.path));
+        if !self
+            .removed_dirs
+            .iter()
+            .any(|x| direct_child(&x.path, &d.path))
+        {
+            self.removed_dirs.push(d.clone());
+        }
+        Some(ipc::Data::FileTransferLog((
+            "remove".to_string(),
+            serde_json::to_string(&FileActionLog {
+                id: d.id,
+                conn_id: self.conn_id,
+                path: d.path,
+                dir: true,
+            })
+            .unwrap_or_default(),
+        )))
+    }
+
+    fn on_timer(&mut self) -> Vec<ipc::Data> {
+        if self.instant.elapsed().as_secs() < 1 {
+            return vec![];
+        }
+        let mut v: Vec<ipc::Data> = vec![];
+        self.removed_files
+            .drain(..)
+            .map(|f| {
+                v.push(ipc::Data::FileTransferLog((
+                    "remove".to_string(),
+                    serde_json::to_string(&FileActionLog {
+                        id: f.id,
+                        conn_id: self.conn_id,
+                        path: f.path,
+                        dir: false,
+                    })
+                    .unwrap_or_default(),
+                )));
+            })
+            .count();
+        self.removed_dirs
+            .drain(..)
+            .map(|d| {
+                v.push(ipc::Data::FileTransferLog((
+                    "remove".to_string(),
+                    serde_json::to_string(&FileActionLog {
+                        id: d.id,
+                        conn_id: self.conn_id,
+                        path: d.path,
+                        dir: true,
+                    })
+                    .unwrap_or_default(),
+                )));
+            })
+            .count();
+        v
+    }
 }
 
 #[cfg(windows)]
