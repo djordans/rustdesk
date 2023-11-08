@@ -30,7 +30,7 @@
 			<key>CFBundleURLIconFile</key>
 			<string></string>
 			<key>CFBundleURLName</key>
-			<string>com.afflelou.rustdesk</string>
+			<string>com.carriez.flutter_hbb</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>rustdesk</string>
