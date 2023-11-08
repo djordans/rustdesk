@@ -2601,7 +2601,7 @@ Future<String> onClickInstallApk(String apkFilePath) async {
     if (permissions[Permission.storage] == PermissionStatus.granted) {
        if (permissions[Permission.requestInstallPackages] == PermissionStatus.granted) {
 
-        InstallPlugin.installApk(apkFilePath, "com.carriez.flutter_hbb").then((result) {
+        InstallPlugin.installApk(apkFilePath, "com.afflelou.flutter_hbb").then((result) {
          return 'install apk $result';
         }).catchError((error) {
          return 'install apk error: $error';
