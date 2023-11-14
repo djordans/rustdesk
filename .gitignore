@@ -52,3 +52,7 @@ lib/generated_bridge.dart
 examples/**/target/
 resources/WindowsInjection.dll
 libsciter.dylib
+resources/RustDeskIddDriver.cer
+resources/RustDeskIddDriver/rustdeskidddriver.cat
+resources/RustDeskIddDriver/RustDeskIddDriver.dll
+resources/RustDeskIddDriver/RustDeskIddDriver.inf
