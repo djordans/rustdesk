@@ -52,7 +52,7 @@ fn main() {
     );
     let matches = App::new("rustdesk")
         .version(crate::VERSION)
-        .author("Jordan Grundheber<info@afflelou.com>")
+        .author("Jordan Grundheber<info@carriez.com>")
         .about("RustDesk command line tool")
         .args_from_usage(&args)
         .get_matches();

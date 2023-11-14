@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="RustDesk"
@@ -33,7 +34,13 @@
                 <action android:name="com.carriez.flutter_hbb.DEBUG_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
+        <service
+            android:name=".service.ScreenCaptureService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection"
+            android:stopWithTask="false" />
+            
         <service
             android:name=".InputService"
             android:enabled="true"
