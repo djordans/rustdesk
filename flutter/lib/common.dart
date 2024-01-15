@@ -3126,7 +3126,7 @@ Future<bool> setServerConfig(
   }
   // id
   if (config.idServer.isNotEmpty && errMsgs != null) {
-    errMsgs[1].value =
+    errMsgs[0].value =
         translate(await bind.mainTestIfValidServer(server: config.idServer));
     if (errMsgs[0].isNotEmpty) {
       return false;
@@ -3134,7 +3134,7 @@ Future<bool> setServerConfig(
   }
   // relay
   if (config.relayServer.isNotEmpty && errMsgs != null) {
-    errMsgs[2].value =
+    errMsgs[1].value =
         translate(await bind.mainTestIfValidServer(server: config.relayServer));
     if (errMsgs[1].isNotEmpty) {
       return false;
@@ -3144,7 +3144,7 @@ Future<bool> setServerConfig(
   if (config.apiServer.isNotEmpty && errMsgs != null) {
     if (!config.apiServer.startsWith('http://') &&
         !config.apiServer.startsWith('https://')) {
-      errMsgs[3].value =
+      errMsgs[2].value =
           '${translate("API Server")}: ${translate("invalid_http")}';
       return false;
     }
@@ -3153,7 +3153,7 @@ Future<bool> setServerConfig(
          errMsgs[4].value = (await checkstore(config.codeMagasin))!;
          if (errMsgs[4].value == 'false'){
           bind.mainSetLocalOption(key: 'codeMagasin',value: '');
-           return false;
+          return false;
         }
       }
   final oldApiServer = await bind.mainGetApiServer();
