@@ -3153,20 +3153,17 @@ Future<bool> setServerConfig(
          errMsgs[4].value = (await checkstore(config.codeMagasin))!;
          if (errMsgs[4].value == 'false'){
           bind.mainSetLocalOption(key: 'codeMagasin',value: '');
+           return false;
         }
-        if (errMsgs[4].isNotEmpty) return false;
       }
-	  if (config.codeMagasin.isNotEmpty) {
-      bind.mainSetLocalOption(key: 'codeMagasin', value: config.codeMagasin.trim());
-    }
   final oldApiServer = await bind.mainGetApiServer();
 
   // should set one by one
-  await bind.mainSetOption(
-      key: 'custom-rendezvous-server', value: config.idServer);
+  await bind.mainSetOption(key: 'custom-rendezvous-server', value: config.idServer);
   await bind.mainSetOption(key: 'relay-server', value: config.relayServer);
   await bind.mainSetOption(key: 'api-server', value: config.apiServer);
   await bind.mainSetOption(key: 'key', value: config.key);
+  await bind.mainSetLocalOption(key: 'codeMagasin', value: config.codeMagasin);
 
   final newApiServer = await bind.mainGetApiServer();
   if (oldApiServer.isNotEmpty &&
