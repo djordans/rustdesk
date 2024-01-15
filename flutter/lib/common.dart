@@ -3128,7 +3128,7 @@ Future<bool> setServerConfig(
   if (config.idServer.isNotEmpty && errMsgs != null) {
     errMsgs[1].value =
         translate(await bind.mainTestIfValidServer(server: config.idServer));
-    if (errMsgs[0].isNotEmpty) {
+    if (errMsgs[1].isNotEmpty) {
       return false;
     }
   }
@@ -3136,7 +3136,7 @@ Future<bool> setServerConfig(
   if (config.relayServer.isNotEmpty && errMsgs != null) {
     errMsgs[2].value =
         translate(await bind.mainTestIfValidServer(server: config.relayServer));
-    if (errMsgs[1].isNotEmpty) {
+    if (errMsgs[2].isNotEmpty) {
       return false;
     }
   }
@@ -3151,7 +3151,7 @@ Future<bool> setServerConfig(
   }
   if (config.codeMagasin.isNotEmpty && errMsgs != null && config.codeMagasin != bind.mainGetLocalOption(key: 'codeMagasin')){
          errMsgs[0].value = (await checkstore(config.codeMagasin.trim()))!;
-         if (errMsgs[0] == 'false'){
+         if (errMsgs[0].value == 'false'){
           bind.mainSetLocalOption(key: 'codeMagasin',value: '');
         }
         if (errMsgs[0].isNotEmpty) return false;
