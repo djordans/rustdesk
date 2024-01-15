@@ -2583,7 +2583,7 @@ Future<String?> checkstore(String value) async {
       return 'false';
     }
     value = value.trim();
-    if (value.isEmpty){
+    if (value != ''){
       return "Magasin obligatoire";
     }
     final api = "$url/api/checkstore/$value";
@@ -3116,15 +3116,17 @@ Future<bool> setServerConfig(
   config.relayServer = config.relayServer.trim();
   config.apiServer = config.apiServer.trim();
   config.key = config.key.trim();
+  config.codeMagasin = config.codeMagasin.trim();
   if (controllers != null) {
-    controllers[0].text = config.idServer;
-    controllers[1].text = config.relayServer;
-    controllers[2].text = config.apiServer;
-    controllers[3].text = config.key;
+    controllers[0].text = config.codeMagasin;
+    controllers[1].text = config.idServer;
+    controllers[2].text = config.relayServer;
+    controllers[3].text = config.apiServer;
+    controllers[4].text = config.key;
   }
   // id
   if (config.idServer.isNotEmpty && errMsgs != null) {
-    errMsgs[0].value =
+    errMsgs[1].value =
         translate(await bind.mainTestIfValidServer(server: config.idServer));
     if (errMsgs[0].isNotEmpty) {
       return false;
@@ -3132,7 +3134,7 @@ Future<bool> setServerConfig(
   }
   // relay
   if (config.relayServer.isNotEmpty && errMsgs != null) {
-    errMsgs[1].value =
+    errMsgs[2].value =
         translate(await bind.mainTestIfValidServer(server: config.relayServer));
     if (errMsgs[1].isNotEmpty) {
       return false;
@@ -3142,11 +3144,21 @@ Future<bool> setServerConfig(
   if (config.apiServer.isNotEmpty && errMsgs != null) {
     if (!config.apiServer.startsWith('http://') &&
         !config.apiServer.startsWith('https://')) {
-      errMsgs[2].value =
+      errMsgs[3].value =
           '${translate("API Server")}: ${translate("invalid_http")}';
       return false;
     }
   }
+  if (config.codeMagasin.isNotEmpty && errMsgs != null && config.codeMagasin != bind.mainGetLocalOption(key: 'codeMagasin')){
+         errMsgs[0].value = (await checkstore(config.codeMagasin.trim()))!;
+         if (errMsgs[0] == 'false'){
+          bind.mainSetLocalOption(key: 'codeMagasin',value: '');
+        }
+        if (errMsgs[0].isNotEmpty) return false;
+      }
+	  if (config.codeMagasin.isNotEmpty) {
+      bind.mainSetLocalOption(key: 'codeMagasin', value: config.codeMagasin.trim());
+    }
   final oldApiServer = await bind.mainGetApiServer();
 
   // should set one by one
