@@ -437,6 +437,7 @@ Future<bool?> loginDialog() async {
                   key: 'access_token', value: resp.access_token!);
               await bind.mainSetLocalOption(
                   key: 'user_info', value: jsonEncode(resp.user ?? {}));
+              await bind.mainSetLocalOption(key: 'tokenDevice', value: resp.tokenDevice!);   
             }
             if (close != null) {
               close(true);
