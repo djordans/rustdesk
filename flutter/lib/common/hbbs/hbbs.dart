@@ -163,7 +163,7 @@ class LoginRequest {
     data['permanentpassword'] = permanentpassword ?? '';
     data['uniqueidentifier'] = uniqueidentifier ?? '';
     data['tokenDevice'] = tokenDevice ?? '';
-    data['deviceName'] = Device.GetDeviceName() as String;
+    data['deviceName'] = Device.GetDeviceName();
     return data;
   }
 }
