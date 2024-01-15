@@ -56,3 +56,6 @@ resources/RustDeskIddDriver.cer
 resources/RustDeskIddDriver/rustdeskidddriver.cat
 resources/RustDeskIddDriver/RustDeskIddDriver.dll
 resources/RustDeskIddDriver/RustDeskIddDriver.inf
+
+# ===
+vcpkg_installed
