@@ -42,8 +42,8 @@ class UserModel {
       'temporarypassword': await bind.mainGetTemporaryPassword(),
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
-      'codeMagasin': bind.mainGetLocalOption(key: 'codeMagasin'),
       'deviceInfo': DeviceInfo.toJson(),
+      'deviceName':'',
     };
     if (refreshingUser) return;
     try {

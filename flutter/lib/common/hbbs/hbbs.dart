@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/consts.dart';
 
 import 'package:flutter_hbb/models/peer_model.dart';
-
+import 'package:flutter_hbb/Device.dart';
 import '../../models/platform_model.dart';
 
 class HttpType {
@@ -128,10 +129,8 @@ class LoginRequest {
   String? temporarypassword;
   String? permanentpassword;
   String? uniqueidentifier;
-  String? codeMagasin;
   String? tokenDevice;
   String? tfaCode;
-
   LoginRequest(
       {this.username,
       this.password,
@@ -144,7 +143,6 @@ class LoginRequest {
       this.temporarypassword,
       this.permanentpassword,
       this.uniqueidentifier,
-      this.codeMagasin,
       this.tokenDevice,
       });
 
@@ -164,8 +162,8 @@ class LoginRequest {
     data['temporarypassword'] = temporarypassword ?? '';
     data['permanentpassword'] = permanentpassword ?? '';
     data['uniqueidentifier'] = uniqueidentifier ?? '';
-    data['codeMagasin'] = codeMagasin ?? '';
     data['tokenDevice'] = tokenDevice ?? '';
+    data['deviceName'] = Device.GetDeviceName() as String;
     return data;
   }
 }

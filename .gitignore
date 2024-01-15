@@ -59,3 +59,4 @@ resources/RustDeskIddDriver/RustDeskIddDriver.inf
 
 # ===
 vcpkg_installed
+resources/WindowInjection.dll

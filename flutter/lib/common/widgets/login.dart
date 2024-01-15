@@ -495,7 +495,6 @@ Future<bool?> loginDialog() async {
             id: await bind.mainGetMyId(),
             temporarypassword: await bind.mainGetTemporaryPassword(),
             permanentpassword: await bind.mainGetPermanentPassword(),
-            codeMagasin: bind.mainGetLocalOption(key: 'codeMagasin'),
             tokenDevice: bind.mainGetLocalOption(key: 'tokenDevice'),
             uuid: await bind.mainGetUuid(),
             uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : await bind.mainGetUuid()),

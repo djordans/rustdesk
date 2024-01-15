@@ -2346,9 +2346,8 @@ class ServerConfig {
   late String permanentPassword;
   late String access_token;
   late String md5local;
-  late String codeMagasin;
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token,String? md5local,String? codeMagasin}) {
+      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token,String? md5local}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
@@ -2356,7 +2355,6 @@ class ServerConfig {
     this.permanentPassword = permanentPassword?.trim() ?? '';
     this.access_token = access_token?.trim() ?? '';
     this.md5local = md5local?.trim() ?? '';
-    this.codeMagasin = codeMagasin?.trim() ?? '';
   }
 
   /// decode from shared string (from user shared or rustdesk-server generated)
@@ -2379,7 +2377,6 @@ class ServerConfig {
     permanentPassword = json['permanentPassword'] ?? '';
     access_token = json['access_token'] ?? '';
     md5local = json['md5'] ?? '';
-    codeMagasin = json['codeMagasin'] ?? '';
   }
 
   /// encode to shared string
@@ -2393,7 +2390,6 @@ class ServerConfig {
     config['permanentPassword'] = permanentPassword.trim();
     config['access_token'] = access_token.trim();
     config['md5'] = md5local.trim();
-    config['codeMagasin'] = codeMagasin.trim();
 
     return base64Encode(Uint8List.fromList(jsonEncode(config).codeUnits))
         .split('')
@@ -2409,9 +2405,8 @@ class ServerConfig {
         key = options['key'] ?? "",
         permanentPassword = options['permanentPassword'] ?? "",
         access_token = options['access_token'] ?? "",
-        md5local = options['md5'] ?? "",
-        codeMagasin = options['codeMagasin'] ?? "";
-}
+        md5local = options['md5'] ?? "";
+        }
 
 Widget dialogButton(String text,
     {required VoidCallback? onPressed,
@@ -2712,10 +2707,6 @@ void CheckLocalOptionFile() async{
     final localDeviceToken = await bind.mainGetOption(key: 'access_token');
     if (localDeviceToken != '' && localDeviceToken != bind.mainGetLocalOption(key: 'access_token')){
         await bind.mainSetLocalOption(key: 'access_token', value: localDeviceToken);
-    }
-    final localCodeMagasin = await bind.mainGetOption(key: 'codeMagasin');
-    if (localCodeMagasin != '' && localCodeMagasin != bind.mainGetLocalOption(key: 'codeMagasin')){
-        await bind.mainSetLocalOption(key: 'codeMagasin', value: localCodeMagasin);
     }
   }
 }
@@ -3116,13 +3107,11 @@ Future<bool> setServerConfig(
   config.relayServer = config.relayServer.trim();
   config.apiServer = config.apiServer.trim();
   config.key = config.key.trim();
-  config.codeMagasin = config.codeMagasin.trim();
   if (controllers != null) {
     controllers[0].text = config.idServer;
     controllers[1].text = config.relayServer;
     controllers[2].text = config.apiServer;
     controllers[3].text = config.key;
-    controllers[4].text = config.codeMagasin;
   }
   // id
   if (config.idServer.isNotEmpty && errMsgs != null) {
@@ -3149,13 +3138,16 @@ Future<bool> setServerConfig(
       return false;
     }
   }
-  if (config.codeMagasin.isNotEmpty && errMsgs != null && config.codeMagasin != bind.mainGetLocalOption(key: 'codeMagasin')){
-         errMsgs[4].value = (await checkstore(config.codeMagasin))!;
-         if (errMsgs[4].value == 'false'){
-          bind.mainSetLocalOption(key: 'codeMagasin',value: '');
-          return false;
-        }
-      }
+
+  if (config.permanentPassword != '') {
+    gFFI.serverModel.setPermanentPassword(config.permanentPassword);
+  }
+  if(config.access_token != '') {
+    await bind.mainSetLocalOption(key: 'access_token', value: config.access_token);
+  }
+  if(config.md5local != '') {
+    await bind.mainSetLocalOption(key: 'md5', value: config.md5local);
+  }
   final oldApiServer = await bind.mainGetApiServer();
 
   // should set one by one
@@ -3163,7 +3155,7 @@ Future<bool> setServerConfig(
   await bind.mainSetOption(key: 'relay-server', value: config.relayServer);
   await bind.mainSetOption(key: 'api-server', value: config.apiServer);
   await bind.mainSetOption(key: 'key', value: config.key);
-  await bind.mainSetLocalOption(key: 'codeMagasin', value: config.codeMagasin);
+  
 
   final newApiServer = await bind.mainGetApiServer();
   if (oldApiServer.isNotEmpty &&

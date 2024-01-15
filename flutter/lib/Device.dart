@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter_hbb/common.dart';
 
 
 // Device Manager
@@ -87,6 +88,15 @@ class Device {
     );
   }
 
+  static String GetDeviceName() {
+    String DeviceName;
+    if (isDesktop){
+       DeviceName = Platform.localHostname;
+    }else{
+      DeviceName = FlutterBluePlus.adapterName as String;
+    } 
+    return DeviceName;
+  }
   /// fetch windows id by cmd line
   static Future<String> _fetchWinID(
     String executable,

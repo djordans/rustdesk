@@ -153,19 +153,16 @@ void showServerSettingsWithValue(
   final relayCtrl = TextEditingController(text: serverConfig.relayServer);
   final apiCtrl = TextEditingController(text: serverConfig.apiServer);
   final keyCtrl = TextEditingController(text: serverConfig.key);
-  final codeMagasinCtrl = TextEditingController(text: serverConfig.codeMagasin);
 
   RxString idServerMsg = ''.obs;
   RxString relayServerMsg = ''.obs;
   RxString apiServerMsg = ''.obs;
-  RxString codeMagasinMsg = ''.obs;
 
-  final controllers = [idCtrl, relayCtrl, apiCtrl, keyCtrl,codeMagasinCtrl];
+  final controllers = [idCtrl, relayCtrl, apiCtrl, keyCtrl];
   final errMsgs = [
     idServerMsg,
     relayServerMsg,
     apiServerMsg,
-    codeMagasinMsg,
   ];
 
   dialogManager.show((setState, close, context) {
@@ -181,7 +178,6 @@ void showServerSettingsWithValue(
               relayServer: relayCtrl.text.trim(),
               apiServer: apiCtrl.text.trim(),
               key: keyCtrl.text.trim(),
-              codeMagasin: codeMagasinCtrl.text.trim(),
               access_token: serverConfig.access_token,
               permanentPassword: serverConfig.permanentPassword,
                ));
@@ -201,15 +197,7 @@ void showServerSettingsWithValue(
       content: Form(
           child: Obx(() => Column(
               mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                    TextFormField(
-                      controller: codeMagasinCtrl,
-                      decoration: InputDecoration(
-                          labelText: translate('Code Magasin'),
-                          errorText: codeMagasinMsg.value),
-                          textCapitalization: TextCapitalization.characters,
-                    )
-                  ] +
+              children: <Widget>
                   [
                     TextFormField(
                       controller: idCtrl,

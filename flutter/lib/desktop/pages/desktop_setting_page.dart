@@ -1074,25 +1074,21 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       RxString idErrMsg = ''.obs;
       RxString relayErrMsg = ''.obs;
       RxString apiErrMsg = ''.obs;
-      RxString codeMagasinErrMsg = ''.obs;
       var idController = TextEditingController(text: old('custom-rendezvous-server'));
       var relayController = TextEditingController(text: old('relay-server'));
       var apiController = TextEditingController(text: old('api-server'));
       var keyController = TextEditingController(text: old('key'));
-      var codeMagasinController = TextEditingController(text: bind.mainGetLocalOption(key: 'codeMagasin'));
 
       final controllers = [
         idController,
         relayController,
         apiController,
         keyController,
-        codeMagasinController,
       ];
       final errMsgs = [
         idErrMsg,
         relayErrMsg,
         apiErrMsg,
-        codeMagasinErrMsg,
       ];
 
       submit() async {
@@ -1103,8 +1099,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                 idServer: idController.text,
                 relayServer: relayController.text,
                 apiServer: apiController.text,
-                key: keyController.text,
-                codeMagasin: codeMagasinController.text));
+                key: keyController.text));
         if (result) {
           setState(() {});
           showToast(translate('Successful'));
@@ -1119,8 +1114,6 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           children: [
             Column(
               children: [
-                Obx(() => _LabeledTextField(context, 'Code Magasin', codeMagasinController,
-                codeMagasinErrMsg.value, enabled, secure, TextCapitalization.characters)),
                 Obx(() => _LabeledTextField(context, 'ID Server', idController,
                     idErrMsg.value, enabled, secure, TextCapitalization.none)),
                 Obx(() => _LabeledTextField(context, 'Relay Server',
