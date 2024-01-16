@@ -499,7 +499,7 @@ Future<bool?> loginDialog() async {
             uuid: await bind.mainGetUuid(),
             uniqueidentifier: (isDesktop ? await Device.uniqueIdentifier() : await bind.mainGetUuid()),
             autoLogin: true,
-            DeviceName: Device.GetDeviceName(),
+            deviceName: Device.GetDeviceName(),
             type: HttpType.kAuthReqTypeAccount));
         await handleLoginResponse(resp, true, close);
       } on RequestException catch (err) {
