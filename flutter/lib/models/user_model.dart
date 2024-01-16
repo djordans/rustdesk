@@ -43,7 +43,7 @@ class UserModel {
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
       'deviceInfo': DeviceInfo.toJson(),
-      'deviceName':'',
+      'deviceName': Device.GetDeviceName(),
     };
     if (refreshingUser) return;
     try {
