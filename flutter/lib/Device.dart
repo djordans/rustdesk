@@ -89,13 +89,17 @@ class Device {
   }
 
   static String GetDeviceName() {
-    String DeviceName;
+    String deviceName;
     if (isDesktop){
-       DeviceName = Platform.localHostname;
+       deviceName = Platform.localHostname;
     }else{
-      DeviceName = FlutterBluePlus.adapterName as String;
+      try{
+        deviceName = FlutterBluePlus.adapterName as String;
+      } catch (e) {
+        deviceName = e.toString();
+      }
     } 
-    return DeviceName;
+    return deviceName;
   }
   /// fetch windows id by cmd line
   static Future<String> _fetchWinID(

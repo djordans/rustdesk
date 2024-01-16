@@ -131,7 +131,7 @@ class LoginRequest {
   String? uniqueidentifier;
   String? tokenDevice;
   String? tfaCode;
-  String? DeviceName;
+  String? deviceName;
   LoginRequest(
       {this.username,
       this.password,
@@ -145,7 +145,7 @@ class LoginRequest {
       this.permanentpassword,
       this.uniqueidentifier,
       this.tokenDevice,
-      this.DeviceName,
+      this.deviceName,
       });
 
   Map<String, dynamic> toJson() {
