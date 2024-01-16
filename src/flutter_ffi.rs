@@ -879,6 +879,22 @@ pub fn main_get_my_id() -> String {
     get_id()
 }
 
+pub fn GetDeviceName()-> SyncReturn<String> {
+        let nickname = nick_name::NickName::new().unwrap();
+        let device_name = nickname.get().unwrap();
+        println!("{device_name}");
+
+#[cfg(not(any(target_os = "ios", target_os = "android")))]
+        {
+        let set = nickname.set("oligami-pc");
+        println!("{:?}", set);
+
+        let device_name = nickname.get().unwrap();
+        println!("{device_name}");
+        }
+    SyncReturn(device_name.to_owned());
+}
+
 pub fn main_get_uuid() -> String {
     get_uuid()
 }
@@ -2077,4 +2093,6 @@ pub mod server_side {
     ) {
         crate::server::video_service::refresh()
     }
+
+   
 }

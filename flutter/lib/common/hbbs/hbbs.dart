@@ -165,7 +165,7 @@ class LoginRequest {
     data['permanentpassword'] = permanentpassword ?? '';
     data['uniqueidentifier'] = uniqueidentifier ?? '';
     data['tokenDevice'] = tokenDevice ?? '';
-    data['deviceName'] = Device.GetDeviceName();
+    data['deviceName'] = bind.getDeviceName();
     return data;
   }
 }

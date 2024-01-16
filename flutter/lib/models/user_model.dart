@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common/hbbs/hbbs.dart';
 import 'package:get/get.dart';
@@ -43,7 +44,7 @@ class UserModel {
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
       'deviceInfo': DeviceInfo.toJson(),
-      'deviceName': Device.GetDeviceName(),
+      'deviceName': bind.getDeviceName(),
     };
     if (refreshingUser) return;
     try {
