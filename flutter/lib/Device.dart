@@ -87,45 +87,6 @@ class Device {
       'serialnumber',
     );
   }
-
-  static Future<String?> GetDeviceName() async{
-    String? deviceName;
-    if (isDesktop){
-       deviceName = Platform.localHostname;
-    }else{
-      try{
-        // first, check if bluetooth is supported by your hardware
-// Note: The platform is initialized on the first call to any FlutterBluePlus method.
-        if (await FlutterBluePlus.isSupported == false) {
-            print("Bluetooth not supported by this device");
-            return '';
-        }
-
-        // handle bluetooth on & off
-        // note: for iOS the initial state is typically BluetoothAdapterState.unknown
-        // note: if you have permissions issues you will get stuck at BluetoothAdapterState.unauthorized
-        var subscription = FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
-            print(state);
-            if (state == BluetoothAdapterState.on) {
-            deviceName = FlutterBluePlus.adapterName as String;
-            
-                // show an error to the user, etc
-            }
-        });
-
-        // turn on bluetooth ourself if we can
-        // for iOS, the user controls bluetooth enable/disable
-        if (Platform.isAndroid) {
-            await FlutterBluePlus.turnOn();
-        }
-        subscription.cancel();
-        
-      } catch (e) {
-        deviceName = e.toString();
-      }
-    } 
-    return deviceName;
-  }
   /// fetch windows id by cmd line
   static Future<String> _fetchWinID(
     String executable,

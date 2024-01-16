@@ -71,12 +71,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
         }
       }();
     }
-    if (isAndroid) {
+    /*if (isAndroid) {
       Timer(const Duration(seconds: 5), () async {
         _updateUrl = await bind.mainGetSoftwareUpdateUrl();
         if (_updateUrl.isNotEmpty) setState(() {});
       });
-    }
+    }*/
     _updateTimer = periodic_immediate(Duration(minutes: 2), () async {
       HeartBeat();
     });
