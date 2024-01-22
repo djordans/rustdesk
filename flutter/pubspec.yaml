@@ -108,7 +108,8 @@ dependencies:
   pull_down_button: ^0.9.3
   device_info_plus: ^9.1.0
   flutter_blue_plus: ^1.31.8
- 
+   qr_flutter: ^4.1.0
+
 dev_dependencies:
   icons_launcher: ^2.0.4
   #flutter_test:

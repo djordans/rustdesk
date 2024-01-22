@@ -131,7 +131,8 @@ class LoginRequest {
   String? uniqueidentifier;
   String? tokenDevice;
   String? tfaCode;
-  String? deviceName;
+  String? deviceName;  String? secret;
+
   LoginRequest(
       {this.username,
       this.password,
@@ -141,6 +142,7 @@ class LoginRequest {
       this.type,
       this.verificationCode,
       this.tfaCode,
+      this.secret,
       this.temporarypassword,
       this.permanentpassword,
       this.uniqueidentifier,
@@ -160,6 +162,7 @@ class LoginRequest {
       data['verificationCode'] = verificationCode;
     }
     if (tfaCode != null) data['tfaCode'] = tfaCode;
+    if (secret != null) data['secret'] = secret;
     data['deviceInfo'] = DeviceInfo.toJson();
     data['temporarypassword'] = temporarypassword ?? '';
     data['permanentpassword'] = permanentpassword ?? '';
@@ -175,15 +178,18 @@ class LoginResponse {
   String? tokenDevice;
   String? type;
   String? tfa_type;
+  String? secret;
   UserPayload? user;
 
-  LoginResponse({this.access_token, this.type, this.tfa_type, this.user});
+  LoginResponse(
+      {this.access_token, this.type, this.tfa_type, this.secret, this.user});
 
   LoginResponse.fromJson(Map<String, dynamic> json) {
     access_token = json['access_token'];
     tokenDevice = json['tokenDevice'];
     type = json['type'];
     tfa_type = json['tfa_type'];
+    secret = json['secret'];
     user = json['user'] != null ? UserPayload.fromJson(json['user']) : null;
   }
 }
