@@ -2029,7 +2029,7 @@ pub fn main_supported_input_source() -> SyncReturn<String> {
 pub fn main_generate2fa() -> String {
     #[cfg(any(target_os = "android", target_os = "ios"))]
     {
-        ""
+        "".to_string()
     }
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
    { generate2fa()}
