@@ -2027,18 +2027,32 @@ pub fn main_supported_input_source() -> SyncReturn<String> {
 }
 
 pub fn main_generate2fa() -> String {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        ""
+    }
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    generate2fa()
+   { generate2fa()}
 }
 
 pub fn main_verify2fa(code: String) -> bool {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+       false
+    }
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    verify2fa(code)
+    {verify2fa(code)}
+    
 }
 
 pub fn main_has_valid_2fa_sync() -> SyncReturn<bool> {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        SyncReturn(false)
+    }
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    SyncReturn(has_valid_2fa())
+    {SyncReturn(has_valid_2fa())}
+    
 }
 
 #[cfg(target_os = "android")]
