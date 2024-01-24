@@ -155,11 +155,11 @@ void runMainApp(bool startService) async {
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
   await bind.mainCheckConnectStatus();
-  await [Permission.storage,Permission.requestInstallPackages,Permission.bluetooth,Permission.bluetoothConnect,Permission.bluetoothScan].request();
+  if (isAndroid) await [Permission.storage,Permission.requestInstallPackages,Permission.bluetooth,Permission.bluetoothConnect,Permission.bluetoothScan].request();
   WakelockPlus.enable();
   //gFFI.userModel.refreshCurrentUser();
   if (isAndroid) androidChannelInit();
-  platformFFI.syncAndroidServiceAppDirConfigPath();
+  if (isAndroid) platformFFI.syncAndroidServiceAppDirConfigPath();
   gFFI.serverModel.startService();
   //await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
