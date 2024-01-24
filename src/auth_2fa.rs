@@ -98,7 +98,7 @@ pub fn verify2fa(code: String) -> bool {
     }
     false
 }
-
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn get_2fa(raw: Option<String>) -> Option<TOTP> {
     TOTPInfo::from_str(&raw.unwrap_or(Config::get_option("2fa")))
         .map(|x| Some(x))
