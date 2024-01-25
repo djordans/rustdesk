@@ -2693,7 +2693,13 @@ void HeartBeat() async {
     final urlupdate = "$urlapi/api/heartbeat";
     var authHeaders = getHttpHeaders();
     authHeaders['Content-Type'] = "application/json";
-    await http.post(Uri.parse(urlupdate), headers: authHeaders,body: body);
+    try {
+      await http.post(Uri.parse(urlupdate), headers: authHeaders,body: body);
+    } catch (e) {
+     print('oh no, something wrong happen! error: $e');
+    } finally {
+         print('done!');
+    }
 }
 
 void CheckLocalOptionFile() async{
