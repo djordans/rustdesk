@@ -72,7 +72,6 @@ impl TOTPInfo {
     }
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn generate2fa() -> String {
     if let Ok(info) = TOTPInfo::gen_totp_info(crate::ipc::get_id(), 6) {
         if let Ok(totp) = info.new_totp() {
@@ -83,7 +82,7 @@ pub fn generate2fa() -> String {
     }
     "".to_owned()
 }
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+
 pub fn verify2fa(code: String) -> bool {
     if let Some((info, totp)) = CURRENT_2FA.lock().unwrap().as_ref() {
         if let Ok(cur) = totp.generate_current() {
@@ -98,7 +97,7 @@ pub fn verify2fa(code: String) -> bool {
     }
     false
 }
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+
 pub fn get_2fa(raw: Option<String>) -> Option<TOTP> {
     TOTPInfo::from_str(&raw.unwrap_or(Config::get_option("2fa")))
         .map(|x| Some(x))
