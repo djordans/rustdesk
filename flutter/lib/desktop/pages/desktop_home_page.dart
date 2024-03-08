@@ -71,6 +71,36 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   Widget buildLeftPane(BuildContext context) {
+    final children = <Widget>[
+      buildTip(context),
+      buildIDBoard(context),
+      buildPasswordBoard(context),
+      FutureBuilder<Widget>(
+        future: buildHelpCards(),
+        builder: (_, data) {
+          if (data.hasData) {
+            if (bind.isQs()) {
+              Future.delayed(Duration(milliseconds: 300), () {
+                _updateWindowSize();
+              });
+            }
+            return data.data!;
+          } else {
+            return const Offstage();
+          }
+        },
+      ),
+      buildPluginEntry(),
+    ];
+    if (bind.isQs()) {
+      children.addAll([
+        Divider(),
+        Container(
+          margin: EdgeInsets.fromLTRB(0, 0, 8, 6),
+          child: OnlineStatusWidget(),
+        ),
+      ]);
+    }
     return ChangeNotifierProvider.value(
       value: gFFI.serverModel,
       child: Container(
