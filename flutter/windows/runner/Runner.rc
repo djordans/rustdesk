@@ -95,7 +95,7 @@ BEGIN
             VALUE "InternalName", "rustdesk" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.afflelou. All rights reserved." "\0"
             VALUE "OriginalFilename", "rustdesk.exe" "\0"
-            VALUE "ProductName", "rustdesk" "\0"
+            VALUE "ProductName", "RustDesk" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

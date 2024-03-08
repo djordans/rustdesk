@@ -59,14 +59,12 @@ Future<void> main(List<String> args) async {
     // Because stateGlobal.windowId is a global value.
     argument['windowId'] = kWindowId;
     kWindowType = type.windowType;
-    final windowName = getWindowName();
     switch (kWindowType) {
       case WindowType.RemoteDesktop:
         desktopType = DesktopType.remote;
         runMultiWindow(
           argument,
           kAppTypeDesktopRemote,
-          windowName,
         );
         break;
       case WindowType.FileTransfer:
@@ -74,7 +72,6 @@ Future<void> main(List<String> args) async {
         runMultiWindow(
           argument,
           kAppTypeDesktopFileTransfer,
-          windowName,
         );
         break;
       case WindowType.PortForward:
@@ -82,7 +79,6 @@ Future<void> main(List<String> args) async {
         runMultiWindow(
           argument,
           kAppTypeDesktopPortForward,
-          windowName,
         );
         break;
       default:
@@ -149,6 +145,7 @@ void runMainApp(bool startService) async {
     }
     windowManager.setOpacity(1);
     windowManager.setTitle(getWindowName());
+    windowManager.setResizable(!bind.isQs());
   });
 }
 
@@ -170,9 +167,9 @@ void runMobileApp() async {
 void runMultiWindow(
   Map<String, dynamic> argument,
   String appType,
-  String title,
 ) async {
   await initEnv(appType);
+  final title = getWindowName();
   // set prevent close to true, we handle close event manually
   WindowController.fromWindowId(kWindowId!).setPreventClose(true);
   late Widget widget;
@@ -438,7 +435,7 @@ class _AppState extends State<App> {
               ? (context, child) => AccessibilityListener(
                     child: MediaQuery(
                       data: MediaQuery.of(context).copyWith(
-                        textScaleFactor: 1.0,
+                        textScaler: TextScaler.linear(1.0),
                       ),
                       child: child ?? Container(),
                     ),
@@ -460,7 +457,7 @@ class _AppState extends State<App> {
 Widget _keepScaleBuilder(BuildContext context, Widget? child) {
   return MediaQuery(
     data: MediaQuery.of(context).copyWith(
-      textScaleFactor: 1.0,
+      textScaler: TextScaler.linear(1.0),
     ),
     child: child ?? Container(),
   );

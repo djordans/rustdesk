@@ -229,10 +229,10 @@ class ScamWarningDialog extends StatefulWidget {
   ScamWarningDialog({required this.serverModel});
 
   @override
-  _ScamWarningDialogState createState() => _ScamWarningDialogState();
+  ScamWarningDialogState createState() => ScamWarningDialogState();
 }
 
-class _ScamWarningDialogState extends State<ScamWarningDialog> {
+class ScamWarningDialogState extends State<ScamWarningDialog> {
   int _countdown = 12;
   bool show_warning = false;
   late Timer _timer;
@@ -323,10 +323,7 @@ class _ScamWarningDialogState extends State<ScamWarningDialog> {
                 ),
                 SizedBox(height: 18),
                 Text(
-                  translate("scam_text1") +
-                      "\n\n" +
-                      translate("scam_text2") +
-                      "\n",
+                  "${translate("scam_text1")}\n\n${translate("scam_text2")}\n",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -370,11 +367,11 @@ class _ScamWarningDialogState extends State<ScamWarningDialog> {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          primary: Colors.blueAccent,
+                          backgroundColor: Colors.blueAccent,
                         ),
                         child: Text(
                           isButtonLocked
-                              ? translate("I Agree") + " (${_countdown}s)"
+                              ? "${translate("I Agree")} (${_countdown}s)"
                               : translate("I Agree"),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,

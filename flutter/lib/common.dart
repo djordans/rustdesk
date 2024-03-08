@@ -328,6 +328,8 @@ class MyTheme {
   );
 
   static ThemeData lightTheme = ThemeData(
+    // https://stackoverflow.com/questions/77537315/after-upgrading-to-flutter-3-16-the-app-bar-background-color-button-size-and
+    useMaterial3: false,
     brightness: Brightness.light,
     hoverColor: Color.fromARGB(255, 224, 224, 224),
     scaffoldBackgroundColor: Colors.white,
@@ -420,6 +422,7 @@ class MyTheme {
     ],
   );
   static ThemeData darkTheme = ThemeData(
+    useMaterial3: false,
     brightness: Brightness.dark,
     hoverColor: Color.fromARGB(255, 45, 46, 53),
     scaffoldBackgroundColor: Color(0xFF18191E),
@@ -1529,6 +1532,9 @@ class LastWindowPosition {
   }
 }
 
+String get windowFramePrefix =>
+    bind.isQs() ? "${kWindowPrefix}qs_" : kWindowPrefix;
+
 /// Save window position and size on exit
 /// Note that windowId must be provided if it's subwindow
 Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
@@ -1544,7 +1550,7 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
       (Platform.isMacOS && stateGlobal.closeOnFullscreen == true);
   setFrameIfMaximized() {
     if (isMaximized) {
-      final pos = bind.getLocalFlutterOption(k: kWindowPrefix + type.name);
+      final pos = bind.getLocalFlutterOption(k: windowFramePrefix + type.name);
       var lpos = LastWindowPosition.loadFromString(pos);
       position = Offset(
           lpos?.offsetWidth ?? position.dx, lpos?.offsetHeight ?? position.dy);
@@ -1592,7 +1598,7 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
       "Saving frame: $windowId: ${pos.width}/${pos.height}, offset:${pos.offsetWidth}/${pos.offsetHeight}, isMaximized:${pos.isMaximized}, isFullscreen:${pos.isFullscreen}");
 
   await bind.setLocalFlutterOption(
-      k: kWindowPrefix + type.name, v: pos.toString());
+      k: windowFramePrefix + type.name, v: pos.toString());
 
   if (type == WindowType.RemoteDesktop && windowId != null) {
     await _saveSessionWindowPosition(
@@ -1607,7 +1613,7 @@ Future _saveSessionWindowPosition(WindowType windowType, int windowId,
   getPeerPos(String peerId) {
     if (isMaximized) {
       final peerPos = bind.mainGetPeerFlutterOptionSync(
-          id: peerId, k: kWindowPrefix + windowType.name);
+          id: peerId, k: windowFramePrefix + windowType.name);
       var lpos = LastWindowPosition.loadFromString(peerPos);
       return LastWindowPosition(
               lpos?.width ?? pos.offsetWidth,
@@ -1626,7 +1632,7 @@ Future _saveSessionWindowPosition(WindowType windowType, int windowId,
     for (final peerId in remoteList.split(',')) {
       bind.mainSetPeerFlutterOptionSync(
           id: peerId,
-          k: kWindowPrefix + windowType.name,
+          k: windowFramePrefix + windowType.name,
           v: getPeerPos(peerId));
     }
   }
@@ -1744,14 +1750,14 @@ Future<bool> restoreWindowPosition(WindowType type,
     // Because the session may not be read at this time.
     if (desktopType == DesktopType.main) {
       pos = bind.mainGetPeerFlutterOptionSync(
-          id: peerId, k: kWindowPrefix + type.name);
+          id: peerId, k: windowFramePrefix + type.name);
     } else {
       pos = await bind.sessionGetFlutterOptionByPeerId(
-          id: peerId, k: kWindowPrefix + type.name);
+          id: peerId, k: windowFramePrefix + type.name);
     }
     isRemotePeerPos = pos != null;
   }
-  pos ??= bind.getLocalFlutterOption(k: kWindowPrefix + type.name);
+  pos ??= bind.getLocalFlutterOption(k: windowFramePrefix + type.name);
 
   var lpos = LastWindowPosition.loadFromString(pos);
   if (lpos == null) {
@@ -1798,9 +1804,13 @@ Future<bool> restoreWindowPosition(WindowType type,
       }
       if (lpos.isMaximized == true) {
         await restorePos();
-        await windowManager.maximize();
+        if (!bind.isQs()) {
+          await windowManager.maximize();
+        }
       } else {
-        await windowManager.setSize(size);
+        if (!bind.isQs()) {
+          await windowManager.setSize(size);
+        }
         await restorePos();
       }
       return true;
@@ -1897,7 +1907,7 @@ bool handleUriLink({List<String>? cmdArgs, Uri? uri, String? uriString}) {
   if (cmdArgs != null && cmdArgs.isNotEmpty) {
     args = cmdArgs;
     // rustdesk <uri link>
-    if (args[0].startsWith(kUniLinksPrefix)) {
+    if (args[0].startsWith(bind.mainUriPrefixSync())) {
       final uri = Uri.tryParse(args[0]);
       if (uri != null) {
         args = urlLinkToCmdArgs(uri);
@@ -2456,19 +2466,20 @@ int versionCmp(String v1, String v2) {
 }
 
 String getWindowName({WindowType? overrideType}) {
+  final name = bind.mainGetAppNameSync();
   switch (overrideType ?? kWindowType) {
     case WindowType.Main:
-      return "RustDesk";
+      return name;
     case WindowType.FileTransfer:
-      return "File Transfer - RustDesk";
+      return "File Transfer - $name";
     case WindowType.PortForward:
-      return "Port Forward - RustDesk";
+      return "Port Forward - $name";
     case WindowType.RemoteDesktop:
-      return "Remote Desktop - RustDesk";
+      return "Remote Desktop - $name";
     default:
       break;
   }
-  return "RustDesk";
+  return name;
 }
 
 String getWindowNameWithId(String id, {WindowType? overrideType}) {
@@ -2734,7 +2745,7 @@ Future<void> start_service(bool is_start) async {
   }
 }
 
-typedef Future<bool> WhetherUseRemoteBlock();
+typedef WhetherUseRemoteBlock = Future<bool> Function();
 Widget buildRemoteBlock({required Widget child, WhetherUseRemoteBlock? use}) {
   var block = false.obs;
   return Obx(() => MouseRegion(
@@ -3170,4 +3181,115 @@ Future<bool> setServerConfig(
     gFFI.userModel.logOut(apiServer: oldApiServer);
   }
   return true;
+}
+
+ColorFilter? svgColor(Color? color) {
+  if (color == null) {
+    return null;
+  } else {
+    return ColorFilter.mode(color, BlendMode.srcIn);
+  }
+}
+
+// ignore: must_be_immutable
+class ComboBox extends StatelessWidget {
+  late final List<String> keys;
+  late final List<String> values;
+  late final String initialKey;
+  late final Function(String key) onChanged;
+  late final bool enabled;
+  late String current;
+
+  ComboBox({
+    Key? key,
+    required this.keys,
+    required this.values,
+    required this.initialKey,
+    required this.onChanged,
+    this.enabled = true,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var index = keys.indexOf(initialKey);
+    if (index < 0) {
+      index = 0;
+    }
+    var ref = values[index].obs;
+    current = keys[index];
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: enabled
+              ? MyTheme.color(context).border2 ?? MyTheme.border
+              : MyTheme.border,
+        ),
+        borderRadius:
+            BorderRadius.circular(8), //border raiuds of dropdown button
+      ),
+      height: 42, // should be the height of a TextField
+      child: Obx(() => DropdownButton<String>(
+            isExpanded: true,
+            value: ref.value,
+            elevation: 16,
+            underline: Container(),
+            style: TextStyle(
+                color: enabled
+                    ? Theme.of(context).textTheme.titleMedium?.color
+                    : disabledTextColor(context, enabled)),
+            icon: const Icon(
+              Icons.expand_more_sharp,
+              size: 20,
+            ).marginOnly(right: 15),
+            onChanged: enabled
+                ? (String? newValue) {
+                    if (newValue != null && newValue != ref.value) {
+                      ref.value = newValue;
+                      current = newValue;
+                      onChanged(keys[values.indexOf(newValue)]);
+                    }
+                  }
+                : null,
+            items: values.map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(
+                  value,
+                  style: const TextStyle(fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
+                ).marginOnly(left: 15),
+              );
+            }).toList(),
+          )),
+    ).marginOnly(bottom: 5);
+  }
+}
+
+Color? disabledTextColor(BuildContext context, bool enabled) {
+  return enabled
+      ? null
+      : Theme.of(context).textTheme.titleLarge?.color?.withOpacity(0.6);
+}
+
+Widget loadLogo(double size) {
+  return Image.asset('assets/logo.png',
+      width: size,
+      height: size,
+      errorBuilder: (ctx, error, stackTrace) => SvgPicture.asset(
+            'assets/logo.svg',
+            width: size,
+            height: size,
+          ));
+}
+
+var desktopQsHomeLeftPaneSize = Size(280, 300);
+Size getDesktopQsHomeSize() {
+  final magicWidth = 11.0;
+  final magicHeight = 8.0;
+  return desktopQsHomeLeftPaneSize +
+      Offset(magicWidth, kDesktopRemoteTabBarHeight + magicHeight);
+}
+
+Size getDesktopQsSettingsSize() {
+  return Size(768, 600);
 }
