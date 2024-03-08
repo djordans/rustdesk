@@ -346,7 +346,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   Future<Widget> buildHelpCards() async {
-    if (updateUrl.isNotEmpty && !isCardClosed) {
+    /*if (updateUrl.isNotEmpty && !isCardClosed) {
       final AutoUpdate = await bind.mainGetOption(key: 'AutoUpdate');
       if (AutoUpdate == "Y")
       {
@@ -369,7 +369,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         //await launchUrl(url);
       },
       closeButton: true);
-    }
+    }*/
     if (systemError.isNotEmpty) {
       return buildInstallCard("", systemError, "", () {});
     }
