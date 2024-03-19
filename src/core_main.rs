@@ -3,7 +3,7 @@ use crate::client::translate;
 #[cfg(not(debug_assertions))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::platform::breakdown_callback;
-use hbb_common::log;
+use hbb_common::{config, log};
 #[cfg(not(debug_assertions))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use hbb_common::platform::register_breakdown_handler;
@@ -38,6 +38,7 @@ fn is_empty_uni_link(arg: &str) -> bool {
 /// If it returns [`Some`], then the process will continue, and flutter gui will be started.
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn core_main() -> Option<Vec<String>> {
+    crate::load_custom_client();
     #[cfg(windows)]
     crate::platform::windows::bootstrap();
     let mut args = Vec::new();
@@ -62,7 +63,7 @@ pub fn core_main() -> Option<Vec<String>> {
             ]
             .contains(&arg.as_str())
             {
-                if crate::flutter_ffi::is_qs().0 {
+                if config::is_incoming_only() {
                     return None;
                 } else {
                     _is_flutter_invoke_new_connection = true;
@@ -95,7 +96,7 @@ pub fn core_main() -> Option<Vec<String>> {
     #[cfg(feature = "flutter")]
     {
         let (k, v) = ("LIBGL_ALWAYS_SOFTWARE", "1");
-        if !hbb_common::config::Config::get_option("allow-always-software-render").is_empty() {
+        if !config::Config::get_option("allow-always-software-render").is_empty() {
             std::env::set_var(k, v);
         } else {
             std::env::remove_var(k);
@@ -110,7 +111,7 @@ pub fn core_main() -> Option<Vec<String>> {
         return core_main_invoke_new_connection(std::env::args());
     }
     let click_setup = cfg!(windows) && args.is_empty() && crate::common::is_setup(&arg_exe);
-    if click_setup {
+    if click_setup && !config::is_disable_installation(){
         args.push("--install".to_owned());
         flutter_args.push("--install".to_string());
     }
@@ -187,6 +188,9 @@ pub fn core_main() -> Option<Vec<String>> {
                 }
                 return None;
             } else if args[0] == "--silent-install" {
+                if config::is_disable_installation() {
+                    return None;
+                }
                 let res = platform::install_me(
                     "desktopicon startmenu",
                     "".to_owned(),
@@ -201,7 +205,7 @@ pub fn core_main() -> Option<Vec<String>> {
                     }
                 };
                 Toast::new(Toast::POWERSHELL_APP_ID)
-                    .title(&hbb_common::config::APP_NAME.read().unwrap())
+                    .title(&config::APP_NAME.read().unwrap())
                     .text1(&text)
                     .sound(Some(Sound::Default))
                     .duration(Duration::Short)

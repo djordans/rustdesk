@@ -42,6 +42,8 @@ lazy_static::lazy_static! {
 fn initialize(app_dir: &str) {
     flutter::async_tasks::start_flutter_async_runner();
     *config::APP_DIR.write().unwrap() = app_dir.to_owned();
+    // core_main's load_custom_client does not work for flutter since it is only applied to its load_library in main.c
+    crate::load_custom_client();
     #[cfg(target_os = "android")]
     {
         // flexi_logger can't work when android_logger initialized.
@@ -63,6 +65,11 @@ fn initialize(app_dir: &str) {
     {
         use hbb_common::env_logger::*;
         init_from_env(Env::default().filter_or(DEFAULT_FILTER_ENV, "debug"));
+    }
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        // core_main's init_log does not work for flutter since it is only applied to its load_library in main.c
+        hbb_common::init_log(false, "flutter_ffi");
     }
 }
 
@@ -1817,8 +1824,46 @@ pub fn main_support_remove_wallpaper() -> bool {
     support_remove_wallpaper()
 }
 
-pub fn is_qs() -> SyncReturn<bool> {
-    SyncReturn(false)
+pub fn is_incoming_only() -> SyncReturn<bool> {
+    SyncReturn(config::is_incoming_only())
+}
+
+pub fn is_outgoing_only() -> SyncReturn<bool> {
+    SyncReturn(config::is_outgoing_only())
+}
+
+pub fn is_custom_client() -> SyncReturn<bool> {
+    SyncReturn(get_app_name() != "RustDesk")
+}
+
+pub fn is_disable_settings() -> SyncReturn<bool> {
+    SyncReturn(config::is_disable_settings())
+}
+
+pub fn is_disable_ab() -> SyncReturn<bool> {
+    SyncReturn(config::is_disable_ab())
+}
+
+pub fn is_disable_account() -> SyncReturn<bool> {
+    SyncReturn(config::is_disable_account())
+}
+
+// windows only
+pub fn is_disable_installation() -> SyncReturn<bool> {
+    SyncReturn(config::is_disable_installation())
+}
+
+pub fn is_preset_password() -> bool {
+    config::HARD_SETTINGS
+        .read()
+        .unwrap()
+        .get("password")
+        .map_or(false, |p| {
+            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            return p == &crate::ipc::get_permanent_password();
+            #[cfg(any(target_os = "android", target_os = "ios"))]
+            return p == &config::Config::get_permanent_password();
+        })
 }
 
 /// Send a url scheme throught the ipc.
@@ -2071,6 +2116,10 @@ pub fn main_has_valid_2fa_sync() -> SyncReturn<bool> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {SyncReturn(has_valid_2fa())}
     
+}
+
+pub fn main_get_hard_option(key: String) -> SyncReturn<String> {
+    SyncReturn(get_hard_option(key))
 }
 
 #[cfg(target_os = "android")]

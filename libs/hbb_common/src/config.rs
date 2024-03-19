@@ -5,7 +5,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, RwLock},
+    sync::{Mutex, RwLock},
     time::{Duration, Instant, SystemTime},
 };
 
@@ -46,41 +46,42 @@ pub const CONFIG_OPTION_ALLOW_LINUX_HEADLESS: &str = "allow-linux-headless";
 
 #[cfg(target_os = "macos")]
 lazy_static::lazy_static! {
-    pub static ref ORG: Arc<RwLock<String>> = Arc::new(RwLock::new("com.afflelou".to_owned()));
+    pub static ref ORG: RwLock<String> = RwLock::new("com.afflelou".to_owned());
 }
 
 type Size = (i32, i32, i32, i32);
 type KeyPair = (Vec<u8>, Vec<u8>);
 
 lazy_static::lazy_static! {
-    static ref CONFIG: Arc<RwLock<Config>> = Arc::new(RwLock::new(Config::load()));
-    static ref CONFIG2: Arc<RwLock<Config2>> = Arc::new(RwLock::new(Config2::load()));
-    static ref LOCAL_CONFIG: Arc<RwLock<LocalConfig>> = Arc::new(RwLock::new(LocalConfig::load()));
-    static ref ONLINE: Arc<Mutex<HashMap<String, i64>>> = Default::default();
-    pub static ref PROD_RENDEZVOUS_SERVER: Arc<RwLock<String>> = Arc::new(RwLock::new(match option_env!("RENDEZVOUS_SERVER") {
+    static ref CONFIG: RwLock<Config> = RwLock::new(Config::load());
+    static ref CONFIG2: RwLock<Config2> = RwLock::new(Config2::load());
+    static ref LOCAL_CONFIG: RwLock<LocalConfig> = RwLock::new(LocalConfig::load());
+    static ref ONLINE: Mutex<HashMap<String, i64>> = Default::default();
+    pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new(match option_env!("RENDEZVOUS_SERVER") {
         Some(key) if !key.is_empty() => key,
         _ => "",
-    }.to_owned()));
-    pub static ref EXE_RENDEZVOUS_SERVER: Arc<RwLock<String>> = Default::default();
-    pub static ref APP_NAME: Arc<RwLock<String>> = Arc::new(RwLock::new("RustDesk".to_owned()));
-    static ref KEY_PAIR: Arc<Mutex<Option<KeyPair>>> = Default::default();
-    static ref USER_DEFAULT_CONFIG: Arc<RwLock<(UserDefaultConfig, Instant)>> = Arc::new(RwLock::new((UserDefaultConfig::load(), Instant::now())));
-    pub static ref NEW_STORED_PEER_CONFIG: Arc<Mutex<HashSet<String>>> = Default::default();
-    pub static ref DEFAULT_SETTINGS: Arc<RwLock<HashMap<String, String>>> = Default::default();
-    pub static ref OVERWRITE_SETTINGS: Arc<RwLock<HashMap<String, String>>> = Default::default();
-    pub static ref DEFAULT_DISPLAY_SETTINGS: Arc<RwLock<HashMap<String, String>>> = Default::default();
-    pub static ref OVERWRITE_DISPLAY_SETTINGS: Arc<RwLock<HashMap<String, String>>> = Default::default();
-    pub static ref DEFAULT_LOCAL_SETTINGS: Arc<RwLock<HashMap<String, String>>> = Default::default();
-    pub static ref OVERWRITE_LOCAL_SETTINGS: Arc<RwLock<HashMap<String, String>>> = Default::default();
+    }.to_owned());
+    pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
+    pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());
+    static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
+    static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
+    pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
+    pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
 }
 
 lazy_static::lazy_static! {
-    pub static ref APP_DIR: Arc<RwLock<String>> = Default::default();
+    pub static ref APP_DIR: RwLock<String> = Default::default();
 }
 
 #[cfg(any(target_os = "android", target_os = "ios"))]
 lazy_static::lazy_static! {
-    pub static ref APP_HOME_DIR: Arc<RwLock<String>> = Default::default();
+    pub static ref APP_HOME_DIR: RwLock<String> = Default::default();
 }
 
 pub const LINK_DOCS_HOME: &str = "https://rustdesk.com/docs/en/";
@@ -401,21 +402,11 @@ fn patch(path: PathBuf) -> PathBuf {
         #[cfg(target_os = "linux")]
         {
             if _tmp == "/root" {
-                if let Ok(output) = std::process::Command::new("whoami").output() {
-                    let user = String::from_utf8_lossy(&output.stdout)
-                        .to_string()
-                        .trim()
-                        .to_owned();
+                if let Ok(user) = crate::platform::linux::run_cmds("whoami") {
                     if user != "root" {
                         let cmd = format!("getent passwd '{}' | awk -F':' '{{print $6}}'", user);
-                        if let Ok(output) = std::process::Command::new(cmd).output() {
-                            let home_dir = String::from_utf8_lossy(&output.stdout)
-                                .to_string()
-                                .trim()
-                                .to_owned();
-                            if !home_dir.is_empty() {
-                                return home_dir.into();
-                            }
+                        if let Ok(output) = crate::platform::linux::run_cmds(&cmd) {
+                            return output.into();
                         }
                         return format!("/home/{user}").into();
                     }
@@ -912,7 +903,13 @@ impl Config {
         res
     }
 
-    pub fn set_options(v: HashMap<String, String>) {
+    #[inline]
+    fn purify_options(v: &mut HashMap<String, String>) {
+        v.retain(|k, v| is_option_can_save(&OVERWRITE_SETTINGS, &DEFAULT_SETTINGS, k, v));
+    }
+
+    pub fn set_options(mut v: HashMap<String, String>) {
+        Self::purify_options(&mut v);
         let mut config = CONFIG2.write().unwrap();
         if config.options == v {
             return;
@@ -922,20 +919,19 @@ impl Config {
     }
 
     pub fn get_option(k: &str) -> String {
-        if let Some(v) = OVERWRITE_SETTINGS.read().unwrap().get(k) {
-            return v.clone();
-        }
-        if let Some(v) = CONFIG2.read().unwrap().options.get(k) {
-            v.clone()
-        } else {
-            if let Some(v) = DEFAULT_SETTINGS.read().unwrap().get(k) {
-                return v.clone();
-            }
-            "".to_owned()
-        }
+        get_or(
+            &OVERWRITE_SETTINGS,
+            &CONFIG2.read().unwrap().options,
+            &DEFAULT_SETTINGS,
+            k,
+        )
+        .unwrap_or_default()
     }
 
     pub fn set_option(k: String, v: String) {
+        if !is_option_can_save(&OVERWRITE_SETTINGS, &DEFAULT_SETTINGS, &k, &v) {
+            return;
+        }
         let mut config = CONFIG2.write().unwrap();
         let v2 = if v.is_empty() { None } else { Some(&v) };
         if v2 != config.options.get(&k) {
@@ -958,6 +954,14 @@ impl Config {
     }
 
     pub fn set_permanent_password(password: &str) {
+        if HARD_SETTINGS
+            .read()
+            .unwrap()
+            .get("password")
+            .map_or(false, |v| v == password)
+        {
+            return;
+        }
         let mut config = CONFIG.write().unwrap();
         if password == config.password {
             return;
@@ -967,7 +971,13 @@ impl Config {
     }
 
     pub fn get_permanent_password() -> String {
-        CONFIG.read().unwrap().password.clone()
+        let mut password = CONFIG.read().unwrap().password.clone();
+        if password.is_empty() {
+            if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
+                password = v.to_owned();
+            }
+        }
+        password
     }
 
     pub fn set_salt(salt: &str) {
@@ -1381,20 +1391,19 @@ impl LocalConfig {
     }
 
     pub fn get_option(k: &str) -> String {
-        if let Some(v) = OVERWRITE_LOCAL_SETTINGS.read().unwrap().get(k) {
-            return v.clone();
-        }
-        if let Some(v) = LOCAL_CONFIG.read().unwrap().options.get(k) {
-            v.clone()
-        } else {
-            if let Some(v) = DEFAULT_LOCAL_SETTINGS.read().unwrap().get(k) {
-                return v.clone();
-            }
-            "".to_owned()
-        }
+        get_or(
+            &OVERWRITE_LOCAL_SETTINGS,
+            &LOCAL_CONFIG.read().unwrap().options,
+            &DEFAULT_LOCAL_SETTINGS,
+            k,
+        )
+        .unwrap_or_default()
     }
 
     pub fn set_option(k: String, v: String) {
+        if !is_option_can_save(&OVERWRITE_LOCAL_SETTINGS, &DEFAULT_LOCAL_SETTINGS, &k, &v) {
+            return;
+        }
         let mut config = LOCAL_CONFIG.write().unwrap();
         let v2 = if v.is_empty() { None } else { Some(&v) };
         if v2 != config.options.get(&k) {
@@ -1571,6 +1580,14 @@ impl UserDefaultConfig {
     }
 
     pub fn set(&mut self, key: String, value: String) {
+        if !is_option_can_save(
+            &OVERWRITE_DISPLAY_SETTINGS,
+            &DEFAULT_DISPLAY_SETTINGS,
+            &key,
+            &value,
+        ) {
+            return;
+        }
         if value.is_empty() {
             self.options.remove(&key);
         } else {
@@ -1608,18 +1625,13 @@ impl UserDefaultConfig {
         }
     }
 
-    fn get_after(&self, key: &str) -> Option<String> {
-        if let Some(v) = OVERWRITE_DISPLAY_SETTINGS.read().unwrap().get(key) {
-            return Some(v.clone());
-        }
-        if let Some(v) = self.options.get(key) {
-            Some(v.clone())
-        } else {
-            if let Some(v) = DEFAULT_DISPLAY_SETTINGS.read().unwrap().get(key) {
-                return Some(v.clone());
-            }
-            None
-        }
+    fn get_after(&self, k: &str) -> Option<String> {
+        get_or(
+            &OVERWRITE_DISPLAY_SETTINGS,
+            &self.options,
+            &DEFAULT_DISPLAY_SETTINGS,
+            k,
+        )
     }
 }
 
@@ -1866,6 +1878,89 @@ deserialize_default!(deserialize_hashmap_string_string, HashMap<String, String>)
 deserialize_default!(deserialize_hashmap_string_bool,  HashMap<String, bool>);
 deserialize_default!(deserialize_hashmap_resolutions, HashMap<String, Resolution>);
 
+#[inline]
+fn get_or(
+    a: &RwLock<HashMap<String, String>>,
+    b: &HashMap<String, String>,
+    c: &RwLock<HashMap<String, String>>,
+    k: &str,
+) -> Option<String> {
+    a.read()
+        .unwrap()
+        .get(k)
+        .or(b.get(k))
+        .or(c.read().unwrap().get(k))
+        .cloned()
+}
+
+#[inline]
+fn is_option_can_save(
+    overwrite: &RwLock<HashMap<String, String>>,
+    defaults: &RwLock<HashMap<String, String>>,
+    k: &str,
+    v: &str,
+) -> bool {
+    if overwrite.read().unwrap().contains_key(k) {
+        return false;
+    }
+    if defaults.read().unwrap().get(k).map_or(false, |x| x == v) {
+        return false;
+    }
+    true
+}
+
+#[inline]
+pub fn is_incoming_only() -> bool {
+    HARD_SETTINGS
+        .read()
+        .unwrap()
+        .get("conn-type")
+        .map_or(false, |x| x == ("incoming"))
+}
+
+#[inline]
+pub fn is_outgoing_only() -> bool {
+    HARD_SETTINGS
+        .read()
+        .unwrap()
+        .get("conn-type")
+        .map_or(false, |x| x == ("outgoing"))
+}
+
+#[inline]
+fn is_some_hard_opton(name: &str) -> bool {
+    HARD_SETTINGS
+        .read()
+        .unwrap()
+        .get(name)
+        .map_or(false, |x| x == ("Y"))
+}
+
+#[inline]
+pub fn is_disable_tcp_listen() -> bool {
+    is_some_hard_opton("disable-tcp-listen")
+}
+
+#[inline]
+pub fn is_disable_settings() -> bool {
+    is_some_hard_opton("disable-settings")
+}
+
+#[inline]
+pub fn is_disable_ab() -> bool {
+    is_some_hard_opton("disable-ab")
+}
+
+#[inline]
+pub fn is_disable_account() -> bool {
+    is_some_hard_opton("disable-account")
+}
+
+#[inline]
+pub fn is_disable_installation() -> bool {
+    is_some_hard_opton("disable-installation")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1908,6 +2003,33 @@ mod tests {
             .write()
             .unwrap()
             .insert("d".to_string(), "c".to_string());
+        let mut res: HashMap<String, String> = Default::default();
+        res.insert("b".to_owned(), "c".to_string());
+        res.insert("d".to_owned(), "c".to_string());
+        res.insert("c".to_owned(), "a".to_string());
+        Config::purify_options(&mut res);
+        assert!(res.len() == 0);
+        res.insert("b".to_owned(), "c".to_string());
+        res.insert("d".to_owned(), "c".to_string());
+        res.insert("c".to_owned(), "a".to_string());
+        res.insert("f".to_owned(), "a".to_string());
+        Config::purify_options(&mut res);
+        assert!(res.len() == 1);
+        res.insert("b".to_owned(), "c".to_string());
+        res.insert("d".to_owned(), "c".to_string());
+        res.insert("c".to_owned(), "a".to_string());
+        res.insert("f".to_owned(), "a".to_string());
+        res.insert("c".to_owned(), "d".to_string());
+        Config::purify_options(&mut res);
+        assert!(res.len() == 2);
+        res.insert("b".to_owned(), "c".to_string());
+        res.insert("d".to_owned(), "c".to_string());
+        res.insert("c".to_owned(), "a".to_string());
+        res.insert("f".to_owned(), "a".to_string());
+        res.insert("c".to_owned(), "d".to_string());
+        res.insert("d".to_owned(), "cc".to_string());
+        Config::purify_options(&mut res);
+        assert!(res.len() == 2);
         let res = Config::get_options();
         assert!(res["a"] == "b");
         assert!(res["c"] == "a");
