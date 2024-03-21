@@ -1737,7 +1737,7 @@ mod tests {
     async fn test_clipboard_context() {
         #[cfg(target_os = "linux")]
         let dur = {
-            let dur = Duration::from_micros(500);
+            let dur = Duration::from_micros(500).as_secs();
             arboard::Clipboard::set_x11_server_conn_timeout(dur);
             dur
         };
