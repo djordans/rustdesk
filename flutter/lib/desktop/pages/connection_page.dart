@@ -286,7 +286,7 @@ class _ConnectionPageState extends State<ConnectionPage>
   /// Connects to the selected peer.
   void onConnect({bool isFileTransfer = false}) {
     var id = _idController.id;
-    String password = gFFI.abModel.getPeerPassword(id);
+    String password = '';//gFFI.abModel.getPeerPassword(id);
     connect(context, id, isFileTransfer: isFileTransfer, password: password);
   }
 
@@ -360,11 +360,11 @@ class _ConnectionPageState extends State<ConnectionPage>
                         platform: '',
                         tags: [],
                         hash: '',
+                        password: '',
                         forceAlwaysRelay: false,
                         rdpPort: '',
                         rdpUsername: '',
                         loginName: '',
-                          password: '',
                       );
                       return [emptyPeer];
                     } else {

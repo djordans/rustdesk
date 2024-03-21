@@ -102,8 +102,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
   /// Connects to the selected peer.
   void onConnect() {
     var id = _idController.id;
-    String password = gFFI.abModel.getPeerPassword(id);
-    connect(context, id, password: password);
+    //String password = '';//gFFI.abModel.getPeerPassword(id);
+    connect(context, id);
   }
 
   /// UI for software update.
@@ -185,11 +185,11 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           platform: '',
                           tags: [],
                           hash: '',
+                          password: '',
                           forceAlwaysRelay: false,
                           rdpPort: '',
                           rdpUsername: '',
                           loginName: '',
-                          password: '',
                         );
                         return [emptyPeer];
                       } else {

@@ -588,5 +588,18 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Please select the session you want to connect to", "연결하려는 세션을 선택하세요."),
         ("powered_by_me", "RustDesk 제공"),
         ("outgoing_only_desk_tip", "이것은 맞춤형 버전입니다.\n다른 장치에 연결할 수 있지만 다른 장치는 귀하의 장치에 연결할 수 없습니다."),
+        ("preset_password_warning", ""),
+        ("Security Alert", ""),
+        ("My address book", ""),
+        ("Personal", ""),
+        ("Owner", ""),
+        ("Set shared password", ""),
+        ("Exist in", ""),
+        ("Read-only", ""),
+        ("Read/Write", ""),
+        ("Full Control", ""),
+        ("share_warning_tip", ""),
+        ("Everyone", ""),
+        ("ab_web_console_tip", ""),
     ].iter().cloned().collect();
 }
