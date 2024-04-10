@@ -383,7 +383,7 @@ class ServerModel with ChangeNotifier {
     // ugly is here, because for desktop, below is useless
     await bind.mainStartService();
     updateClientState();
-    if (Platform.isAndroid) {
+    if (isAndroid) {
       WakelockPlus.enable();
     }
   }
@@ -395,7 +395,7 @@ class ServerModel with ChangeNotifier {
     await parent.target?.invokeMethod("stop_service");
     await bind.mainStopService();
     notifyListeners();
-    if (!Platform.isLinux) {
+    if (!isLinux) {
       // current linux is not supported
       WakelockPlus.disable();
     }

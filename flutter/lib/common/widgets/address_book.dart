@@ -46,14 +46,12 @@ class _AddressBookState extends State<AddressBook> {
               child: ElevatedButton(
                   onPressed: loginDialog, child: Text(translate("Login"))));
         } else {
-          if (gFFI.abModel.currentAbLoading.value &&
-              gFFI.abModel.currentAbEmtpy) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
           return Column(
             children: [
+              // NOT use Offstage to wrap LinearProgressIndicator
+              if (gFFI.abModel.currentAbLoading.value &&
+                  gFFI.abModel.currentAbEmpty)
+                const LinearProgressIndicator(),
               buildErrorBanner(context,
                   loading: gFFI.abModel.currentAbLoading,
                   err: gFFI.abModel.currentAbPullError,
@@ -65,7 +63,7 @@ class _AddressBookState extends State<AddressBook> {
                   retry: null, // remove retry
                   close: () => gFFI.abModel.currentAbPushError.value = ''),
               Expanded(
-                  child: isDesktop
+                  child: (isDesktop || isWebDesktop)
                       ? _buildAddressBookDesktop()
                       : _buildAddressBookMobile())
             ],
@@ -84,13 +82,15 @@ class _AddressBookState extends State<AddressBook> {
                   border: Border.all(
                       color: Theme.of(context).colorScheme.background)),
               child: Container(
-                width: 180,
+                width: 200,
                 height: double.infinity,
-                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
                     _buildAbDropdown(),
-                    _buildTagHeader().marginOnly(left: 8.0, right: 0),
+                    _buildTagHeader().marginOnly(
+                        left: 8.0,
+                        right: gFFI.abModel.legacyMode.value ? 8.0 : 0,
+                        top: gFFI.abModel.legacyMode.value ? 8.0 : 0),
                     Expanded(
                       child: Container(
                         width: double.infinity,
@@ -199,6 +199,12 @@ class _AddressBookState extends State<AddressBook> {
           bind.setLocalFlutterOption(k: 'current-ab-name', v: value);
         }
       },
+      underline: Container(
+        height: 0.7,
+        color: Theme.of(context).dividerColor.withOpacity(0.1),
+      ),
+      buttonStyleData: ButtonStyleData(height: 48),
+      menuItemStyleData: MenuItemStyleData(height: 36),
       items: names
           .map((e) => DropdownMenuItem(
               value: e,
@@ -206,9 +212,14 @@ class _AddressBookState extends State<AddressBook> {
                 children: [
                   Expanded(
                     child: Tooltip(
-                        message: e,
-                        child: Text(gFFI.abModel.translatedName(e),
-                            style: TextStyle(fontSize: 14))),
+                        waitDuration: Duration(milliseconds: 500),
+                        message: gFFI.abModel.translatedName(e),
+                        child: Text(
+                          gFFI.abModel.translatedName(e),
+                          style: TextStyle(fontSize: 14.0),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )),
                   ),
                 ],
               )))
@@ -303,7 +314,7 @@ class _AddressBookState extends State<AddressBook> {
             return tagBuilder(e);
           });
       final maxHeight = max(MediaQuery.of(context).size.height / 6, 100.0);
-      return isDesktop
+      return (isDesktop || isWebDesktop)
           ? gridView
           : LimitedBox(maxHeight: maxHeight, child: gridView);
     });
@@ -376,13 +387,14 @@ class _AddressBookState extends State<AddressBook> {
       sortMenuItem(),
       syncMenuItem(),
       filterMenuItem(),
-      MenuEntryDivider<String>(),
-      getEntry(translate("ab_web_console_tip"), () async {
-        final url = await bind.mainGetApiServer();
-        if (await canLaunchUrlString(url)) {
-          launchUrlString(url);
-        }
-      }),
+      if (!gFFI.abModel.legacyMode.value) MenuEntryDivider<String>(),
+      if (!gFFI.abModel.legacyMode.value)
+        getEntry(translate("ab_web_console_tip"), () async {
+          final url = await bind.mainGetApiServer();
+          if (await canLaunchUrlString(url)) {
+            launchUrlString(url);
+          }
+        }),
     ];
 
     mod_menu.showMenu(
@@ -406,6 +418,7 @@ class _AddressBookState extends State<AddressBook> {
       return;
     }
     var isInProgress = false;
+    var passwordVisible = false;
     IDTextEditingController idController = IDTextEditingController(text: '');
     TextEditingController aliasController = TextEditingController(text: '');
     TextEditingController passwordController = TextEditingController(text: '');
@@ -451,6 +464,24 @@ class _AddressBookState extends State<AddressBook> {
       }
 
       double marginBottom = 4;
+
+      row({required Widget lable, required Widget input}) {
+        return Row(
+          children: [
+            !isMobile
+                ? ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 100),
+                    child: lable.marginOnly(right: 10))
+                : SizedBox.shrink(),
+            Expanded(
+              child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 200),
+                  child: input),
+            ),
+          ],
+        ).marginOnly(bottom: !isMobile ? 8 : 0);
+      }
+
       return CustomAlertDialog(
         title: Text(translate("Add ID")),
         content: Column(
@@ -458,75 +489,90 @@ class _AddressBookState extends State<AddressBook> {
           children: [
             Column(
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      Text(
-                        '*',
-                        style: TextStyle(color: Colors.red, fontSize: 14),
-                      ),
-                      Text(
-                        'ID',
-                        style: style,
-                      ),
-                    ],
-                  ),
-                ).marginOnly(bottom: marginBottom),
-                TextField(
-                  controller: idController,
-                  inputFormatters: [IDTextInputFormatter()],
-                  decoration:
-                      InputDecoration(errorText: errorMsg, errorMaxLines: 5),
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
+                row(
+                    lable: Row(
+                      children: [
+                        Text(
+                          '*',
+                          style: TextStyle(color: Colors.red, fontSize: 14),
+                        ),
+                        Text(
+                          'ID',
+                          style: style,
+                        ),
+                      ],
+                    ),
+                    input: TextField(
+                      controller: idController,
+                      inputFormatters: [IDTextInputFormatter()],
+                      decoration: InputDecoration(
+                          labelText: !isMobile ? null : translate('ID'),
+                          errorText: errorMsg,
+                          errorMaxLines: 5),
+                    )),
+                row(
+                  lable: Text(
                     translate('Alias'),
                     style: style,
                   ),
-                ).marginOnly(top: 8, bottom: marginBottom),
-                TextField(
-                  controller: aliasController,
+                  input: TextField(
+                      controller: aliasController,
+                      decoration: InputDecoration(
+                        labelText: !isMobile ? null : translate('Alias'),
+                      )),
                 ),
                 if (isCurrentAbShared)
+                  row(
+                      lable: Text(
+                        translate('Password'),
+                        style: style,
+                      ),
+                      input: TextField(
+                        controller: passwordController,
+                        obscureText: !passwordVisible,
+                        decoration: InputDecoration(
+                          labelText: !isMobile ? null : translate('Password'),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                passwordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: MyTheme.lightTheme.primaryColor),
+                            onPressed: () {
+                              setState(() {
+                                passwordVisible = !passwordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                      )),
+                if (gFFI.abModel.currentAbTags.isNotEmpty)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      translate('Password'),
+                      translate('Tags'),
                       style: style,
                     ),
                   ).marginOnly(top: 8, bottom: marginBottom),
-                if (isCurrentAbShared)
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
+                if (gFFI.abModel.currentAbTags.isNotEmpty)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      children: tags
+                          .map((e) => AddressBookTag(
+                              name: e,
+                              tags: selectedTag,
+                              onTap: () {
+                                if (selectedTag.contains(e)) {
+                                  selectedTag.remove(e);
+                                } else {
+                                  selectedTag.add(e);
+                                }
+                              },
+                              showActionMenu: false))
+                          .toList(growable: false),
+                    ),
                   ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    translate('Tags'),
-                    style: style,
-                  ),
-                ).marginOnly(top: 8, bottom: marginBottom),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    children: tags
-                        .map((e) => AddressBookTag(
-                            name: e,
-                            tags: selectedTag,
-                            onTap: () {
-                              if (selectedTag.contains(e)) {
-                                selectedTag.remove(e);
-                              } else {
-                                selectedTag.add(e);
-                              }
-                            },
-                            showActionMenu: false))
-                        .toList(growable: false),
-                  ),
-                ),
               ],
             ),
             const SizedBox(

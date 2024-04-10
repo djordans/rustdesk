@@ -480,7 +480,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       return buildInstallCard("", systemError, "", () {});
     }
 
-    if (Platform.isWindows && !bind.isDisableInstallation()) {
+    if (isWindows && !bind.isDisableInstallation()) {
       if (!bind.mainIsInstalled()) {
         return buildInstallCard(
             "", bind.isOutgoingOnly() ? "" : "install_tip", "Install",
@@ -496,7 +496,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
          bind.mainUpdateMe(path: '');
         });
       }
-    } else if (Platform.isMacOS) {
+    } else if (isMacOS) {
       if (!(bind.isOutgoingOnly() ||
           bind.mainIsCanScreenRecording(prompt: false))) {
         return buildInstallCard("Permissions", "config_screen", "Configure",
@@ -532,7 +532,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       //     watchIsCanRecordAudio = true;
       //   });
       // }
-    } else if (Platform.isLinux) {
+    } else if (isLinux) {
       if (bind.isOutgoingOnly()) {
         return Container();
       }
@@ -581,7 +581,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           onPressed: () {
             SystemNavigator.pop(); // Close the application
             // https://github.com/flutter/flutter/issues/66631
-            if (Platform.isWindows) {
+            if (isWindows) {
               exit(0);
             }
           },
@@ -757,7 +757,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         }
       }
       if (watchIsCanRecordAudio) {
-        if (Platform.isMacOS) {
+        if (isMacOS) {
           Future.microtask(() async {
             if ((await osxCanRecordAudio() ==
                 PermissionAuthorizeType.authorized)) {

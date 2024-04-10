@@ -57,6 +57,7 @@ class _RemotePageState extends State<RemotePage> {
   @override
   void initState() {
     super.initState();
+    gFFI.ffiModel.updateEventListener(sessionId, widget.id);
     gFFI.start(
       widget.id,
       password: widget.password,
@@ -69,7 +70,6 @@ class _RemotePageState extends State<RemotePage> {
     });
     WakelockPlus.enable();
     _physicalFocusNode.requestFocus();
-    gFFI.ffiModel.updateEventListener(sessionId, widget.id);
     gFFI.inputModel.listenToMouse(true);
     gFFI.qualityMonitorModel.checkShowQualityMonitor(sessionId);
     keyboardSubscription =
@@ -295,25 +295,26 @@ class _RemotePageState extends State<RemotePage> {
                       : Offstage(),
                 ],
               )),
-          body: getRawPointerAndKeyBody(Overlay(
-            initialEntries: [
-              OverlayEntry(builder: (context) {
-                return Container(
+          body: Obx(
+            () => getRawPointerAndKeyBody(Overlay(
+              initialEntries: [
+                OverlayEntry(builder: (context) {
+                  return Container(
                     color: Colors.black,
                     child: isWebDesktop
                         ? getBodyForDesktopWithListener(keyboard)
-                        : SafeArea(child:
-                            OrientationBuilder(builder: (ctx, orientation) {
-                            if (_currentOrientation != orientation) {
-                              Timer(const Duration(milliseconds: 200), () {
-                                gFFI.dialogManager
-                                    .resetMobileActionsOverlay(ffi: gFFI);
-                                _currentOrientation = orientation;
-                                gFFI.canvasModel.updateViewStyle();
-                              });
-                            }
-                            return Obx(
-                              () => Container(
+                        : SafeArea(
+                            child:
+                                OrientationBuilder(builder: (ctx, orientation) {
+                              if (_currentOrientation != orientation) {
+                                Timer(const Duration(milliseconds: 200), () {
+                                  gFFI.dialogManager
+                                      .resetMobileActionsOverlay(ffi: gFFI);
+                                  _currentOrientation = orientation;
+                                  gFFI.canvasModel.updateViewStyle();
+                                });
+                              }
+                              return Container(
                                 color: MyTheme.canvasColor,
                                 child: inputModel.isPhysicalMouse.value
                                     ? getBodyForMobile()
@@ -321,12 +322,14 @@ class _RemotePageState extends State<RemotePage> {
                                         child: getBodyForMobile(),
                                         ffi: gFFI,
                                       ),
-                              ),
-                            );
-                          })));
-              })
-            ],
-          ))),
+                              );
+                            }),
+                          ),
+                  );
+                })
+              ],
+            )),
+          )),
     );
   }
 
