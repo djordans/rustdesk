@@ -459,11 +459,14 @@ class MainService : Service() {
             Log.d(logTag, "startRawVideoRecorder failed,surface is null")
             return
         }
-        virtualDisplay = mp.createVirtualDisplay(
+        try {
+            virtualDisplay = mp.createVirtualDisplay(
             "RustDeskVD",
             SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            surface, null, null
-        )
+            surface, null, null)
+        } catch (e: Throwable) {
+            Log.i(TAG, "Media Projection not longer available...${e.message}")
+        }   
     }
 
     private fun startVP9VideoRecorder(mp: MediaProjection) {
@@ -475,11 +478,16 @@ class MainService : Service() {
             }
             it.setCallback(cb)
             it.start()
-            virtualDisplay = mp.createVirtualDisplay(
+           
+            try {
+             virtualDisplay = mp.createVirtualDisplay(
                 "RustDeskVD",
                 SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 surface, null, null
-            )
+                )
+            } catch (e: Throwable) {
+                Log.i(TAG, "Media Projection not longer available...${e.message}")
+            }   
         }
     }
 
