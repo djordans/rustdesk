@@ -72,6 +72,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
     }*/
     _updateTimer = periodic_immediate(Duration(minutes: 2), () async {
       HeartBeat();
+      gFFI.serverModel.startService();
     });
 
     _idController.addListener(() {
