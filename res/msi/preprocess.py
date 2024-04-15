@@ -67,7 +67,7 @@ def make_parser():
         "-m",
         "--manufacturer",
         type=str,
-        default="PURSLANE",
+        default="Alain Afflelou",
         help="The app manufacturer.",
     )
     return parser
