@@ -2129,7 +2129,7 @@ pub mod server_side {
     use crate::start_server;
 
     #[no_mangle]
-    pub unsafe extern "system" fn Java_com_afflelou_flutter_1hbb_MainService_startServer(
+    pub unsafe extern "system" fn Java_ffi_FFI_startServer(
         env: JNIEnv,
         _class: JClass,
         app_dir: JString,
@@ -2143,7 +2143,7 @@ pub mod server_side {
     }
 
     #[no_mangle]
-    pub unsafe extern "system" fn Java_com_afflelou_flutter_1hbb_MainService_startService(
+    pub unsafe extern "system" fn Java_ffi_FFI_startService(
         _env: JNIEnv,
         _class: JClass,
     ) {
@@ -2153,7 +2153,7 @@ pub mod server_side {
     }
 
     #[no_mangle]
-    pub unsafe extern "system" fn Java_com_afflelou_flutter_1hbb_MainService_translateLocale(
+    pub unsafe extern "system" fn Java_ffi_FFI_translateLocale(
         env: JNIEnv,
         _class: JClass,
         locale: JString,
@@ -2172,7 +2172,7 @@ pub mod server_side {
     }
 
     #[no_mangle]
-    pub unsafe extern "system" fn Java_com_afflelou_flutter_1hbb_MainService_refreshScreen(
+    pub unsafe extern "system" fn Java_ffi_FFI_refreshScreen(
         _env: JNIEnv,
         _class: JClass,
     ) {
