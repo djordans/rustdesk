@@ -39,7 +39,7 @@ class ConnectionPage extends StatefulWidget implements PageShape {
 class _ConnectionPageState extends State<ConnectionPage> {
   /// Controller for the id input bar.
   final _idController = IDTextEditingController();
-  Timer? _updateTimer;  
+  Timer? _updateTimer;
   final RxBool _idEmpty = true.obs;
 
   /// Update url. If it's not null, means an update is available.
@@ -114,33 +114,31 @@ class _ConnectionPageState extends State<ConnectionPage> {
         ? const SizedBox(height: 0)
         : InkWell(
             onTap: () async {
-              setState(() {
+              /*setState(() {
                 isInProgress = true;
               });
               await AutoUpgrade(_updateUrl);
               setState(() {
                 isInProgress = false;
-              });
+              });*/
               /*if (await canLaunchUrl(url)) {
                 await launchUrl(url);
               }*/
               _updateUrl = '';
               _buildUpdateUI();
-              
             },
             child: Container(
                 alignment: AlignmentDirectional.center,
                 width: double.infinity,
                 color: Color.fromARGB(255, 255, 0, 0),
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Column( 
-                  children :[
-                    Text(translate('Download new version'),
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                    Offstage(
-                        offstage: !isInProgress,
-                        child: LinearProgressIndicator())])));
+                child: Column(children: [
+                  Text(translate('Download new version'),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  Offstage(
+                      offstage: !isInProgress, child: LinearProgressIndicator())
+                ])));
   }
 
   Future<void> _fetchPeers() async {
@@ -358,8 +356,11 @@ class _ConnectionPageState extends State<ConnectionPage> {
     );
     return Align(
         alignment: Alignment.center,
-        child: Container(constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width), child: w));
-        //child: Container(constraints: kMobilePageConstraints, child: w));
+        child: Container(
+            constraints:
+                BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+            child: w));
+    //child: Container(constraints: kMobilePageConstraints, child: w));
   }
 
   @override

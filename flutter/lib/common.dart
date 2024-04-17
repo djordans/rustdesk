@@ -27,7 +27,6 @@ import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
 import 'package:path_provider/path_provider.dart';
-import 'package:install_plugin_v2/install_plugin_v2.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../consts.dart';
 import 'common/widgets/overlay.dart';
@@ -419,7 +418,9 @@ class MyTheme {
         style:
             MenuStyle(backgroundColor: MaterialStatePropertyAll(Colors.white))),
     colorScheme: ColorScheme.light(
-        primary: Color.fromARGB(255, 195, 162, 105), secondary: accent, background: grayBg),
+        primary: Color.fromARGB(255, 195, 162, 105),
+        secondary: accent,
+        background: grayBg),
     popupMenuTheme: PopupMenuThemeData(
         color: Colors.white,
         shape: RoundedRectangleBorder(
@@ -1470,16 +1471,16 @@ Future<bool> matchPeer(String searchText, Peer peer) async {
   if (peer.id.toLowerCase().contains(searchText)) {
     return true;
   }
-  if (peer.hostname.toLowerCase().contains(searchText)){
+  if (peer.hostname.toLowerCase().contains(searchText)) {
     return true;
   }
-  if(peer.username.toLowerCase().contains(searchText)){
-    return true;
-  }  
-  if(peer.alias.toLowerCase().contains(searchText)) {
+  if (peer.username.toLowerCase().contains(searchText)) {
     return true;
   }
-  if(peer.tags.contains(searchText.toUpperCase())) {
+  if (peer.alias.toLowerCase().contains(searchText)) {
+    return true;
+  }
+  if (peer.tags.contains(searchText.toUpperCase())) {
     return true;
   }
   return false;
@@ -2129,7 +2130,8 @@ connectMainDesktop(String id,
     {required bool isFileTransfer,
     required bool isTcpTunneling,
     required bool isRDP,
-    bool? forceRelay,String? password,
+    bool? forceRelay,
+    String? password,
     bool? isSharedPassword}) async {
   if (isFileTransfer) {
     await rustDeskWinManager.newFileTransfer(id,
@@ -2383,7 +2385,13 @@ class ServerConfig {
   late String access_token;
   late String md5local;
   ServerConfig(
-      {String? idServer, String? relayServer, String? apiServer, String? key, String? permanentPassword, String? access_token,String? md5local}) {
+      {String? idServer,
+      String? relayServer,
+      String? apiServer,
+      String? key,
+      String? permanentPassword,
+      String? access_token,
+      String? md5local}) {
     this.idServer = idServer?.trim() ?? '';
     this.relayServer = relayServer?.trim() ?? '';
     this.apiServer = apiServer?.trim() ?? '';
@@ -2442,7 +2450,7 @@ class ServerConfig {
         permanentPassword = options['permanentPassword'] ?? "",
         access_token = options['access_token'] ?? "",
         md5local = options['md5'] ?? "";
-        }
+}
 
 Widget dialogButton(String text,
     {required VoidCallback? onPressed,
@@ -2559,6 +2567,7 @@ class DeviceInfo {
     return data;
   }
 }
+
 class DraggableNeverScrollableScrollPhysics extends ScrollPhysics {
   /// Creates scroll physics that does not let the user scroll.
   const DraggableNeverScrollableScrollPhysics({super.parent});
@@ -2599,7 +2608,6 @@ Widget futureBuilder(
       });
 }
 
-
 void onCopyFingerprint(String value) {
   if (value.isNotEmpty) {
     Clipboard.setData(ClipboardData(text: value));
@@ -2610,146 +2618,154 @@ void onCopyFingerprint(String value) {
 }
 
 Future<String?> checkstore(String value) async {
-    final url = await bind.mainGetApiServer();
-    if (url.isEmpty){
-      return 'false';
-    }
-    value = value.trim();
-    if (value != ''){
-      return "Magasin obligatoire";
-    }
-    final api = "$url/api/checkstore/$value";
-    var authHeaders = getHttpHeaders();
-    authHeaders['Content-Type'] = "application/json";
-    authHeaders['DeviceInfo'] =  DeviceInfo.toJson() as String;
-    final resp = await http.get(Uri.parse(api), headers: authHeaders);
-    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-        return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
-    }
+  final url = await bind.mainGetApiServer();
+  if (url.isEmpty) {
+    return 'false';
+  }
+  value = value.trim();
+  if (value != '') {
     return "Magasin obligatoire";
   }
+  final api = "$url/api/checkstore/$value";
+  var authHeaders = getHttpHeaders();
+  authHeaders['Content-Type'] = "application/json";
+  authHeaders['DeviceInfo'] = DeviceInfo.toJson() as String;
+  final resp = await http.get(Uri.parse(api), headers: authHeaders);
+  if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+    return resp.body.toLowerCase() == 'true' ? null : "Magasin inconnu";
+  }
+  return "Magasin obligatoire";
+}
 
-  Future<String> GetUpdate() async {
-    final urlapi = await bind.mainGetApiServer();
-    if (urlapi.isEmpty){
-      return '';
-    }
-    String plateform = Platform.operatingSystem;
-    final arch = sizeOf<IntPtr>() * 8;
-    if(Platform.isAndroid)
-    {
-      plateform = '${Platform.operatingSystem}_$arch';
-    }
-    final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
-    final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice/";
-    var authHeaders = getHttpHeaders();
-    authHeaders['Content-Type'] = "application/json";
-    authHeaders['md5'] = bind.mainGetLocalOption(key: 'md5');
-    final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
-    final status = resp.statusCode;
-    if ( status == 200 ) {
-      if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-          return resp.body;
-      }
-    }
+Future<String> GetUpdate() async {
+  final urlapi = await bind.mainGetApiServer();
+  if (urlapi.isEmpty) {
     return '';
   }
-
-  AutoUpgrade(String url) async {
-    if (url.isEmpty){
-      return '';
-    }
-    try {
-      final urlapi = await bind.mainGetApiServer();
-      Uri uri = Uri.parse('$urlapi/api$url');
-      String filename = '';
-      String executable = uri.pathSegments[uri.pathSegments.length-1];
-      if (Platform.isWindows) {
-        final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
-        filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
-      } else if (Platform.isAndroid){
-        filename = '${await bind.mainGetHomeDir()}${Platform.pathSeparator}/Rustdesk/$executable';
-      }
-      File file = File(filename);
-      if (await file.exists()){
-        await file.delete();
-      }
-      
-      var authHeaders = getHttpHeaders();
-      authHeaders['Content-Type'] = "application/octet-stream";
-      final resp = await http.get(uri, headers: authHeaders);
-      final status = resp.statusCode;
-       if ( status == 200 ) {
-        if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
-            await file.writeAsBytes(resp.bodyBytes);
-            await bind.mainSetLocalOption(key: 'md5', value: resp.headers['md5'].toString());
-            if (Platform.isWindows) {
-              bind.mainUpdateMe(path: filename);
-            } else if (Platform.isAndroid){
-              return await onClickInstallApk(filename);
-            }
-        } else {
-          return resp.body;      
-        }
-       }
-    } catch(e) {
-      return e.toString();
+  String plateform = Platform.operatingSystem;
+  final arch = sizeOf<IntPtr>() * 8;
+  if (Platform.isAndroid) {
+    plateform = '${Platform.operatingSystem}_$arch';
+  }
+  final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
+  final urlupdate = "$urlapi/api/getupdate/$plateform/$tokenDevice/";
+  var authHeaders = getHttpHeaders();
+  authHeaders['Content-Type'] = "application/json";
+  authHeaders['md5'] = bind.mainGetLocalOption(key: 'md5');
+  final resp = await http.get(Uri.parse(urlupdate), headers: authHeaders);
+  final status = resp.statusCode;
+  if (status == 200) {
+    if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+      return resp.body;
     }
   }
-
-Future<String> onClickInstallApk(String apkFilePath) async {  
-    if (apkFilePath.isEmpty) {
-      return 'make sure the apk file is set';
-    }
-    Map<Permission, PermissionStatus> permissions = await [Permission.storage,Permission.requestInstallPackages].request();
-    if (permissions[Permission.storage] == PermissionStatus.granted) {
-       if (permissions[Permission.requestInstallPackages] == PermissionStatus.granted) {
-
-        InstallPlugin.installApk(apkFilePath, "com.afflelou.flutter_hbb").then((result) {
-         return 'install apk $result';
-        }).catchError((error) {
-         return 'install apk error: $error';
-        });
-         return 'install apk error: $apkFilePath';
-       } else {
-       return 'Permission installation request fail!';
-    }
-    } else {
-      return 'Permission storage request fail!';
-    }
+  return '';
 }
+
+/*AutoUpgrade(String url) async {
+  if (url.isEmpty) {
+    return '';
+  }
+  try {
+    final urlapi = await bind.mainGetApiServer();
+    Uri uri = Uri.parse('$urlapi/api$url');
+    String filename = '';
+    String executable = uri.pathSegments[uri.pathSegments.length - 1];
+    if (Platform.isWindows) {
+      final Directory appDocumentsDir =
+          await getApplicationDocumentsDirectory();
+      filename = '${appDocumentsDir.path}${Platform.pathSeparator}$executable';
+    } else if (Platform.isAndroid) {
+      filename =
+          '${await bind.mainGetHomeDir()}${Platform.pathSeparator}/Rustdesk/$executable';
+    }
+    File file = File(filename);
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+    var authHeaders = getHttpHeaders();
+    authHeaders['Content-Type'] = "application/octet-stream";
+    final resp = await http.get(uri, headers: authHeaders);
+    final status = resp.statusCode;
+    if (status == 200) {
+      if (resp.body.isNotEmpty && resp.body.toLowerCase() != "null") {
+        await file.writeAsBytes(resp.bodyBytes);
+        await bind.mainSetLocalOption(
+            key: 'md5', value: resp.headers['md5'].toString());
+        if (Platform.isWindows) {
+          bind.mainUpdateMe(path: filename);
+        } else if (Platform.isAndroid) {
+          return await onClickInstallApk(filename);
+        }
+      } else {
+        return resp.body;
+      }
+    }
+  } catch (e) {
+    return e.toString();
+  }
+}
+
+Future<String> onClickInstallApk(String apkFilePath) async {
+  if (apkFilePath.isEmpty) {
+    return 'make sure the apk file is set';
+  }
+  Map<Permission, PermissionStatus> permissions =
+      await [Permission.storage, Permission.requestInstallPackages].request();
+  if (permissions[Permission.storage] == PermissionStatus.granted) {
+    if (permissions[Permission.requestInstallPackages] ==
+        PermissionStatus.granted) {
+      InstallPlugin.installApk(apkFilePath, "com.afflelou.flutter_hbb")
+          .then((result) {
+        return 'install apk $result';
+      }).catchError((error) {
+        return 'install apk error: $error';
+      });
+      return 'install apk error: $apkFilePath';
+    } else {
+      return 'Permission installation request fail!';
+    }
+  } else {
+    return 'Permission storage request fail!';
+  }
+}*/
 
 void HeartBeat() async {
-    final urlapi = await bind.mainGetApiServer();
-    if (urlapi.isEmpty){
-      return;
-    }
-    final id = await bind.mainGetMyId();
-    final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
-    final body = jsonEncode({"id": id, "modified_at":"0" ,"ver":"","tokenDevice":tokenDevice});
-    final urlupdate = "$urlapi/api/heartbeat";
-    var authHeaders = getHttpHeaders();
-    authHeaders['Content-Type'] = "application/json";
-    try {
-      await http.post(Uri.parse(urlupdate), headers: authHeaders,body: body);
-    } catch (e) {
-     print('oh no, something wrong happen! error: $e');
-    } finally {
-         print('done!');
-    }
+  final urlapi = await bind.mainGetApiServer();
+  if (urlapi.isEmpty) {
+    return;
+  }
+  final id = await bind.mainGetMyId();
+  final tokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
+  final body = jsonEncode(
+      {"id": id, "modified_at": "0", "ver": "", "tokenDevice": tokenDevice});
+  final urlupdate = "$urlapi/api/heartbeat";
+  var authHeaders = getHttpHeaders();
+  authHeaders['Content-Type'] = "application/json";
+  try {
+    await http.post(Uri.parse(urlupdate), headers: authHeaders, body: body);
+  } catch (e) {
+    print('oh no, something wrong happen! error: $e');
+  } finally {
+    print('done!');
+  }
 }
 
-void CheckLocalOptionFile() async{
-  if(Platform.isWindows || Platform.isMacOS || Platform.isLinux){
-    final localPermanentPassword = await bind.mainGetOption(key: 'permanentPassword');
-    if (localPermanentPassword != ''){
-      if (localPermanentPassword != await bind.mainGetPermanentPassword()){
+void CheckLocalOptionFile() async {
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    final localPermanentPassword =
+        await bind.mainGetOption(key: 'permanentPassword');
+    if (localPermanentPassword != '') {
+      if (localPermanentPassword != await bind.mainGetPermanentPassword()) {
         await bind.mainSetPermanentPassword(password: localPermanentPassword);
       }
     }
     final localDeviceToken = await bind.mainGetOption(key: 'access_token');
-    if (localDeviceToken != '' && localDeviceToken != bind.mainGetLocalOption(key: 'access_token')){
-        await bind.mainSetLocalOption(key: 'access_token', value: localDeviceToken);
+    if (localDeviceToken != '' &&
+        localDeviceToken != bind.mainGetLocalOption(key: 'access_token')) {
+      await bind.mainSetLocalOption(
+          key: 'access_token', value: localDeviceToken);
     }
   }
 }
@@ -3185,20 +3201,21 @@ Future<bool> setServerConfig(
   if (config.permanentPassword != '') {
     gFFI.serverModel.setPermanentPassword(config.permanentPassword);
   }
-  if(config.access_token != '') {
-    await bind.mainSetLocalOption(key: 'access_token', value: config.access_token);
+  if (config.access_token != '') {
+    await bind.mainSetLocalOption(
+        key: 'access_token', value: config.access_token);
   }
-  if(config.md5local != '') {
+  if (config.md5local != '') {
     await bind.mainSetLocalOption(key: 'md5', value: config.md5local);
   }
   final oldApiServer = await bind.mainGetApiServer();
 
   // should set one by one
-  await bind.mainSetOption(key: 'custom-rendezvous-server', value: config.idServer);
+  await bind.mainSetOption(
+      key: 'custom-rendezvous-server', value: config.idServer);
   await bind.mainSetOption(key: 'relay-server', value: config.relayServer);
   await bind.mainSetOption(key: 'api-server', value: config.apiServer);
   await bind.mainSetOption(key: 'key', value: config.key);
-  
 
   final newApiServer = await bind.mainGetApiServer();
   if (oldApiServer.isNotEmpty &&
