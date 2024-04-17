@@ -34,7 +34,7 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         if (MainService.isReady) {
             Intent(activity, MainService::class.java).also {
-                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
+                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
             }
         }
         flutterMethodChannel = MethodChannel(
@@ -96,7 +96,7 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "init_service" -> {
                     Intent(activity, MainService::class.java).also {
-                        bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
+                        bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
                     }
                     if (MainService.isReady) {
                         result.success(false)
