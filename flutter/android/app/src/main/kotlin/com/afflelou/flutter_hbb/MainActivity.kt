@@ -33,8 +33,14 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         if (MainService.isReady) {
-            Intent(activity, MainService::class.java).also {
-                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Intent(activity, MainService::class.java).also {
+                    bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
+                }
+            } else {
+                Intent(activity, MainService::class.java).also {
+                    bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
+                }
             }
         }
         flutterMethodChannel = MethodChannel(
@@ -95,9 +101,16 @@ class MainActivity : FlutterActivity() {
             // make sure result will be invoked, otherwise flutter will await forever
             when (call.method) {
                 "init_service" -> {
-                    Intent(activity, MainService::class.java).also {
-                        bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        Intent(activity, MainService::class.java).also {
+                            bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
+                        }
+                    } else {
+                        Intent(activity, MainService::class.java).also {
+                            bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
+                        }
                     }
+                    
                     if (MainService.isReady) {
                         result.success(false)
                         return@setMethodCallHandler
