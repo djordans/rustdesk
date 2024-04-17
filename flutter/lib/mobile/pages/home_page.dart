@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../common.dart';
 import 'connection_page.dart';
 import '../../common/widgets/chat_page.dart';
+import '../../models/platform_model.dart';
 
 abstract class PageShape extends Widget {
   final String title = "";
@@ -43,8 +44,8 @@ class HomePageState extends State<HomePage> {
 
   void initPages() {
     _pages.clear();
-    _pages.add(ConnectionPage());
-    if (isAndroid) {
+    if (!bind.isIncomingOnly()) _pages.add(ConnectionPage());
+    if (isAndroid && !bind.isOutgoingOnly()) {
       _pages.addAll([ChatPage(type: ChatPageType.mobileMain), ServerPage()]);
     }
     _pages.add(SettingsPage());
@@ -141,7 +142,7 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Text("RustDesk");
+    return Text(bind.mainGetAppNameSync());
   }
 }
 
@@ -154,7 +155,7 @@ class WebHomePage extends StatelessWidget {
       // backgroundColor: MyTheme.grayBg,
       appBar: AppBar(
         centerTitle: true,
-        title: Text("RustDesk${isWeb ? " (Beta) " : ""}"),
+        title: Text(bind.mainGetAppNameSync()),
         actions: connectionPage.appBarActions,
       ),
       body: connectionPage,
