@@ -449,7 +449,7 @@ class MainService : Service() {
             SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
             surface, null, null)
         } catch (e: Throwable) {
-            Log.i(TAG, "Media Projection not longer available...${e.message}")
+            Log.i(logTag, "Media Projection not longer available...${e.message}")
         }   
     }
 
@@ -470,7 +470,7 @@ class MainService : Service() {
                 surface, null, null
                 )
             } catch (e: Throwable) {
-                Log.i(TAG, "Media Projection not longer available...${e.message}")
+                Log.i(logTag, "Media Projection not longer available...${e.message}")
             }   
         }
     }
