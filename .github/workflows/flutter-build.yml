@@ -329,10 +329,10 @@ jobs:
   #         pushd flutter && flutter pub get && popd
   #         ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
 
-      - name: Build rustdesk
-        run: |
-          # --hwcodec not supported on macos yet
-          ./build.py --flutter --hwcodec
+      # - name: Build rustdesk
+      #   run: |
+      #     # --hwcodec not supported on macos yet
+      #     ./build.py --flutter --hwcodec
 
       # - name: create unsigned dmg
       #   if: env.UPLOAD_ARTIFACT == 'true'
@@ -672,14 +672,14 @@ jobs:
           - {
               arch: aarch64,
               target: aarch64-linux-android,
-              os: ubuntu-20.04,
+              os: ubuntu-22.04,
               extra-build-features: "",
               openssl-arch: android-arm64,
             }
           - {
               arch: armv7,
               target: armv7-linux-androideabi,
-              os: ubuntu-20.04,
+              os: ubuntu-22.04,
               extra-build-features: "",
               openssl-arch: android-arm,
             }
