@@ -11,7 +11,7 @@ on:
         default: "nightly"
 
 env:
-  RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503
+  RUST_VERSION: "1.77.2" # https://github.com/rustdesk/rustdesk/discussions/7503
   CARGO_NDK_VERSION: "3.5.4"
   LLVM_VERSION: "15.0.6"
   FLUTTER_VERSION: "3.19.6"
