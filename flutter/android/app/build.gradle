@@ -117,4 +117,3 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib") { version { strictly("$kotlin_version") } }
 }
 
-apply plugin: 'com.google.gms.google-services'

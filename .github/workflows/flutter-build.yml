@@ -329,10 +329,10 @@ jobs:
   #         pushd flutter && flutter pub get && popd
   #         ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
 
-  #     - name: Build rustdesk
-  #       run: |
-  #         # --hwcodec not supported on macos yet
-  #         ./build.py --flutter
+      - name: Build rustdesk
+        run: |
+          # --hwcodec not supported on macos yet
+          ./build.py --flutter --hwcodec
 
       # - name: create unsigned dmg
       #   if: env.UPLOAD_ARTIFACT == 'true'
@@ -486,8 +486,7 @@ jobs:
 
       - name: Build rustdesk
         run: |
-          # --hwcodec not supported on macos yet
-          ./build.py --flutter ${{ matrix.job.extra-build-args }}
+          ./build.py --flutter --hwcodec ${{ matrix.job.extra-build-args }}
 
       - name: create unsigned dmg
         if: env.UPLOAD_ARTIFACT == 'true'
@@ -636,7 +635,7 @@ jobs:
   #     - name: Build rustdesk lib
   #       run: |
   #         rustup target add ${{ matrix.job.target }}
-  #         cargo build --features flutter --release --target aarch64-apple-ios --lib
+  #         cargo build --features flutter,hwcodec --release --target aarch64-apple-ios --lib
 
   #     - name: Build rustdesk
   #       shell: bash
