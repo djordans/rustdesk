@@ -12,13 +12,13 @@ on:
 
 env:
   RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503
-  CARGO_NDK_VERSION: "3.1.2"
+  CARGO_NDK_VERSION: "3.5.4"
   LLVM_VERSION: "15.0.6"
-  FLUTTER_VERSION: "3.19.5"
+  FLUTTER_VERSION: "3.19.6"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   # for arm64 linux because official Dart SDK does not work
-  FLUTTER_ELINUX_VERSION: "3.16.9"
-  FLUTTER_ELINUX_COMMIT_ID: "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
+  #FLUTTER_ELINUX_VERSION: "3.19.5"
+  #FLUTTER_ELINUX_COMMIT_ID: "fa20c7e847d23316719aa295a3092d3b1ea3ef89" #"c02bd16e1630f5bd690b85c5c2456ac1920e25af"
   TAG_NAME: "${{ inputs.upload-tag }}"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
   # vcpkg version: 2023.10.19
