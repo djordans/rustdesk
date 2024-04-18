@@ -20,7 +20,7 @@ if [ -z "$VCPKG_ROOT" ]; then
   exit 1
 fi
 
-API_LEVEL="21"
+API_LEVEL="24"
 
 # Get directory of this script
 
