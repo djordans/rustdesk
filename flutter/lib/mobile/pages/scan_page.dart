@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
-//import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:zxing2/qrcode.dart';
 
 import '../../common.dart';
@@ -17,7 +17,7 @@ class ScanPage extends StatefulWidget {
 }
 
 class _ScanPageState extends State<ScanPage> {
-  /*QRViewController? controller;
+  QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   // In order to get hot reload to work we need to pause the camera if the platform
@@ -30,68 +30,68 @@ class _ScanPageState extends State<ScanPage> {
     }
     controller!.resumeCamera();
   }
-*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-      title: const Text('Scan QR'),
-      actions: [
-        IconButton(
-            color: Colors.white,
-            icon: Icon(Icons.image_search),
-            iconSize: 32.0,
-            onPressed: () async {
-              final ImagePicker picker = ImagePicker();
-              final XFile? file =
-                  await picker.pickImage(source: ImageSource.gallery);
-              if (file != null) {
-                var image = img.decodeNamedImage(
-                    file.path, File(file.path).readAsBytesSync())!;
+          title: const Text('Scan QR'),
+          actions: [
+            IconButton(
+                color: Colors.white,
+                icon: Icon(Icons.image_search),
+                iconSize: 32.0,
+                onPressed: () async {
+                  final ImagePicker picker = ImagePicker();
+                  final XFile? file =
+                      await picker.pickImage(source: ImageSource.gallery);
+                  if (file != null) {
+                    var image = img.decodeNamedImage(
+                        file.path, File(file.path).readAsBytesSync())!;
 
-                LuminanceSource source = RGBLuminanceSource(
-                    image.width,
-                    image.height,
-                    image
-                        .getBytes(order: img.ChannelOrder.abgr)
-                        .buffer
-                        .asInt32List());
-                var bitmap = BinaryBitmap(HybridBinarizer(source));
+                    LuminanceSource source = RGBLuminanceSource(
+                        image.width,
+                        image.height,
+                        image
+                            .getBytes(order: img.ChannelOrder.abgr)
+                            .buffer
+                            .asInt32List());
+                    var bitmap = BinaryBitmap(HybridBinarizer(source));
 
-                var reader = QRCodeReader();
-                try {
-                  var result = reader.decode(bitmap);
-                  if (result.text.startsWith(bind.mainUriPrefixSync())) {
-                    handleUriLink(uriString: result.text);
-                  } else {
-                    //showServerSettingFromQr(result.text);
+                    var reader = QRCodeReader();
+                    try {
+                      var result = reader.decode(bitmap);
+                      if (result.text.startsWith(bind.mainUriPrefixSync())) {
+                        handleUriLink(uriString: result.text);
+                      } else {
+                        showServerSettingFromQr(result.text);
+                      }
+                    } catch (e) {
+                      showToast('No QR code found');
+                    }
                   }
-                } catch (e) {
-                  showToast('No QR code found');
-                }
-              }
-            }),
-        IconButton(
-            color: Colors.yellow,
-            icon: Icon(Icons.flash_on),
-            iconSize: 32.0,
-            onPressed: () async {
-              //await controller?.toggleFlash();
-            }),
-        IconButton(
-          color: Colors.white,
-          icon: Icon(Icons.switch_camera),
-          iconSize: 32.0,
-          onPressed: () async {
-            //await controller?.flipCamera();
-          },
+                }),
+            IconButton(
+                color: Colors.yellow,
+                icon: Icon(Icons.flash_on),
+                iconSize: 32.0,
+                onPressed: () async {
+                  await controller?.toggleFlash();
+                }),
+            IconButton(
+              color: Colors.white,
+              icon: Icon(Icons.switch_camera),
+              iconSize: 32.0,
+              onPressed: () async {
+                await controller?.flipCamera();
+              },
+            ),
+          ],
         ),
-      ],
-    )); //,
-    //body: _buildQrView(context));
+        body: _buildQrView(context));
   }
 
-  /*Widget _buildQrView(BuildContext context) {
+  Widget _buildQrView(BuildContext context) {
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
     var scanArea = (MediaQuery.of(context).size.width < 400 ||
             MediaQuery.of(context).size.height < 400)
@@ -150,5 +150,5 @@ class _ScanPageState extends State<ScanPage> {
     } catch (e) {
       showToast('Invalid QR code');
     }
-  }*/
+  }
 }

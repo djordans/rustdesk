@@ -318,6 +318,7 @@ class MainService : Service() {
         val intent = Intent(this, PermissionRequestTransparentActivity::class.java).apply {
             action = ACT_REQUEST_MEDIA_PROJECTION
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
         }
         startActivity(intent)
     }
@@ -519,7 +520,6 @@ class MainService : Service() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun startAudioRecorder() {
         checkAudioRecorder()
         if (audioReader != null && audioRecorder != null && minBufferSize != 0) {
@@ -542,7 +542,6 @@ class MainService : Service() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun checkAudioRecorder() {
         if (audioRecorder != null && audioRecorder != null && minBufferSize != 0) {
             return
@@ -619,17 +618,14 @@ class MainService : Service() {
             addCategory(Intent.CATEGORY_LAUNCHER)
             putExtra("type", type)
         }
-        val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val pendingIntent =
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //val options = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED) 
+                //val options = ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                //val options = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
                 PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
             }else{
                 PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
             }
-            
-        } else {
-            PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT)
-        }
         val notification = notificationBuilder
             .setOngoing(true)
             .setSmallIcon(R.mipmap.ic_stat_logo)

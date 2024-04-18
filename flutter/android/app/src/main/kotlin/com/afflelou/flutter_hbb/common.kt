@@ -73,13 +73,14 @@ fun requestPermission(context: Context, type: String) {
 
 fun startAction(context: Context, action: String) {
     try {
-        context.startActivity(Intent(action).apply {
+        val explicitIntent = Intent(action).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             // don't pass package name when launch ACTION_ACCESSIBILITY_SETTINGS
             if (ACTION_ACCESSIBILITY_SETTINGS != action) {
                 data = Uri.parse("package:" + context.packageName)
             }
-        })
+        }
+        context.startActivity(explicitIntent)
     } catch (e: Exception) {
         e.printStackTrace()
     }
