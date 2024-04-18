@@ -67,20 +67,21 @@ android {
     }
 
     compileOptions {
-        targetCompatibility JavaVersion.VERSION_17
-        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '11'
     }
     kotlin {
-        jvmToolchain(17)
+        jvmToolchain(11)
     }
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.afflelou.flutter_hbb"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 34
+
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -102,9 +103,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules'
         }
     }
-    composeOptions {
-          kotlinCompilerExtensionVersion = "1.5.12"
-    }
 }
 
 flutter {
@@ -112,7 +110,8 @@ flutter {
 }
 
 dependencies {
-    implementation "androidx.media:media:1.6.0"
+    implementation "androidx.media:media:1.7.0"
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'com.github.getActivity:XXPermissions:18.5'
     implementation("org.jetbrains.kotlin:kotlin-stdlib") { version { strictly("$kotlin_version") } }
 }

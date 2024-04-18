@@ -67,7 +67,6 @@ const val AUDIO_CHANNEL_MASK = AudioFormat.CHANNEL_IN_STEREO
 class MainService : Service() {
 
     @Keep
-    @RequiresApi(Build.VERSION_CODES.N)
     fun rustPointerInput(kind: String, mask: Int, x: Int, y: Int) {
         // turn on screen with LIFT_DOWN when screen off
         if (!powerManager.isInteractive && (kind == "touch" || mask == LIFT_DOWN)) {
@@ -92,7 +91,6 @@ class MainService : Service() {
     }
 
     @Keep
-    @RequiresApi(Build.VERSION_CODES.N)
     fun rustKeyEventInput(input: ByteArray) {
         InputService.ctx?.onKeyEvent(input)
     }
@@ -192,6 +190,7 @@ class MainService : Service() {
     private lateinit var notificationChannel: String
     private lateinit var notificationBuilder: NotificationCompat.Builder
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate() {
         super.onCreate()
         Log.d(logTag,"MainService onCreate")
@@ -283,6 +282,7 @@ class MainService : Service() {
         fun getService(): MainService = this@MainService
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("whichService", "this service: ${Thread.currentThread()}")
         super.onStartCommand(intent, flags, startId)
@@ -610,6 +610,7 @@ class MainService : Service() {
         notificationBuilder = NotificationCompat.Builder(this, notificationChannel)
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @SuppressLint("UnspecifiedImmutableFlag")
     private fun createForegroundNotification() {
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -621,7 +622,7 @@ class MainService : Service() {
         val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val options = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED) 
-                PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE, options)
+                PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
             }else{
                 PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
             }
