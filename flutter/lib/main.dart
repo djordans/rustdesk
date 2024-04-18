@@ -130,7 +130,7 @@ void runMainApp(bool startService) async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
-  gFFI.abModel.pullAb(force: ForcePullAb.listAndCurrent,quiet: true);
+  gFFI.abModel.pullAb(force: ForcePullAb.listAndCurrent, quiet: true);
   // Set window option.
   WindowOptions windowOptions = getHiddenTitleBarWindowOptions();
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -156,7 +156,14 @@ void runMainApp(bool startService) async {
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
   await bind.mainCheckConnectStatus();
-  if (isAndroid) await [Permission.storage,Permission.requestInstallPackages,Permission.bluetooth,Permission.bluetoothConnect,Permission.bluetoothScan].request();
+  if (isAndroid)
+    await [
+      Permission.storage,
+      Permission.requestInstallPackages,
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan
+    ].request();
   WakelockPlus.enable();
   //gFFI.userModel.refreshCurrentUser();
   if (isAndroid) androidChannelInit();
