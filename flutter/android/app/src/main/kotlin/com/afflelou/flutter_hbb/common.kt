@@ -109,7 +109,6 @@ class AudioReader(val bufSize: Int, private val maxFrames: Int) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun readSync(audioRecord: AudioRecord): ByteBuffer? {
         val buffer = bufferPool[currentPos]
         val res = audioRecord.read(buffer, bufSize, READ_BLOCKING)

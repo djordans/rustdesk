@@ -452,25 +452,24 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
     final disabledSettings = bind.isDisableSettings();
     final settings = SettingsList(
       sections: [
-        if (!bind.isDisableAccount())
-          SettingsSection(
-            title: Text(translate('Account')),
-            tiles: [
-              SettingsTile(
-                title: Obx(() => Text(gFFI.userModel.userName.value.isEmpty
-                    ? translate('Login')
-                    : '${translate('Logout')} (${gFFI.userModel.userName.value})')),
-                leading: Icon(Icons.person),
-                onPressed: (context) {
-                  if (gFFI.userModel.userName.value.isEmpty) {
-                    loginDialog();
-                  } else {
-                    logOutConfirmDialog();
-                  }
-                },
-              ),
-            ],
-          ),
+        SettingsSection(
+          title: Text(translate('Account')),
+          tiles: [
+            SettingsTile(
+              title: Obx(() => Text(gFFI.userModel.userName.value.isEmpty
+                  ? translate('Login')
+                  : '${translate('Logout')} (${gFFI.userModel.userName.value})')),
+              leading: Icon(Icons.person),
+              onPressed: (context) {
+                if (gFFI.userModel.userName.value.isEmpty) {
+                  loginDialog();
+                } else {
+                  logOutConfirmDialog();
+                }
+              },
+            ),
+          ],
+        ),
         SettingsSection(title: Text(translate("Settings")), tiles: [
           if (!disabledSettings)
             SettingsTile(
@@ -816,16 +815,16 @@ class __DisplayPageState extends State<_DisplayPage> {
             ),
           ],
         ),
-        SettingsSection(
+        /*SettingsSection(
           title: Text(translate('Other Default Options')),
           tiles:
               otherDefaultSettings().map((e) => otherRow(e.$1, e.$2)).toList(),
-        ),
+        ),*/
       ]),
     );
   }
 
-  SettingsTile otherRow(String label, String key) {
+  /*SettingsTile otherRow(String label, String key) {
     final value = bind.mainGetUserDefaultOption(key: key) == 'Y';
     return SettingsTile.switchTile(
       initialValue: value,
@@ -835,7 +834,7 @@ class __DisplayPageState extends State<_DisplayPage> {
         setState(() {});
       },
     );
-  }
+  }*/
 }
 
 class _RadioEntry {
