@@ -446,7 +446,7 @@ class MainService : Service() {
             return
         }
         try {
-            mp.registerCallback(object : MediaProjection.Callback() {}, null)
+            mp.registerCallback(object : MediaProjection.Callback() {}, serviceHandler)
             virtualDisplay = mp.createVirtualDisplay(
             "RustDeskVD",
             SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
@@ -467,7 +467,7 @@ class MainService : Service() {
             it.start()
            
             try {
-                mp.registerCallback(object : MediaProjection.Callback() { fun OnStop(){ it.release()}}, null)
+                mp.registerCallback(object : MediaProjection.Callback() { fun OnStop(){ it.release()}}, serviceHandler)
              virtualDisplay = mp.createVirtualDisplay(
                 "RustDeskVD",
                 SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
