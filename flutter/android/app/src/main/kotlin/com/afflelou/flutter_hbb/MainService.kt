@@ -447,10 +447,18 @@ class MainService : Service() {
         }
         try {
             mp.registerCallback(object : MediaProjection.Callback() {}, serviceHandler)
-            virtualDisplay = mp.createVirtualDisplay(
-            "RustDeskVD",
-            SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            surface, null, null)
+            if(virtualDisplay == null) {
+                virtualDisplay = mp.createVirtualDisplay(
+                    "RustDeskVD",
+                    SCREEN_INFO.width,
+                    SCREEN_INFO.height,
+                    SCREEN_INFO.dpi,
+                    VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    surface,
+                    null,
+                    null
+                )
+            }
         } catch (e: Throwable) {
             Log.i(logTag, "Media Projection not longer available...${e.message}")
         }   
@@ -468,11 +476,20 @@ class MainService : Service() {
            
             try {
                 mp.registerCallback(object : MediaProjection.Callback() { fun OnStop(){ it.release()}}, serviceHandler)
-             virtualDisplay = mp.createVirtualDisplay(
-                "RustDeskVD",
-                SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                surface, null, null
-                )
+                if(virtualDisplay == null) {
+                    virtualDisplay = mp.createVirtualDisplay(
+                        "RustDeskVD",
+                        SCREEN_INFO.width,
+                        SCREEN_INFO.height,
+                        SCREEN_INFO.dpi,
+                        VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                        surface,
+                        null,
+                        null
+                    )
+                } else {
+                    //nothing
+                }
             } catch (e: Throwable) {
                 Log.i(logTag, "Media Projection not longer available...${e.message}")
             }   
