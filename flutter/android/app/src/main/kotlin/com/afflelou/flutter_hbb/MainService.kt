@@ -361,13 +361,13 @@ class MainService : Service() {
             return true
         }
         if (mediaProjection == null) {
-            Log.w(logTag, "startCapture fail,mediaProjection is null")
+            Log.w(logTag, "startCapture fail, mediaProjection is null")
             return false
         }
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
         surface = createSurface()
-
+        mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
         if (useVP9) {
             startVP9VideoRecorder(mediaProjection!!)
         } else {
@@ -446,6 +446,7 @@ class MainService : Service() {
             return
         }
         try {
+            
             virtualDisplay = mp.createVirtualDisplay(
             "RustDeskVD",
             SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
