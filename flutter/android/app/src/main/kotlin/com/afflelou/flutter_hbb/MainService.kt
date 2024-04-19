@@ -691,11 +691,7 @@ class MainService : Service() {
             action = ACT_LOGIN_REQ_NOTIFY
             putExtra(EXT_LOGIN_REQ_NOTIFY, res)
         }
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.getService(this, 111, intent, FLAG_IMMUTABLE)
-        } else {
-            PendingIntent.getService(this, 111, intent, FLAG_UPDATE_CURRENT)
-        }
+        return PendingIntent.getService(this, 111, intent, FLAG_IMMUTABLE)
     }
 
     private fun setTextNotification(_title: String?, _text: String?) {

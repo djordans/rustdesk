@@ -37,8 +37,8 @@ const url = 'https://rustdesk.com/';
 
 class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
   final _hasIgnoreBattery = androidVersion >= 26;
-  var _ignoreBatteryOpt = true;
-  var _enableStartOnBoot = true;
+  var _ignoreBatteryOpt = false;
+  var _enableStartOnBoot = false;
   var _enableAbr = false;
   var _denyLANDiscovery = false;
   var _onlyWhiteList = false;
@@ -219,6 +219,20 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     Provider.of<FfiModel>(context);
     final outgoingOnly = bind.isOutgoingOnly();
+    final customClientSection = CustomSettingsSection(
+        child: Column(
+      children: [
+        if (bind.isCustomClient())
+          Align(
+            alignment: Alignment.center,
+            child: loadPowered(context),
+          ),
+        Align(
+          alignment: Alignment.center,
+          child: loadLogo(),
+        )
+      ],
+    ));
     final List<AbstractSettingsTile> enhancementsTiles = [];
     final List<AbstractSettingsTile> shareScreenTiles = [
       SettingsTile.switchTile(
@@ -452,24 +466,26 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
     final disabledSettings = bind.isDisableSettings();
     final settings = SettingsList(
       sections: [
-        SettingsSection(
-          title: Text(translate('Account')),
-          tiles: [
-            SettingsTile(
-              title: Obx(() => Text(gFFI.userModel.userName.value.isEmpty
-                  ? translate('Login')
-                  : '${translate('Logout')} (${gFFI.userModel.userName.value})')),
-              leading: Icon(Icons.person),
-              onPressed: (context) {
-                if (gFFI.userModel.userName.value.isEmpty) {
-                  loginDialog();
-                } else {
-                  logOutConfirmDialog();
-                }
-              },
-            ),
-          ],
-        ),
+        customClientSection,
+        if (!bind.isDisableAccount())
+          SettingsSection(
+            title: Text(translate('Account')),
+            tiles: [
+              SettingsTile(
+                title: Obx(() => Text(gFFI.userModel.userName.value.isEmpty
+                    ? translate('Login')
+                    : '${translate('Logout')} (${gFFI.userModel.userName.value})')),
+                leading: Icon(Icons.person),
+                onPressed: (context) {
+                  if (gFFI.userModel.userName.value.isEmpty) {
+                    loginDialog();
+                  } else {
+                    logOutConfirmDialog();
+                  }
+                },
+              ),
+            ],
+          ),
         SettingsSection(title: Text(translate("Settings")), tiles: [
           if (!disabledSettings)
             SettingsTile(
@@ -581,20 +597,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         ),
       ],
     );
-    return Column(
-      children: [
-        if (bind.isCustomClient())
-          Align(
-            alignment: Alignment.center,
-            child: loadPowered(context),
-          ),
-        Align(
-          alignment: Alignment.center,
-          child: loadLogo(),
-        ),
-        settings
-      ],
-    );
+    return settings;
   }
 
   Future<bool> canStartOnBoot() async {
@@ -695,7 +698,7 @@ void showThemeSettings(OverlayDialogManager dialogManager) async {
 void showAbout(OverlayDialogManager dialogManager) {
   dialogManager.show((setState, close, context) {
     return CustomAlertDialog(
-      title: Text('${translate('About')} RustDesk - ${bind.getDeviceName()}'),
+      title: Text('${translate('About')} RustDesk'),
       content: Wrap(direction: Axis.vertical, spacing: 12, children: [
         Text('Version: $version'),
         InkWell(
@@ -815,16 +818,16 @@ class __DisplayPageState extends State<_DisplayPage> {
             ),
           ],
         ),
-        /*SettingsSection(
+        SettingsSection(
           title: Text(translate('Other Default Options')),
           tiles:
               otherDefaultSettings().map((e) => otherRow(e.$1, e.$2)).toList(),
-        ),*/
+        ),
       ]),
     );
   }
 
-  /*SettingsTile otherRow(String label, String key) {
+  SettingsTile otherRow(String label, String key) {
     final value = bind.mainGetUserDefaultOption(key: key) == 'Y';
     return SettingsTile.switchTile(
       initialValue: value,
@@ -834,7 +837,7 @@ class __DisplayPageState extends State<_DisplayPage> {
         setState(() {});
       },
     );
-  }*/
+  }
 }
 
 class _RadioEntry {

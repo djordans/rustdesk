@@ -179,9 +179,7 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "stop_input" -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        InputService.ctx?.disableSelf()
-                    }
+                    InputService.ctx?.disableSelf()
                     InputService.ctx = null
                     Companion.flutterMethodChannel?.invokeMethod(
                         "on_state_changed",
