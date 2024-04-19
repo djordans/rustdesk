@@ -392,7 +392,7 @@ class MainService : Service() {
         _isStart = false
         // release video
         //virtualDisplay?.release()
-        surface?.release()
+        //surface?.release()
         imageReader?.close()
         videoEncoder?.let {
             it.signalEndOfInputStream()
