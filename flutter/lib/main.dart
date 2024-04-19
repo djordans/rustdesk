@@ -158,6 +158,8 @@ void runMobileApp() async {
   await bind.mainCheckConnectStatus();
   if (isAndroid) {
     await [
+      Permission.notification,
+      Permission.accessNotificationPolicy,
       Permission.storage,
       Permission.requestInstallPackages,
       Permission.bluetooth,
