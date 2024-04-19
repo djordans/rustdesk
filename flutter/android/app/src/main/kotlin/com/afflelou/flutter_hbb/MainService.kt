@@ -391,7 +391,7 @@ class MainService : Service() {
         FFI.setFrameRawEnable("audio",false)
         _isStart = false
         // release video
-        virtualDisplay?.release()
+        //virtualDisplay?.release()
         surface?.release()
         imageReader?.close()
         videoEncoder?.let {
@@ -399,7 +399,7 @@ class MainService : Service() {
             it.stop()
             it.release()
         }
-        virtualDisplay = null
+        //virtualDisplay = null
         videoEncoder = null
 
         // release audio
