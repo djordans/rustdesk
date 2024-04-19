@@ -34,6 +34,7 @@ class BootReceiver : BroadcastReceiver() {
 
             val it = Intent(context, MainService::class.java).apply {
                 action = ACT_INIT_MEDIA_PROJECTION_AND_SERVICE
+                putExtra(EXT_MEDIA_PROJECTION_RES_INTENT, intent)
                 putExtra(EXT_INIT_FROM_BOOT, true)
             }
             Toast.makeText(context, "RustDesk is Open", Toast.LENGTH_LONG).show()

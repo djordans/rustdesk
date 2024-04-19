@@ -208,7 +208,7 @@ class MainService : Service() {
         val configPath = prefs.getString(KEY_APP_DIR_CONFIG_PATH, "") ?: ""
         FFI.startServer(configPath, "")
 
-        createForegroundNotification()
+        this.createForegroundNotification()
     }
 
     override fun onDestroy() {
@@ -287,7 +287,7 @@ class MainService : Service() {
         Log.d("whichService", "this service: ${Thread.currentThread()}")
         super.onStartCommand(intent, flags, startId)
         if (intent?.action == ACT_INIT_MEDIA_PROJECTION_AND_SERVICE) {
-            createForegroundNotification()
+            this.createForegroundNotification()
 
             if (intent.getBooleanExtra(EXT_INIT_FROM_BOOT, false)) {
                 FFI.startService()
@@ -299,7 +299,7 @@ class MainService : Service() {
             intent.getParcelableExtra<Intent>(EXT_MEDIA_PROJECTION_RES_INTENT)?.let {
                 mediaProjection =
                     mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, it)
-                checkMediaPermission()
+                this.checkMediaPermission()
                 _isReady = true
             } ?: let {
                 Log.d(logTag, "getParcelableExtra intent null, invoke requestMediaProjection")
@@ -419,7 +419,10 @@ class MainService : Service() {
         stopCapture()
         imageReader?.close()
         imageReader = null
-
+        virtualDisplay?.release()
+        surface?.release()
+        virtualDisplay = null
+        surface = null
         mediaProjection = null
         checkMediaPermission()
         stopForeground(true)
@@ -632,7 +635,6 @@ class MainService : Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    @SuppressLint("UnspecifiedImmutableFlag")
     private fun createForegroundNotification() {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED

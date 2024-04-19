@@ -156,14 +156,18 @@ void runMainApp(bool startService) async {
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
   await bind.mainCheckConnectStatus();
-  if (isAndroid)
+  if (isAndroid) {
     await [
       Permission.storage,
       Permission.requestInstallPackages,
       Permission.bluetooth,
       Permission.bluetoothConnect,
-      Permission.bluetoothScan
+      Permission.bluetoothScan,
+      Permission.bluetoothAdvertise,
+      Permission.ignoreBatteryOptimizations,
+      Permission.mediaLibrary
     ].request();
+  }
   WakelockPlus.enable();
   //gFFI.userModel.refreshCurrentUser();
   if (isAndroid) androidChannelInit();
