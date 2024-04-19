@@ -367,7 +367,7 @@ class MainService : Service() {
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
         surface = createSurface()
-        mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
+        //mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
         if (useVP9) {
             startVP9VideoRecorder(mediaProjection!!)
         } else {
@@ -446,7 +446,7 @@ class MainService : Service() {
             return
         }
         try {
-            
+            mp.registerCallback(object : MediaProjection.Callback() {}, null)
             virtualDisplay = mp.createVirtualDisplay(
             "RustDeskVD",
             SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
@@ -467,6 +467,7 @@ class MainService : Service() {
             it.start()
            
             try {
+                mp.registerCallback(object : MediaProjection.Callback() { fun OnStop(){ it.release()}}, null)
              virtualDisplay = mp.createVirtualDisplay(
                 "RustDeskVD",
                 SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
@@ -501,7 +502,6 @@ class MainService : Service() {
             Log.e(logTag, "MediaCodec.Callback error:$e")
         }
     }
-
 
     private fun createMediaCodec() {
         Log.d(logTag, "MediaFormat.MIMETYPE_VIDEO_VP9 :$MIME_TYPE")
