@@ -331,28 +331,31 @@ class MainService : Service() {
             null
         } else {
             Log.d(logTag, "ImageReader.newInstance:INFO:$SCREEN_INFO")
-            imageReader =
-                ImageReader.newInstance(
-                    SCREEN_INFO.width,
-                    SCREEN_INFO.height,
-                    PixelFormat.RGBA_8888,
-                    4
-                ).apply {
-                    setOnImageAvailableListener({ imageReader: ImageReader ->
-                        try {
-                            imageReader.acquireLatestImage().use { image ->
-                                if (image == null) return@setOnImageAvailableListener
-                                val planes = image.planes
-                                val buffer = planes[0].buffer
-                                buffer.rewind()
-                                FFI.onVideoFrameUpdate(buffer)
+            if (imageReader==null) {
+                imageReader = ImageReader.newInstance(
+                        SCREEN_INFO.width,
+                        SCREEN_INFO.height,
+                        PixelFormat.RGBA_8888,
+                        4
+                    ).apply {
+                        setOnImageAvailableListener({ imageReader: ImageReader ->
+                            try {
+                                imageReader.acquireLatestImage().use { image ->
+                                    if (image == null) return@setOnImageAvailableListener
+                                    val planes = image.planes
+                                    val buffer = planes[0].buffer
+                                    buffer.rewind()
+                                    FFI.onVideoFrameUpdate(buffer)
+                                }
+                            } catch (ignored: java.lang.Exception) {
                             }
-                        } catch (ignored: java.lang.Exception) {
-                        }
-                    }, serviceHandler)
-                }
-            Log.d(logTag, "ImageReader.setOnImageAvailableListener done")
+                        }, serviceHandler)
+                    }
+                Log.d(logTag, "ImageReader.setOnImageAvailableListener done")
+                imageReader?.surface
+        } else {
             imageReader?.surface
+        }
         }
     }
     private fun createSurfaceNew(context: Context): Surface ? {
@@ -378,7 +381,9 @@ class MainService : Service() {
         }
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
-        surface = createSurface()
+        if (surface == null){
+            surface = createSurface()
+        }
         //mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
         if (useVP9) {
             startVP9VideoRecorder(mediaProjection!!)
@@ -404,7 +409,7 @@ class MainService : Service() {
         _isStart = false
         // release video
         //virtualDisplay?.release()
-        surface?.release()
+        //surface?.release()
         //imageReader?.close()
         videoEncoder?.let {
             it.signalEndOfInputStream()
