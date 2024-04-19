@@ -456,11 +456,11 @@ class MainService : Service() {
                     VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                     surface,
                     null,
-                    null
+                    serviceHandler
                 )
             }
         } catch (e: Throwable) {
-            Log.i(logTag, "Media Projection not longer available...${e.message}")
+            Log.i(logTag, "Media Projection Raw not longer available...${e.message}")
         }   
     }
 
@@ -485,13 +485,13 @@ class MainService : Service() {
                         VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                         surface,
                         null,
-                        null
+                        serviceHandler
                     )
                 } else {
                     //nothing
                 }
             } catch (e: Throwable) {
-                Log.i(logTag, "Media Projection not longer available...${e.message}")
+                Log.i(logTag, "Media Projection VP9 not longer available...${e.message}")
             }   
         }
     }
