@@ -30,8 +30,8 @@ import android.media.projection.MediaProjectionManager
 import android.os.*
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.Surface
 import android.view.Surface.FRAME_RATE_COMPATIBILITY_DEFAULT
-import android.view.SurfaceView
 import android.view.WindowManager
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
@@ -179,7 +179,6 @@ class MainService : Service() {
     private var videoEncoder: MediaCodec? = null
     private var imageReader: ImageReader? = null
     private var virtualDisplay: VirtualDisplay? = null
-    private var surfaceView: SurfaceView? = null
     // audio
     private var audioRecorder: AudioRecord? = null
     private var audioReader: AudioReader? = null
@@ -356,19 +355,6 @@ class MainService : Service() {
         } else {
             imageReader?.surface
         }
-        }
-    }
-    private fun createSurfaceNew(context: Context): Surface ? {
-        return if (useVP9) {
-            // TODO
-            null
-        } else {
-            Log.d(logTag, "ImageReader.newInstance:INFO:$SCREEN_INFO")
-            surfaceView = SurfaceView(context)
-            val surfaceHolder = surfaceView!!.holder
-
-
-            surfaceHolder.surface
         }
     }
     fun startCapture(): Boolean {
