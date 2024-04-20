@@ -353,9 +353,6 @@ class MainService : Service() {
                     }
                 Log.d(logTag, "ImageReader.setOnImageAvailableListener done")
                 imageReader?.surface
-        } else {
-            imageReader?.surface
-        }
         }
     }
     fun startCapture(): Boolean {
