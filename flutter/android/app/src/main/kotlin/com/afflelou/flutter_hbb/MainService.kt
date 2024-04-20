@@ -201,7 +201,7 @@ class MainService : Service() {
             serviceHandler = Handler(looper)
         }
         updateScreenInfo(resources.configuration.orientation)
-        initNotification()
+        this.initNotification()
 
         // keep the config dir same with flutter
         val prefs = applicationContext.getSharedPreferences(KEY_SHARED_PREFERENCES, FlutterActivity.MODE_PRIVATE)
@@ -324,6 +324,7 @@ class MainService : Service() {
     }
 
     //@SuppressLint("WrongConstant")
+    @SuppressLint("WrongConstant")
     private fun createSurface(): Surface? {
         return if (useVP9) {
             // TODO
@@ -349,10 +350,12 @@ class MainService : Service() {
                                 buffer.rewind()
                                 FFI.onVideoFrameUpdate(buffer)
                             }
-                        }, serviceHandler)
-                    }
-                Log.d(logTag, "ImageReader.setOnImageAvailableListener done")
-                imageReader?.surface
+                        } catch (ignored: java.lang.Exception) {
+                        }
+                    }, serviceHandler)
+                }
+            Log.d(logTag, "ImageReader.setOnImageAvailableListener done")
+            imageReader?.surface
         }
     }
     fun startCapture(): Boolean {
