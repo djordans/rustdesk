@@ -368,9 +368,9 @@ class MainService : Service() {
         }
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
-        if (surface == null){
-            surface = createSurface()
-        }
+        //if (surface == null){
+        surface = createSurface()
+        //}
         //mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
         if (useVP9) {
             startVP9VideoRecorder(mediaProjection!!)
@@ -395,8 +395,11 @@ class MainService : Service() {
         FFI.setFrameRawEnable("audio",false)
         _isStart = false
         // release video
-        imageReader?.close()
-        imageReader = null
+        if (imageReader != null) {
+            imageReader!!.setOnImageAvailableListener(null, null)
+            imageReader!!.close()
+            imageReader = null
+        }
         //virtualDisplay?.release()
         //surface?.release()
         //imageReader?.close()
@@ -463,7 +466,7 @@ class MainService : Service() {
                     SCREEN_INFO.height,
                     SCREEN_INFO.dpi,
                     VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                    surface,
+                    surface!!,
                     null,
                     serviceHandler
                 )
@@ -492,7 +495,7 @@ class MainService : Service() {
                         SCREEN_INFO.height,
                         SCREEN_INFO.dpi,
                         VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                        surface,
+                        surface!!,
                         null,
                         serviceHandler
                     )
