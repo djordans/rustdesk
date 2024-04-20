@@ -395,19 +395,23 @@ class MainService : Service() {
         FFI.setFrameRawEnable("audio",false)
         _isStart = false
         // release video
+        imageReader?.close()
+        imageReader = null
         //virtualDisplay?.release()
         //surface?.release()
         //imageReader?.close()
-        videoEncoder?.let {
+        /*videoEncoder?.let {
             it.signalEndOfInputStream()
             it.stop()
             it.release()
-        }
+        }*/
         //virtualDisplay = null
-        videoEncoder = null
+        //videoEncoder = null
         //surface = null
         // release audio
-        audioRecordStat = false
+        //audioRecordStat = false
+        //audioRecorder
+
     }
 
     fun destroy() {
