@@ -330,23 +330,24 @@ class MainService : Service() {
             null
         } else {
             Log.d(logTag, "ImageReader.newInstance:INFO:$SCREEN_INFO")
-            if (imageReader==null) {
-                imageReader = ImageReader.newInstance(
-                        SCREEN_INFO.width,
-                        SCREEN_INFO.height,
-                        PixelFormat.RGBA_8888,
-                        4
-                    ).apply {
-                        setOnImageAvailableListener({ imageReader: ImageReader ->
-                            try {
-                                imageReader.acquireLatestImage().use { image ->
-                                    if (image == null) return@setOnImageAvailableListener
-                                    val planes = image.planes
-                                    val buffer = planes[0].buffer
-                                    buffer.rewind()
-                                    FFI.onVideoFrameUpdate(buffer)
-                                }
-                            } catch (ignored: java.lang.Exception) {
+            imageReader =
+                ImageReader.newInstance(
+                    SCREEN_INFO.width,
+                    SCREEN_INFO.height,
+                    PixelFormat.RGBA_8888,
+                    4
+                ).apply {
+                    setOnImageAvailableListener({ imageReader: ImageReader ->
+                        try {
+                            if (!isStart) {
+                                return@setOnImageAvailableListener
+                            }
+                            imageReader.acquireLatestImage().use { image ->
+                                if (image == null || !isStart) return@setOnImageAvailableListener
+                                val planes = image.planes
+                                val buffer = planes[0].buffer
+                                buffer.rewind()
+                                FFI.onVideoFrameUpdate(buffer)
                             }
                         }, serviceHandler)
                     }
@@ -407,9 +408,6 @@ class MainService : Service() {
         //surface = null
         // release audio
         audioRecordStat = false
-        audioRecorder?.release()
-        audioRecorder = null
-        minBufferSize = 0
     }
 
     fun destroy() {
@@ -423,6 +421,7 @@ class MainService : Service() {
         surface?.release()
         virtualDisplay = null
         surface = null
+
         mediaProjection = null
         checkMediaPermission()
         stopForeground(true)
@@ -557,6 +556,10 @@ class MainService : Service() {
                             FFI.onAudioFrameUpdate(it)
                         }
                     }
+                    // let's release here rather than onDestroy to avoid threading issue
+                    audioRecorder?.release()
+                    audioRecorder = null
+                    minBufferSize = 0
                     Log.d(logTag, "Exit audio thread")
                 }
             } catch (e: Exception) {

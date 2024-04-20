@@ -64,8 +64,6 @@ use windows_service::{
 use winreg::enums::*;
 use winreg::RegKey;
 
-pub const DRIVER_CERT_FILE: &str = "RustDeskIddDriver.cer";
-
 pub fn get_cursor_pos() -> Option<(i32, i32)> {
     unsafe {
         #[allow(invalid_value)]
@@ -462,6 +460,7 @@ extern "C" {
     fn is_win_down() -> BOOL;
     fn is_local_system() -> BOOL;
     fn alloc_console_and_redirect();
+    fn is_service_running_w(svc_name: *const u16) -> bool;
 }
 
 extern "system" {
@@ -1296,12 +1295,14 @@ fn get_uninstall(kill_self: bool) -> String {
     {before_uninstall}
     {uninstall_cert_cmd}
     reg delete {subkey} /f
+    {uninstall_amyuni_idd}
     if exist \"{path}\" rd /s /q \"{path}\"
     if exist \"{start_menu}\" rd /s /q \"{start_menu}\"
     if exist \"%PUBLIC%\\Desktop\\{app_name}.lnk\" del /f /q \"%PUBLIC%\\Desktop\\{app_name}.lnk\"
     if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\"
     ",
         before_uninstall=get_before_uninstall(kill_self),
+        uninstall_amyuni_idd=get_uninstall_amyuni_idd(&path),
         app_name = crate::get_app_name(),
     )
 }
@@ -2365,5 +2366,44 @@ impl Drop for WallPaperRemover {
     fn drop(&mut self) {
         // If the old background is a slideshow, it will be converted into an image. AnyDesk does the same.
         allow_err!(Self::set_wallpaper(Some(self.old_path.clone())));
+    }
+}
+
+pub fn get_amyuni_exe_name() -> Option<String> {
+    let exe = match std::env::consts::ARCH {
+        "x86" => "deviceinstaller.exe",
+        "x86_64" => "deviceinstaller64.exe",
+        _ => {
+            log::error!("Unsupported machine architecture");
+            return None;
+        }
+    };
+    Some(exe.to_string())
+}
+
+fn get_uninstall_amyuni_idd(path: &str) -> String {
+    let Some(exe) = get_amyuni_exe_name() else {
+        return "".to_string();
+    };
+    let work_dir = PathBuf::from(path).join("usbmmidd_v2");
+    if work_dir.join(&exe).exists() {
+        format!(
+            "pushd {} && .\\{exe} remove usbmmidd && popd",
+            work_dir.to_string_lossy()
+        )
+    } else {
+        "".to_string()
+    }
+}
+
+#[inline]
+pub fn is_self_service_running() -> bool {
+    is_service_running(&crate::get_app_name())
+}
+
+pub fn is_service_running(service_name: &str) -> bool {
+    unsafe {
+        let service_name = wide_string(service_name);
+        is_service_running_w(service_name.as_ptr() as _)
     }
 }
