@@ -333,7 +333,11 @@ dependencies = [
  "futures-lite 2.3.0",
  "parking",
  "polling 3.6.0",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "slab",
  "tracing",
  "windows-sys 0.52.0",
@@ -372,7 +376,11 @@ dependencies = [
  "cfg-if 1.0.0",
  "event-listener 3.1.0",
  "futures-lite 1.13.0",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "windows-sys 0.48.0",
 ]
 
@@ -399,7 +407,11 @@ dependencies = [
  "cfg-if 1.0.0",
  "futures-core",
  "futures-io",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "signal-hook-registry",
  "slab",
  "windows-sys 0.52.0",
@@ -2907,6 +2919,7 @@ dependencies = [
  "socket2 0.3.19",
  "sodiumoxide",
  "sysinfo",
+ "thiserror",
  "tokio",
  "tokio-socks",
  "tokio-util",
@@ -3034,7 +3047,7 @@ checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 [[package]]
 name = "hwcodec"
 version = "0.3.3"
-source = "git+https://github.com/21pages/hwcodec#eeebf980d4eb41daaf05090b097d5a59d688d3d8"
+source = "git+https://github.com/21pages/hwcodec#4af91e7ee32590b8e2a6ecc360afa3b1e5fdde19"
 dependencies = [
  "bindgen 0.59.2",
  "cc",
@@ -4674,7 +4687,11 @@ dependencies = [
  "concurrent-queue",
  "hermit-abi 0.3.9",
  "pin-project-lite",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "tracing",
  "windows-sys 0.52.0",
 ]
@@ -5562,9 +5579,15 @@ dependencies = [
 
 [[package]]
 name = "rustix"
+<<<<<<< HEAD
 version = "0.38.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65e04861e65f21776e67888bfbea442b3642beaa0138fdb1dd7a84a52dffdb89"
+=======
+version = "0.38.33"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3cc72858054fcff6d7dea32df2aeaee6a7c24227366d7ea429aada2f26b16ad"
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
 dependencies = [
  "bitflags 2.5.0",
  "errno",
@@ -6286,7 +6309,11 @@ checksum = "85b77fafb263dd9d05cbeac119526425676db3784113aa9295c88498cbf8bff1"
 dependencies = [
  "cfg-if 1.0.0",
  "fastrand 2.0.2",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "windows-sys 0.52.0",
 ]
 
@@ -7040,7 +7067,11 @@ checksum = "9d50fa61ce90d76474c87f5fc002828d81b32677340112b4ef08079a9d459a40"
 dependencies = [
  "cc",
  "downcast-rs",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "scoped-tls",
  "smallvec",
  "wayland-sys",
@@ -7053,7 +7084,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82fb96ee935c2cea6668ccb470fb7771f6215d1691746c2d896b447a00ad3f1f"
 dependencies = [
  "bitflags 2.5.0",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "wayland-backend",
  "wayland-scanner",
 ]
@@ -7162,7 +7197,11 @@ dependencies = [
  "either",
  "home",
  "once_cell",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
 ]
 
 [[package]]
@@ -7809,7 +7848,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8f25ead8c7e4cba123243a6367da5d3990e0d3affa708ea19dce96356bd9f1a"
 dependencies = [
  "gethostname 0.4.3",
+<<<<<<< HEAD
  "rustix 0.38.32",
+=======
+ "rustix 0.38.33",
+>>>>>>> 61885893369ee419aaaf2d5d556e68079acfe319
  "x11rb-protocol 0.13.0",
 ]
 

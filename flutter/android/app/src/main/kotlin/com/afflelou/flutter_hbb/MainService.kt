@@ -368,9 +368,9 @@ class MainService : Service() {
         }
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
-        if (surface == null){
+        //if (surface == null){
         surface = createSurface()
-        }
+        //}
         //mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
         if (useVP9) {
             startVP9VideoRecorder(mediaProjection!!)
@@ -403,16 +403,16 @@ class MainService : Service() {
         //virtualDisplay?.release()
         //surface?.release()
         //imageReader?.close()
-        videoEncoder?.let {
+        /*videoEncoder?.let {
             it.signalEndOfInputStream()
             it.stop()
             it.release()
-        }
+        }*/
         //virtualDisplay = null
         //videoEncoder = null
         //surface = null
         // release audio
-        audioRecordStat = false
+        //audioRecordStat = false
         //audioRecorder
 
     }
@@ -466,9 +466,9 @@ class MainService : Service() {
                     SCREEN_INFO.height,
                     SCREEN_INFO.dpi,
                     VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                    surface,
+                    surface!!,
                     null,
-                    null
+                    serviceHandler
                 )
             }
         } catch (e: Throwable) {
@@ -495,9 +495,9 @@ class MainService : Service() {
                         SCREEN_INFO.height,
                         SCREEN_INFO.dpi,
                         VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                        surface,
+                        surface!!,
                         null,
-                        null
+                        serviceHandler
                     )
                 } else {
                     //nothing
