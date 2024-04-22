@@ -306,7 +306,7 @@ class MainService : Service() {
                 requestMediaProjection()
             }
         }
-        return START_NOT_STICKY // don't use sticky (auto restart), the new service (from auto restart) will lose control
+        return START_STICKY // don't use sticky (auto restart), the new service (from auto restart) will lose control
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
