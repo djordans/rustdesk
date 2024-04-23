@@ -286,17 +286,28 @@ class MainService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("whichService", "this service: ${Thread.currentThread()}")
         super.onStartCommand(intent, flags, startId)
-        if (intent?.action == ACT_INIT_MEDIA_PROJECTION_AND_SERVICE) {
+        createMediaProjection(intent,startId)
+        return START_STICKY // don't use sticky (auto restart), the new service (from auto restart) will lose control
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        updateScreenInfo(newConfig.orientation)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    private fun createMediaProjection(intentcreate: Intent?, startIdCreate: Int){
+        if (intentcreate?.action == ACT_INIT_MEDIA_PROJECTION_AND_SERVICE) {
             this.createForegroundNotification()
 
-            if (intent.getBooleanExtra(EXT_INIT_FROM_BOOT, false)) {
+            if (intentcreate.getBooleanExtra(EXT_INIT_FROM_BOOT, false)) {
                 FFI.startService()
             }
-            Log.d(logTag, "service starting: ${startId}:${Thread.currentThread()}")
+            Log.d(logTag, "service starting: ${startIdCreate}:${Thread.currentThread()}")
             val mediaProjectionManager =
                 getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
-            intent.getParcelableExtra<Intent>(EXT_MEDIA_PROJECTION_RES_INTENT)?.let {
+                intentcreate.getParcelableExtra<Intent>(EXT_MEDIA_PROJECTION_RES_INTENT)?.let {
                 mediaProjection =
                     mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, it)
                 this.checkMediaPermission()
@@ -306,14 +317,8 @@ class MainService : Service() {
                 requestMediaProjection()
             }
         }
-        return START_STICKY // don't use sticky (auto restart), the new service (from auto restart) will lose control
     }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        updateScreenInfo(newConfig.orientation)
-    }
-
+    
     private fun requestMediaProjection() {
         val intent = Intent(this, PermissionRequestTransparentActivity::class.java).apply {
             action = ACT_REQUEST_MEDIA_PROJECTION
@@ -364,7 +369,8 @@ class MainService : Service() {
         }
         if (mediaProjection == null) {
             Log.w(logTag, "startCapture fail, mediaProjection is null")
-            return false
+            createMediaProjection(this,0)
+            //return false
         }
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
