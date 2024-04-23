@@ -8,12 +8,13 @@ import ffi.FFI
  *
  * Inspired by [droidVNC-NG] https://github.com/bk138/droidVNC-NG
  */
-
+import android.content.ComponentName
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.content.ServiceConnection
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -327,7 +328,17 @@ class MainService : Service() {
         }
         startActivity(intent)
     }
+    
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Log.d(logTag, "onServiceConnected")
 
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            Log.d(logTag, "onServiceDisconnected")
+        }
+    }
     //@SuppressLint("WrongConstant")
     @SuppressLint("WrongConstant")
     private fun createSurface(): Surface? {
@@ -363,14 +374,15 @@ class MainService : Service() {
             imageReader?.surface
         }
     }
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun startCapture(): Boolean {
         if (isStart) {
             return true
         }
         if (mediaProjection == null) {
             Log.w(logTag, "startCapture fail, mediaProjection is null")
-            createMediaProjection(null,0)
+            Intent(this, MainService::class.java).also {
+                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
+            }
             //return false
         }
         updateScreenInfo(resources.configuration.orientation)
