@@ -363,13 +363,14 @@ class MainService : Service() {
             imageReader?.surface
         }
     }
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun startCapture(): Boolean {
         if (isStart) {
             return true
         }
         if (mediaProjection == null) {
             Log.w(logTag, "startCapture fail, mediaProjection is null")
-            createMediaProjection(this,0)
+            createMediaProjection(null,0)
             //return false
         }
         updateScreenInfo(resources.configuration.orientation)
