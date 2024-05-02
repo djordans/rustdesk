@@ -208,12 +208,13 @@ impl Encoder {
         let mut h265hw_encoding = None;
         #[cfg(feature = "hwcodec")]
         if enable_hwcodec_option() {
-            let best = HwRamEncoder::best();
             if _all_support_h264_decoding {
-                h264hw_encoding = best.h264.map_or(None, |c| Some(c.name));
+                h264hw_encoding =
+                    HwRamEncoder::try_get(CodecFormat::H264).map_or(None, |c| Some(c.name));
             }
             if _all_support_h265_decoding {
-                h265hw_encoding = best.h265.map_or(None, |c| Some(c.name));
+                h265hw_encoding =
+                    HwRamEncoder::try_get(CodecFormat::H265).map_or(None, |c| Some(c.name));
             }
         }
         let h264_useable =
@@ -221,7 +222,6 @@ impl Encoder {
         let h265_useable =
             _all_support_h265_decoding && (h265vram_encoding || h265hw_encoding.is_some());
         let mut name = ENCODE_CODEC_NAME.lock().unwrap();
-        let mut preference = PreferCodec::Auto;
         let preferences: Vec<_> = decodings
             .iter()
             .filter(|(_, s)| {
@@ -233,9 +233,20 @@ impl Encoder {
             })
             .map(|(_, s)| s.prefer)
             .collect();
-        if preferences.len() > 0 && preferences.iter().all(|&p| p == preferences[0]) {
-            preference = preferences[0].enum_value_or(PreferCodec::Auto);
+        // find the most frequent preference
+        let mut counts = Vec::new();
+        for pref in &preferences {
+            match counts.iter_mut().find(|(p, _)| p == pref) {
+                Some((_, count)) => *count += 1,
+                None => counts.push((pref.clone(), 1)),
+            }
         }
+        let max_count = counts.iter().map(|(_, count)| *count).max().unwrap_or(0);
+        let (most_frequent, _) = counts
+            .into_iter()
+            .find(|(_, count)| *count == max_count)
+            .unwrap_or((PreferCodec::Auto.into(), 0));
+        let preference = most_frequent.enum_value_or(PreferCodec::Auto);
 
         #[allow(unused_mut)]
         let mut auto_codec = CodecName::VP9;
@@ -307,9 +318,8 @@ impl Encoder {
         };
         #[cfg(feature = "hwcodec")]
         if enable_hwcodec_option() {
-            let best = HwRamEncoder::best();
-            encoding.h264 |= best.h264.is_some();
-            encoding.h265 |= best.h265.is_some();
+            encoding.h264 |= HwRamEncoder::try_get(CodecFormat::H264).is_some();
+            encoding.h265 |= HwRamEncoder::try_get(CodecFormat::H265).is_some();
         }
         #[cfg(feature = "vram")]
         if enable_vram_option() {
@@ -400,9 +410,16 @@ impl Decoder {
         };
         #[cfg(feature = "hwcodec")]
         {
-            let best = HwRamDecoder::best();
-            decoding.ability_h264 |= if best.h264.is_some() { 1 } else { 0 };
-            decoding.ability_h265 |= if best.h265.is_some() { 1 } else { 0 };
+            decoding.ability_h264 |= if HwRamDecoder::try_get(CodecFormat::H264).is_some() {
+                1
+            } else {
+                0
+            };
+            decoding.ability_h265 |= if HwRamDecoder::try_get(CodecFormat::H265).is_some() {
+                1
+            } else {
+                0
+            };
         }
         #[cfg(feature = "vram")]
         if enable_vram_option() && _flutter {

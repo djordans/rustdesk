@@ -174,13 +174,13 @@ void showServerSettingsWithValue(
           null,
           errMsgs,
           ServerConfig(
-              idServer: idCtrl.text.trim(),
-              relayServer: relayCtrl.text.trim(),
-              apiServer: apiCtrl.text.trim(),
-              key: keyCtrl.text.trim(),
-              access_token: serverConfig.access_token,
-              permanentPassword: serverConfig.permanentPassword,
-               ));
+            idServer: idCtrl.text.trim(),
+            relayServer: relayCtrl.text.trim(),
+            apiServer: apiCtrl.text.trim(),
+            key: keyCtrl.text.trim(),
+            access_token: serverConfig.access_token,
+            permanentPassword: serverConfig.permanentPassword,
+          ));
       setState(() {
         isInProgress = false;
       });
@@ -197,8 +197,7 @@ void showServerSettingsWithValue(
       content: Form(
           child: Obx(() => Column(
               mainAxisSize: MainAxisSize.min,
-              children: <Widget>
-                  [
+              children: <Widget>[
                     TextFormField(
                       controller: idCtrl,
                       decoration: InputDecoration(
@@ -297,5 +296,3 @@ Future<String?> validateAsync(String value) async {
   final res = await bind.mainTestIfValidServer(server: value);
   return res.isEmpty ? null : res;
 }
-
-

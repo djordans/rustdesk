@@ -774,8 +774,7 @@ pub fn main_get_error() -> String {
 }
 
 pub fn main_show_option(_key: String) -> SyncReturn<bool> {
-    #[cfg(all(target_os = "linux", feature = "linux_headless"))]
-    #[cfg(not(any(feature = "flatpak", feature = "appimage")))]
+    #[cfg(target_os = "linux")]
     if _key.eq(config::CONFIG_OPTION_ALLOW_LINUX_HEADLESS) {
         return SyncReturn(true);
     }
@@ -809,8 +808,8 @@ pub fn main_set_options(json: String) {
     }
 }
 
-pub fn main_test_if_valid_server(server: String) -> String {
-    test_if_valid_server(server)
+pub fn main_test_if_valid_server(server: String, test_with_proxy: bool) -> String {
+    test_if_valid_server(server, test_with_proxy)
 }
 
 pub fn main_set_socks(proxy: String, username: String, password: String) {
@@ -895,7 +894,7 @@ pub fn main_get_api_server() -> String {
 }
 
 pub fn main_http_request(url: String, method: String, body: Option<String>, header: String) {
-    http_request(url,method, body, header)
+    http_request(url, method, body, header)
 }
 
 pub fn main_get_local_option(key: String) -> SyncReturn<String> {
