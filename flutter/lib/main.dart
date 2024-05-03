@@ -156,7 +156,10 @@ void runMainApp(bool startService) async {
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
   await bind.mainCheckConnectStatus();
+  //gFFI.userModel.refreshCurrentUser();
   if (isAndroid) {
+    androidChannelInit();
+    platformFFI.syncAndroidServiceAppDirConfigPath();
     await [
       Permission.notification,
       Permission.accessNotificationPolicy,
@@ -169,12 +172,10 @@ void runMobileApp() async {
       Permission.ignoreBatteryOptimizations,
       Permission.mediaLibrary
     ].request();
+    WakelockPlus.enable();
+    gFFI.serverModel.startService();
   }
-  WakelockPlus.enable();
-  //gFFI.userModel.refreshCurrentUser();
-  if (isAndroid) androidChannelInit();
-  if (isAndroid) platformFFI.syncAndroidServiceAppDirConfigPath();
-  gFFI.serverModel.startService();
+
   //await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
