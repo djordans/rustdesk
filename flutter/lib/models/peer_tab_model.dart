@@ -43,8 +43,8 @@ class PeerTabModel with ChangeNotifier {
     true,
     true,
     !isWeb,
-    !(bind.isDisableAb() || bind.isDisableAccount()),
-    !bind.isDisableAccount(),
+    true,
+    true,
   ]);
   final List<bool> _isVisible = List.filled(maxTabCount, true, growable: false);
   List<bool> get isVisibleEnabled => () {

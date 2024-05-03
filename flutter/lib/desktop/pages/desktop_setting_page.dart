@@ -66,7 +66,7 @@ class DesktopSettingPage extends StatefulWidget {
     if (!bind.isIncomingOnly()) SettingsTabKey.display,
     if (!isWeb && !bind.isIncomingOnly() && bind.pluginFeatureIsEnabled())
       SettingsTabKey.plugin,
-    if (!bind.isDisableAccount()) SettingsTabKey.account,
+    SettingsTabKey.account,
     SettingsTabKey.about,
   ];
 
@@ -177,7 +177,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
       if (!bind.isIncomingOnly()) _Display(),
       if (!isWeb && !bind.isIncomingOnly() && bind.pluginFeatureIsEnabled())
         _Plugin(),
-      if (!bind.isDisableAccount()) _Account(),
+      _Account(),
       _About(),
     ];
     return children;
@@ -1188,7 +1188,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       RxString idErrMsg = ''.obs;
       RxString relayErrMsg = ''.obs;
       RxString apiErrMsg = ''.obs;
-      var idController = TextEditingController(text: old('custom-rendezvous-server'));
+      var idController =
+          TextEditingController(text: old('custom-rendezvous-server'));
       var relayController = TextEditingController(text: old('relay-server'));
       var apiController = TextEditingController(text: old('api-server'));
       var keyController = TextEditingController(text: old('key'));
@@ -1221,6 +1222,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           showToast(translate('Failed'));
         }
       }
+
       bool secure = !enabled;
       return _Card(
           title: 'ID/Relay Server',
@@ -1230,12 +1232,24 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
               children: [
                 Obx(() => _LabeledTextField(context, 'ID Server', idController,
                     idErrMsg.value, enabled, secure, TextCapitalization.none)),
-                Obx(() => _LabeledTextField(context, 'Relay Server',
-                    relayController, relayErrMsg.value, enabled, secure, TextCapitalization.none)),
-                Obx(() => _LabeledTextField(context, 'API Server',
-                    apiController, apiErrMsg.value, enabled, secure, TextCapitalization.none)),
-                _LabeledTextField(
-                    context, 'Key', keyController, '', enabled, secure, TextCapitalization.none),
+                Obx(() => _LabeledTextField(
+                    context,
+                    'Relay Server',
+                    relayController,
+                    relayErrMsg.value,
+                    enabled,
+                    secure,
+                    TextCapitalization.none)),
+                Obx(() => _LabeledTextField(
+                    context,
+                    'API Server',
+                    apiController,
+                    apiErrMsg.value,
+                    enabled,
+                    secure,
+                    TextCapitalization.none)),
+                _LabeledTextField(context, 'Key', keyController, '', enabled,
+                    secure, TextCapitalization.none),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [_Button('Apply', submit, enabled: enabled)],
@@ -1303,7 +1317,7 @@ class _DisplayState extends State<_Display> {
       await bind.mainSetUserDefaultOption(key: key, value: value);
       setState(() {});
     }
-    
+
     final groupValue = bind.mainGetUserDefaultOption(key: key);
     return _Card(title: 'Default Scroll Style', children: [
       _Radio(context,
@@ -1497,7 +1511,9 @@ class _AccountState extends State<_Account> {
 
   Widget accountAction() {
     return Obx(() => _Button(
-        gFFI.userModel.userName.value.isEmpty ? translate("Login") : '${translate("Logout")} (${gFFI.userModel.userName.value})' ,
+        gFFI.userModel.userName.value.isEmpty
+            ? translate("Login")
+            : '${translate("Logout")} (${gFFI.userModel.userName.value})',
         () => {
               gFFI.userModel.userName.value.isEmpty
                   ? loginDialog()
@@ -1657,68 +1673,74 @@ class _AboutState extends State<_About> {
           child: SingleChildScrollView(
             controller: scrollController,
             physics: DraggableNeverScrollableScrollPhysics(),
-            child: _Card(title: '${translate('About')} RustDesk - ${bind.getDeviceName()}', children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: _Card(
+                title:
+                    '${translate('About')} RustDesk - ${bind.getDeviceName()}',
                 children: [
-                  const SizedBox(
-                    height: 8.0,
-                  ),
-                  SelectionArea(
-                      child: Text('${translate('Version')}: $version')
-                          .marginSymmetric(vertical: 4.0)),
-                  SelectionArea(
-                      child: Text('${translate('Build Date')}: $buildDate')
-                          .marginSymmetric(vertical: 4.0)),
-                  SelectionArea(
-                      child: Text('${translate('Fingerprint')}: $fingerprint')
-                          .marginSymmetric(vertical: 4.0)),
-                  InkWell(
-                      onTap: () {
-                        launchUrlString('https://rustdesk.com/privacy.html');
-                      },
-                      child: Text(
-                        translate('Privacy Statement'),
-                        style: linkStyle,
-                      ).marginSymmetric(vertical: 4.0)),
-                  InkWell(
-                      onTap: () {
-                        launchUrlString('https://rustdesk.com');
-                      },
-                      child: Text(
-                        translate('Website'),
-                        style: linkStyle,
-                      ).marginSymmetric(vertical: 4.0)),
-                  Container(
-                    decoration: const BoxDecoration(color: Color.fromARGB(255, 195, 162, 105)),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-                    child: SelectionArea(
-                        child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Ltd.\n$license',
-                                style: const TextStyle(color: Colors.white),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(
+                        height: 8.0,
+                      ),
+                      SelectionArea(
+                          child: Text('${translate('Version')}: $version')
+                              .marginSymmetric(vertical: 4.0)),
+                      SelectionArea(
+                          child: Text('${translate('Build Date')}: $buildDate')
+                              .marginSymmetric(vertical: 4.0)),
+                      SelectionArea(
+                          child:
+                              Text('${translate('Fingerprint')}: $fingerprint')
+                                  .marginSymmetric(vertical: 4.0)),
+                      InkWell(
+                          onTap: () {
+                            launchUrlString(
+                                'https://rustdesk.com/privacy.html');
+                          },
+                          child: Text(
+                            translate('Privacy Statement'),
+                            style: linkStyle,
+                          ).marginSymmetric(vertical: 4.0)),
+                      InkWell(
+                          onTap: () {
+                            launchUrlString('https://rustdesk.com');
+                          },
+                          child: Text(
+                            translate('Website'),
+                            style: linkStyle,
+                          ).marginSymmetric(vertical: 4.0)),
+                      Container(
+                        decoration: const BoxDecoration(
+                            color: Color.fromARGB(255, 195, 162, 105)),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 24, horizontal: 8),
+                        child: SelectionArea(
+                            child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Ltd.\n$license',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                  Text(
+                                    translate('Slogan_tip'),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white),
+                                  )
+                                ],
                               ),
-                              Text(
-                                translate('Slogan_tip'),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white),
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    )),
-                  ).marginSymmetric(vertical: 4.0)
-                ],
-              ).marginOnly(left: _kContentHMargin)
-            ]),
+                            ),
+                          ],
+                        )),
+                      ).marginSymmetric(vertical: 4.0)
+                    ],
+                  ).marginOnly(left: _kContentHMargin)
+                ]),
           ));
     });
   }
@@ -1955,7 +1977,8 @@ _LabeledTextField(
     TextEditingController controller,
     String errorText,
     bool enabled,
-    bool secure, TextCapitalization textCapitalization) {
+    bool secure,
+    TextCapitalization textCapitalization) {
   return Row(
     children: [
       ConstrainedBox(

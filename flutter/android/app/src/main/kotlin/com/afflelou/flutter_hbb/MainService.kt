@@ -374,6 +374,7 @@ class MainService : Service() {
             imageReader?.surface
         }
     }
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun startCapture(): Boolean {
         if (isStart) {
             return true

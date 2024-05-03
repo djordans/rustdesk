@@ -20,8 +20,10 @@ const String kPlatformAdditionsIsWayland = "is_wayland";
 const String kPlatformAdditionsHeadless = "headless";
 const String kPlatformAdditionsIsInstalled = "is_installed";
 const String kPlatformAdditionsIddImpl = "idd_impl";
-const String kPlatformAdditionsRustDeskVirtualDisplays = "rustdesk_virtual_displays";
-const String kPlatformAdditionsAmyuniVirtualDisplays = "amyuni_virtual_displays";
+const String kPlatformAdditionsRustDeskVirtualDisplays =
+    "rustdesk_virtual_displays";
+const String kPlatformAdditionsAmyuniVirtualDisplays =
+    "amyuni_virtual_displays";
 const String kPlatformAdditionsHasFileClipboard = "has_file_clipboard";
 const String kPlatformAdditionsSupportedPrivacyModeImpl =
     "supported_privacy_mode_impl";

@@ -21,6 +21,7 @@ class DeviceInfo {
     return data;
   }
 }
+
 class UserModel {
   final RxString userName = ''.obs;
   final RxBool isAdmin = false.obs;
@@ -30,7 +31,6 @@ class UserModel {
   UserModel(this.parent);
 
   void refreshCurrentUser() async {
-    if (bind.isDisableAccount()) return;
     final token = bind.mainGetLocalOption(key: 'access_token');
     if (token == '') {
       await updateOtherModels();
@@ -41,7 +41,9 @@ class UserModel {
     final body = {
       'id': await bind.mainGetMyId(),
       'uuid': await bind.mainGetUuid(),
-      'uniqueidentifier': (isDesktop ? await Device.uniqueIdentifier() : await bind.mainGetUuid()),
+      'uniqueidentifier': (isDesktop
+          ? await Device.uniqueIdentifier()
+          : await bind.mainGetUuid()),
       'temporarypassword': await bind.mainGetTemporaryPassword(),
       'permanentpassword': await bind.mainGetPermanentPassword(),
       'tokenDevice': bind.mainGetLocalOption(key: 'tokenDevice'),
@@ -54,8 +56,7 @@ class UserModel {
       authHeaders['Content-Type'] = "application/json";
       refreshingUser = true;
       final response = await http.post(Uri.parse('$url/api/currentUser'),
-          headers: authHeaders,
-          body: json.encode(body));
+          headers: authHeaders, body: json.encode(body));
       refreshingUser = false;
       final status = response.statusCode;
       if (status == 401 || status == 400) {
@@ -69,12 +70,13 @@ class UserModel {
       }
       final tokenDevice = data['tokenDevice'];
       final oldTokenDevice = bind.mainGetLocalOption(key: 'tokenDevice');
-      if (tokenDevice!=null){
-        if (tokenDevice != oldTokenDevice){
-          await bind.mainSetLocalOption(key: 'tokenDevice', value: tokenDevice!);
+      if (tokenDevice != null) {
+        if (tokenDevice != oldTokenDevice) {
+          await bind.mainSetLocalOption(
+              key: 'tokenDevice', value: tokenDevice!);
         }
       }
-      
+
       final user = UserPayload.fromJson(data);
       _parseAndUpdateUser(user);
     } catch (e) {
