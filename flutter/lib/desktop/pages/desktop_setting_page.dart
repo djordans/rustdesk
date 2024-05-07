@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/widgets/audio_input.dart';
 import 'package:flutter_hbb/common/widgets/setting_widgets.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
@@ -469,38 +470,7 @@ class _GeneralState extends State<_General> {
       return const Offstage();
     }
 
-    String getDefault() {
-      if (isWindows) return translate('System Sound');
-      return '';
-    }
-
-    Future<String> getValue() async {
-      String device = await bind.mainGetOption(key: 'audio-input');
-      if (device.isNotEmpty) {
-        return device;
-      } else {
-        return getDefault();
-      }
-    }
-
-    setDevice(String device) {
-      if (device == getDefault()) device = '';
-      bind.mainSetOption(key: 'audio-input', value: device);
-    }
-
-    return futureBuilder(future: () async {
-      List<String> devices = (await bind.mainGetSoundInputs()).toList();
-      if (isWindows) {
-        devices.insert(0, translate('System Sound'));
-      }
-      String current = await getValue();
-      return {'devices': devices, 'current': current};
-    }(), hasData: (data) {
-      String currentDevice = data['current'];
-      List<String> devices = data['devices'] as List<String>;
-      if (devices.isEmpty) {
-        return const Offstage();
-      }
+    return AudioInput(builder: (devices, currentDevice, setDevice) {
       return _Card(title: 'Audio Input Device', children: [
         ...devices.map((device) => _Radio<String>(context,
                 value: device,
@@ -2135,17 +2105,34 @@ void changeSocks5Proxy() async {
             Row(
               children: [
                 ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 140),
-                    child: Text(
-                      '${translate("Server")}:',
-                      textAlign: TextAlign.right,
-                    ).marginOnly(right: 10)),
+                  constraints: const BoxConstraints(minWidth: 140),
+                  child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        children: [
+                          Text(
+                            translate('Server'),
+                          ).marginOnly(right: 4),
+                          Tooltip(
+                            waitDuration: Duration(milliseconds: 0),
+                            message: translate("default_proxy_tip"),
+                            child: Icon(
+                              Icons.help_outline_outlined,
+                              size: 16,
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.color
+                                  ?.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      )).marginOnly(right: 10),
+                ),
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
                       errorText: proxyMsg.isNotEmpty ? proxyMsg : null,
-                      hintText: translate(
-                          'Default protocol and port are Socks5 and 1080'),
                     ),
                     controller: proxyController,
                     autofocus: true,
