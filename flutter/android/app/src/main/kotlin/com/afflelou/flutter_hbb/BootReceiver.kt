@@ -12,7 +12,6 @@ import com.hjq.permissions.XXPermissions
 import io.flutter.embedding.android.FlutterActivity
 
 const val DEBUG_BOOT_COMPLETED = "com.afflelou.flutter_hbb.DEBUG_BOOT_COMPLETED"
-
 class BootReceiver : BroadcastReceiver() {
     private val logTag = "tagBootReceiver"
 
@@ -34,7 +33,6 @@ class BootReceiver : BroadcastReceiver() {
 
             val it = Intent(context, MainService::class.java).apply {
                 action = ACT_INIT_MEDIA_PROJECTION_AND_SERVICE
-                putExtra(EXT_MEDIA_PROJECTION_RES_INTENT, intent)
                 putExtra(EXT_INIT_FROM_BOOT, true)
             }
             Toast.makeText(context, "RustDesk is Open", Toast.LENGTH_LONG).show()

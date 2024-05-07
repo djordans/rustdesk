@@ -15,7 +15,6 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.WindowManager
-import androidx.annotation.RequiresApi
 import com.hjq.permissions.XXPermissions
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -31,18 +30,11 @@ class MainActivity : FlutterActivity() {
     private val logTag = "mMainActivity"
     private var mainService: MainService? = null
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         if (MainService.isReady) {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Intent(activity, MainService::class.java).also {
-                    bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
-                }
-            } else {
-                Intent(activity, MainService::class.java).also {
-                    bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
-                }
+            Intent(activity, MainService::class.java).also {
+                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
             }
         }
         flutterMethodChannel = MethodChannel(
@@ -98,22 +90,14 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private fun initFlutterChannel(flutterMethodChannel: MethodChannel) {
         flutterMethodChannel.setMethodCallHandler { call, result ->
             // make sure result will be invoked, otherwise flutter will await forever
             when (call.method) {
                 "init_service" -> {
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Intent(activity, MainService::class.java).also {
-                            bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
-                        }
-                    } else {
-                        Intent(activity, MainService::class.java).also {
-                            bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
-                        }
+                    Intent(activity, MainService::class.java).also {
+                        bindService(it, serviceConnection, Context.BIND_AUTO_CREATE)
                     }
-                    
                     if (MainService.isReady) {
                         result.success(false)
                         return@setMethodCallHandler
@@ -179,7 +163,9 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "stop_input" -> {
-                    InputService.ctx?.disableSelf()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        InputService.ctx?.disableSelf()
+                    }
                     InputService.ctx = null
                     Companion.flutterMethodChannel?.invokeMethod(
                         "on_state_changed",

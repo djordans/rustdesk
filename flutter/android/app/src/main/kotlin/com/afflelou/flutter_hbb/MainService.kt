@@ -8,17 +8,15 @@ import ffi.FFI
  *
  * Inspired by [droidVNC-NG] https://github.com/bk138/droidVNC-NG
  */
-import android.content.ComponentName
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.ServiceConnection
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ServiceInfo
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.graphics.Color
@@ -69,6 +67,7 @@ const val AUDIO_CHANNEL_MASK = AudioFormat.CHANNEL_IN_STEREO
 class MainService : Service() {
 
     @Keep
+    @RequiresApi(Build.VERSION_CODES.N)
     fun rustPointerInput(kind: String, mask: Int, x: Int, y: Int) {
         // turn on screen with LIFT_DOWN when screen off
         if (!powerManager.isInteractive && (kind == "touch" || mask == LIFT_DOWN)) {
@@ -93,6 +92,7 @@ class MainService : Service() {
     }
 
     @Keep
+    @RequiresApi(Build.VERSION_CODES.N)
     fun rustKeyEventInput(input: ByteArray) {
         InputService.ctx?.onKeyEvent(input)
     }
@@ -180,6 +180,7 @@ class MainService : Service() {
     private var videoEncoder: MediaCodec? = null
     private var imageReader: ImageReader? = null
     private var virtualDisplay: VirtualDisplay? = null
+
     // audio
     private var audioRecorder: AudioRecord? = null
     private var audioReader: AudioReader? = null
@@ -191,7 +192,6 @@ class MainService : Service() {
     private lateinit var notificationChannel: String
     private lateinit var notificationBuilder: NotificationCompat.Builder
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate() {
         super.onCreate()
         Log.d(logTag,"MainService onCreate")
@@ -202,14 +202,14 @@ class MainService : Service() {
             serviceHandler = Handler(looper)
         }
         updateScreenInfo(resources.configuration.orientation)
-        this.initNotification()
+        initNotification()
 
         // keep the config dir same with flutter
         val prefs = applicationContext.getSharedPreferences(KEY_SHARED_PREFERENCES, FlutterActivity.MODE_PRIVATE)
         val configPath = prefs.getString(KEY_APP_DIR_CONFIG_PATH, "") ?: ""
         FFI.startServer(configPath, "")
 
-        this.createForegroundNotification()
+        createForegroundNotification()
     }
 
     override fun onDestroy() {
@@ -283,12 +283,30 @@ class MainService : Service() {
         fun getService(): MainService = this@MainService
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("whichService", "this service: ${Thread.currentThread()}")
         super.onStartCommand(intent, flags, startId)
-        createMediaProjection(intent,startId)
-        return START_STICKY // don't use sticky (auto restart), the new service (from auto restart) will lose control
+        if (intent?.action == ACT_INIT_MEDIA_PROJECTION_AND_SERVICE) {
+            createForegroundNotification()
+
+            if (intent.getBooleanExtra(EXT_INIT_FROM_BOOT, false)) {
+                FFI.startService()
+            }
+            Log.d(logTag, "service starting: ${startId}:${Thread.currentThread()}")
+            val mediaProjectionManager =
+                getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+
+            intent.getParcelableExtra<Intent>(EXT_MEDIA_PROJECTION_RES_INTENT)?.let {
+                mediaProjection =
+                    mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, it)
+                checkMediaPermission()
+                _isReady = true
+            } ?: let {
+                Log.d(logTag, "getParcelableExtra intent null, invoke requestMediaProjection")
+                requestMediaProjection()
+            }
+        }
+        return START_NOT_STICKY // don't use sticky (auto restart), the new service (from auto restart) will lose control
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -296,50 +314,14 @@ class MainService : Service() {
         updateScreenInfo(newConfig.orientation)
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    private fun createMediaProjection(intentcreate: Intent?, startIdCreate: Int){
-        if (intentcreate?.action == ACT_INIT_MEDIA_PROJECTION_AND_SERVICE) {
-            this.createForegroundNotification()
-
-            if (intentcreate.getBooleanExtra(EXT_INIT_FROM_BOOT, false)) {
-                FFI.startService()
-            }
-            Log.d(logTag, "service starting: ${startIdCreate}:${Thread.currentThread()}")
-            val mediaProjectionManager =
-                getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-
-                intentcreate.getParcelableExtra<Intent>(EXT_MEDIA_PROJECTION_RES_INTENT)?.let {
-                mediaProjection =
-                    mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, it)
-                this.checkMediaPermission()
-                _isReady = true
-            } ?: let {
-                Log.d(logTag, "getParcelableExtra intent null, invoke requestMediaProjection")
-                requestMediaProjection()
-            }
-        }
-    }
-    
     private fun requestMediaProjection() {
         val intent = Intent(this, PermissionRequestTransparentActivity::class.java).apply {
             action = ACT_REQUEST_MEDIA_PROJECTION
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-
         }
         startActivity(intent)
     }
-    
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            Log.d(logTag, "onServiceConnected")
 
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            Log.d(logTag, "onServiceDisconnected")
-        }
-    }
-    //@SuppressLint("WrongConstant")
     @SuppressLint("WrongConstant")
     private fun createSurface(): Surface? {
         return if (useVP9) {
@@ -374,24 +356,19 @@ class MainService : Service() {
             imageReader?.surface
         }
     }
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+
     fun startCapture(): Boolean {
         if (isStart) {
             return true
         }
         if (mediaProjection == null) {
-            Log.w(logTag, "startCapture fail, mediaProjection is null")
-            Intent(this, MainService::class.java).also {
-                bindService(it, serviceConnection, Context.BIND_AUTO_CREATE + Context.BIND_ALLOW_ACTIVITY_STARTS)
-            }
-            //return false
+            Log.w(logTag, "startCapture fail,mediaProjection is null")
+            return false
         }
         updateScreenInfo(resources.configuration.orientation)
         Log.d(logTag, "Start Capture")
-        //if (surface == null){
         surface = createSurface()
-        //}
-        //mediaProjection?.registerCallback(object : MediaProjection.Callback() {}, null)
+
         if (useVP9) {
             startVP9VideoRecorder(mediaProjection!!)
         } else {
@@ -415,14 +392,12 @@ class MainService : Service() {
         FFI.setFrameRawEnable("audio",false)
         _isStart = false
         // release video
-        if (imageReader != null) {
-            imageReader!!.setOnImageAvailableListener(null, null)
-            imageReader!!.close()
-            imageReader = null
-        }
         virtualDisplay?.release()
+        imageReader?.close()
+        imageReader = null
+        // suface needs to be release after imageReader.close to imageReader access released surface
+        // https://github.com/rustdesk/rustdesk/issues/4118#issuecomment-1515666629
         surface?.release()
-        //imageReader?.close()
         videoEncoder?.let {
             it.signalEndOfInputStream()
             it.stop()
@@ -430,14 +405,9 @@ class MainService : Service() {
         }
         virtualDisplay = null
         videoEncoder = null
-        surface = null
+
         // release audio
         audioRecordStat = false
-        //audioRecorder
-        mediaProjection = null
-        checkMediaPermission()
-        stopForeground(true)
-        stopSelf()
     }
 
     fun destroy() {
@@ -445,12 +415,6 @@ class MainService : Service() {
         _isReady = false
 
         stopCapture()
-        imageReader?.close()
-        imageReader = null
-        virtualDisplay?.release()
-        surface?.release()
-        virtualDisplay = null
-        surface = null
 
         mediaProjection = null
         checkMediaPermission()
@@ -480,23 +444,11 @@ class MainService : Service() {
             Log.d(logTag, "startRawVideoRecorder failed,surface is null")
             return
         }
-        try {
-            mp.registerCallback(object : MediaProjection.Callback() {}, serviceHandler)
-            if(virtualDisplay == null) {
-                virtualDisplay = mp.createVirtualDisplay(
-                    "RustDeskVD",
-                    SCREEN_INFO.width,
-                    SCREEN_INFO.height,
-                    SCREEN_INFO.dpi,
-                    VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                    surface!!,
-                    null,
-                    serviceHandler
-                )
-            }
-        } catch (e: Throwable) {
-            Log.i(logTag, "Media Projection Raw not longer available...${e.message}")
-        }   
+        virtualDisplay = mp.createVirtualDisplay(
+            "RustDeskVD",
+            SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            surface, null, null
+        )
     }
 
     private fun startVP9VideoRecorder(mp: MediaProjection) {
@@ -508,26 +460,11 @@ class MainService : Service() {
             }
             it.setCallback(cb)
             it.start()
-           
-            try {
-                mp.registerCallback(object : MediaProjection.Callback() { fun OnStop(){ it.release()}}, serviceHandler)
-                if(virtualDisplay == null) {
-                    virtualDisplay = mp.createVirtualDisplay(
-                        "RustDeskVD",
-                        SCREEN_INFO.width,
-                        SCREEN_INFO.height,
-                        SCREEN_INFO.dpi,
-                        VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                        surface!!,
-                        null,
-                        serviceHandler
-                    )
-                } else {
-                    //nothing
-                }
-            } catch (e: Throwable) {
-                Log.i(logTag, "Media Projection VP9 not longer available...${e.message}")
-            }   
+            virtualDisplay = mp.createVirtualDisplay(
+                "RustDeskVD",
+                SCREEN_INFO.width, SCREEN_INFO.height, SCREEN_INFO.dpi, VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                surface, null, null
+            )
         }
     }
 
@@ -555,6 +492,7 @@ class MainService : Service() {
         }
     }
 
+
     private fun createMediaCodec() {
         Log.d(logTag, "MediaFormat.MIMETYPE_VIDEO_VP9 :$MIME_TYPE")
         videoEncoder = MediaCodec.createEncoderByType(MIME_TYPE)
@@ -574,6 +512,7 @@ class MainService : Service() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun startAudioRecorder() {
         checkAudioRecorder()
         if (audioReader != null && audioRecorder != null && minBufferSize != 0) {
@@ -600,6 +539,7 @@ class MainService : Service() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun checkAudioRecorder() {
         if (audioRecorder != null && audioRecorder != null && minBufferSize != 0) {
             return
@@ -667,7 +607,7 @@ class MainService : Service() {
         notificationBuilder = NotificationCompat.Builder(this, notificationChannel)
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    @SuppressLint("UnspecifiedImmutableFlag")
     private fun createForegroundNotification() {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
@@ -675,14 +615,11 @@ class MainService : Service() {
             addCategory(Intent.CATEGORY_LAUNCHER)
             putExtra("type", type)
         }
-        val pendingIntent =
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //val options = ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
-                val options = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle()
-                PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE, options)
-            }else{
-                PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
-            }
+        val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE)
+        } else {
+            PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT)
+        }
         val notification = notificationBuilder
             .setOngoing(true)
             .setSmallIcon(R.mipmap.ic_stat_logo)
@@ -696,7 +633,7 @@ class MainService : Service() {
             .setColor(ContextCompat.getColor(this, R.color.primary))
             .setWhen(System.currentTimeMillis())
             .build()
-        startForeground(DEFAULT_NOTIFY_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+        startForeground(DEFAULT_NOTIFY_ID, notification)
     }
 
     private fun loginRequestNotification(
@@ -747,7 +684,11 @@ class MainService : Service() {
             action = ACT_LOGIN_REQ_NOTIFY
             putExtra(EXT_LOGIN_REQ_NOTIFY, res)
         }
-        return PendingIntent.getService(this, 111, intent, FLAG_IMMUTABLE)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getService(this, 111, intent, FLAG_IMMUTABLE)
+        } else {
+            PendingIntent.getService(this, 111, intent, FLAG_UPDATE_CURRENT)
+        }
     }
 
     private fun setTextNotification(_title: String?, _text: String?) {
