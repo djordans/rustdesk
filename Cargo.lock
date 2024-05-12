@@ -3764,6 +3764,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "miow"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "359f76430b20a79f9e20e115b3428614e654f04fab314482fc0fda0ebd3c6044"
+dependencies = [
+ "windows-sys 0.48.0",
+]
+
+[[package]]
 name = "mouce"
 version = "0.2.1"
 source = "git+https://github.com/fufesou/mouce.git#ed83800d532b95d70e39915314f6052aa433e9b9"
@@ -4421,11 +4430,12 @@ dependencies = [
 [[package]]
 name = "parity-tokio-ipc"
 version = "0.7.3-3"
-source = "git+https://github.com/rustdesk-org/parity-tokio-ipc#e8448ade10d6d972d0b2307646424b36ab202ff5"
+source = "git+https://github.com/rustdesk-org/parity-tokio-ipc#f2d1fcf8fb002335d9a62bec308559d40698694d"
 dependencies = [
  "futures",
  "libc",
  "log",
+ "miow",
  "rand 0.8.5",
  "tokio",
  "winapi 0.3.9",
