@@ -161,7 +161,7 @@ void runMobileApp() async {
   if (isAndroid) {
     androidChannelInit();
     platformFFI.syncAndroidServiceAppDirConfigPath();
-    await [
+    /*await [
       Permission.notification,
       Permission.accessNotificationPolicy,
       Permission.storage,
@@ -172,7 +172,7 @@ void runMobileApp() async {
       Permission.bluetoothAdvertise,
       Permission.ignoreBatteryOptimizations,
       Permission.mediaLibrary
-    ].request();
+    ].request();*/
     WakelockPlus.enable();
     gFFI.serverModel.startService();
   }
