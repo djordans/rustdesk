@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.2.4+39
 
 environment:
-  sdk: '^3.3.4'
+  sdk: '^3.1.0'
 
 dependencies:
   flutter:
@@ -32,10 +32,9 @@ dependencies:
   external_path: ^1.0.3
   provider: ^6.0.5
   tuple: ^2.0.0
-  wakelock_plus: ^1.2.4
+  wakelock_plus: ^1.1.3
   #firebase_analytics: ^9.1.5
-  qr_code_scanner: ^1.0.1
-  package_info_plus: ^7.0.0
+  package_info_plus: ^4.2.0
   url_launcher: ^6.2.1
   toggle_switch: ^2.1.0
   dash_chat_2:
@@ -45,8 +44,9 @@ dependencies:
   settings_ui: ^2.0.2
   flutter_breadcrumb: ^1.0.1
   http: ^1.1.0
+  qr_code_scanner: ^1.0.0
   zxing2: ^0.2.0
-  image_picker: ^1.1.0
+  image_picker: ^0.8.5
   image: ^4.0.17
   back_button_interceptor: ^6.0.1
   flutter_rust_bridge: "1.80.1"
@@ -69,7 +69,7 @@ dependencies:
   desktop_drop: ^0.4.4
   scroll_pos: ^0.4.0
   debounce_throttle: ^2.0.0
-  file_picker: ^8.0.1
+  file_picker: ^5.1.0
   flutter_svg: ^2.0.5
   flutter_improved_scrolling:
     # currently, we use flutter 3.10.0+.
@@ -94,7 +94,7 @@ dependencies:
     git:
       url: https://github.com/21pages/flutter_gpu_texture_renderer
       ref: 38951317afe79d953ab25733667bd96e172a80d3
-  permission_handler: ^10.2.0  
+  permission_handler: ^10.2.0
   uuid: ^3.0.7
   auto_size_text_field: ^2.2.1
   flex_color_picker: ^3.3.0
@@ -103,7 +103,7 @@ dependencies:
       url: https://github.com/21pages/dynamic_layouts.git
       ref: 24cb88413fa5181d949ddacbb30a65d5c459e7d9
   pull_down_button: ^0.9.3
-  device_info_plus: ^10.1.0
+  device_info_plus: ^9.1.0
   flutter_blue_plus: ^1.31.8
   qr_flutter: ^4.1.0
 
@@ -115,6 +115,7 @@ dev_dependencies:
   freezed: ^2.4.2
   flutter_lints: ^2.0.2
   ffigen: ^8.0.2
+
 # rerun: flutter pub run flutter_launcher_icons
 flutter_icons:
   image_path: "../res/icon.png"
