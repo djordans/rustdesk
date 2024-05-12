@@ -149,7 +149,8 @@ void runMainApp(bool startService) async {
     }
     windowManager.setOpacity(1);
     windowManager.setTitle(getWindowName());
-    windowManager.setResizable(!bind.isIncomingOnly());
+    // Do not use `windowManager.setResizable()` here.
+    setResizable(!bind.isIncomingOnly());
   });
 }
 
@@ -262,7 +263,7 @@ void runConnectionManagerScreen() async {
   } else {
     await showCmWindow(isStartup: true);
   }
-  windowManager.setResizable(false);
+  setResizable(false);
   // Start the uni links handler and redirect links to Native, not for Flutter.
   listenUniLinks(handleByFlutter: false);
 }
@@ -272,7 +273,7 @@ bool _isCmReadyToShow = false;
 showCmWindow({bool isStartup = false}) async {
   if (isStartup) {
     WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
-        size: kConnectionManagerWindowSizeClosedChat);
+        size: kConnectionManagerWindowSizeClosedChat, alwaysOnTop: true);
     await windowManager.waitUntilReadyToShow(windowOptions, null);
     bind.mainHideDocker();
     await Future.wait([
@@ -366,7 +367,7 @@ void runInstallPage() async {
 }
 
 WindowOptions getHiddenTitleBarWindowOptions(
-    {Size? size, bool center = false}) {
+    {Size? size, bool center = false, bool? alwaysOnTop}) {
   var defaultTitleBarStyle = TitleBarStyle.hidden;
   // we do not hide titlebar on win7 because of the frame overflow.
   if (kUseCompatibleUiMode) {
@@ -378,6 +379,7 @@ WindowOptions getHiddenTitleBarWindowOptions(
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: defaultTitleBarStyle,
+    alwaysOnTop: alwaysOnTop,
   );
 }
 
@@ -463,6 +465,9 @@ class _AppState extends State<App> {
                   child = botToastBuilder(context, child);
                   if (isDesktop && desktopType == DesktopType.main) {
                     child = keyListenerBuilder(context, child);
+                  }
+                  if (isLinux) {
+                    child = buildVirtualWindowFrame(context, child);
                   }
                   return child;
                 },

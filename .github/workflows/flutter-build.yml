@@ -178,7 +178,7 @@ jobs:
           python preprocess.py --arp -d ../../rustdesk
           nuget restore msi.sln
           msbuild msi.sln -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
-          mv ./Package/bin/x64/Release/en-us/Package.msi ../../SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-beta.msi
+          mv ./Package/bin/x64/Release/en-us/Package.msi ../../SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.msi
           sha256sum ../../SignOutput/rustdesk-*.msi
 
       - name: Sign rustdesk self-extracted file
@@ -1130,6 +1130,8 @@ jobs:
             fi
             echo $JOBS
             cargo build --lib $JOBS --features hwcodec,flutter,flutter_texture_render --release
+            rm -rf target/release/deps target/release/build
+            rm -rf ~/.cargo
 
             # Setup Flutter
             # disable git safe.directory
@@ -1161,6 +1163,7 @@ jobs:
                   bin/flutter-elinux precache --linux
                 popd
                 cp -R flutter/bin/cache/artifacts/engine/linux-x64/shader_lib flutter-elinux/flutter/bin/cache/artifacts/engine/linux-arm64
+                rm -rf flutter
               ;;
               x86_64)
                 flutter doctor -v
@@ -1228,43 +1231,14 @@ jobs:
         run: |
           sed -i "s/x86_64/${{ matrix.job.arch }}/g" res/PKGBUILD
           if [[ "${{ matrix.job.arch }}" == "aarch64" ]]; then
-            sed -i "s/linux\/x64/linux\/arm64/g" ./res/PKGBUILD
+            sed -i "s/x86_64/aarch64/g" ./res/PKGBUILD
           fi
 
       - name: Build archlinux package
         if: matrix.job.arch == 'x86_64' && env.UPLOAD_ARTIFACT == 'true'
         uses: rustdesk-org/arch-makepkg-action@master
         with:
-          packages: >
-            llvm
-            clang
-            libva
-            libvdpau
-            rust
-            gstreamer
-            unzip
-            git
-            cmake
-            gcc
-            curl
-            wget
-            nasm
-            zip
-            make
-            pkg-config
-            clang
-            gtk3
-            xdotool
-            libxcb
-            libxfixes
-            alsa-lib
-            pipewire
-            python
-            ttf-arphic-uming
-            libappindicator-gtk3
-            pam
-            gst-plugins-base
-            gst-plugin-pipewire
+          packages:
           scripts: |
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
 
@@ -1423,7 +1397,7 @@ jobs:
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export ARCH=armhf
             export CARGO_INCREMENTAL=0
-            cargo build --features inline --release --bins --jobs 3
+            cargo build --features inline --release --bins --jobs 1
             # package
             mkdir -p ./Release
             mv ./target/release/rustdesk ./Release/rustdesk
@@ -1476,7 +1450,7 @@ jobs:
 
       - name: Rename Binary
         run: |
-          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb rustdesk-${{ env.VERSION }}.deb
+          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb appimage/rustdesk.deb
 
       - name: Build appimage package
         shell: bash
@@ -1537,11 +1511,11 @@ jobs:
 
       - name: Rename Binary
         run: |
-          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb rustdesk-${{ env.VERSION }}.deb
+          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb flatpak/rustdesk.deb
 
       - uses: rustdesk-org/run-on-arch-action@amd64-support
         name: Build rustdesk flatpak package for ${{ matrix.job.arch }}
-        id: rpm
+        id: flatpak
         with:
           arch: ${{ matrix.job.arch }}
           distro: ${{ matrix.job.distro }}
