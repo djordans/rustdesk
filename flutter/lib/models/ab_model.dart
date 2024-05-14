@@ -647,6 +647,11 @@ class AbModel {
     return addressbooks.keys.toList();
   }
 
+  String getPassword(String id) {
+    final it = currentAbPeers.where((p0) => p0.id == id);
+    return it.first.password;
+  }
+
   Future<void> setCurrentName(String name) async {
     final oldName = _currentName.value;
     if (addressbooks.containsKey(name)) {
@@ -767,11 +772,6 @@ abstract class BaseAb {
   Future<String?> addPeers(List<Map<String, dynamic>> ps);
   removeHash(Map<String, dynamic> p) {
     p.remove('hash');
-  }
-
-  String getPassword(String id) {
-    Peer peerfind = peers.firstWhere((peer) => peer.id == id);
-    return peerfind.password;
   }
 
   removePassword(Map<String, dynamic> p) {

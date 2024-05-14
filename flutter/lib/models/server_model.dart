@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+//import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/main.dart';
@@ -415,11 +415,13 @@ class ServerModel with ChangeNotifier {
       WakelockPlus.disable();
     }
   }
+
   Future<void> restartService() async {
     await parent.target?.invokeMethod("init_service");
     // ugly is here, because for desktop, below is useless
     await bind.mainStartService();
   }
+
   Future<bool> setPermanentPassword(String newPW) async {
     await bind.mainSetPermanentPassword(password: newPW);
     await Future.delayed(Duration(milliseconds: 500));

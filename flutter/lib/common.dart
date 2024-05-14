@@ -26,8 +26,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+//import 'package:path_provider/path_provider.dart';
+//import 'package:permission_handler/permission_handler.dart';
 import '../consts.dart';
 import 'common/widgets/overlay.dart';
 import 'mobile/pages/file_manager_page.dart';
@@ -37,11 +37,11 @@ import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
 import 'models/input_model.dart';
 import 'models/model.dart';
 import 'models/platform_model.dart';
-import 'native/common.dart';
+import 'native/common.dart'
+    if (dart.library.html) 'package:flutter_hbb/web/common.dart';
 import 'package:flutter_hbb/native/win32.dart'
     if (dart.library.html) 'package:flutter_hbb/web/win32.dart';
-import 'package:flutter_hbb/native/common.dart'
-    if (dart.library.html) 'package:flutter_hbb/web/common.dart';
+//import 'package:flutter_hbb/native/common.dart'
 
 final globalKey = GlobalKey<NavigatorState>();
 final navigationBarKey = GlobalKey();
