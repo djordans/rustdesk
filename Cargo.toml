@@ -77,10 +77,7 @@ libloading = "0.8"
 fon = "0.6"
 zip = "0.6"
 shutdown_hooks = "0.1"
-nick-name = "0.1.2"
 totp-rs = { version = "5.4", default-features = false, features = ["gen_secret", "otpauth"] }
-sodiumoxide = "0.2.7"
-libsodium-sys = "0.2.7"
 
 [target.'cfg(not(any(target_os = "android", target_os = "linux")))'.dependencies]
 cpal = "0.15"
@@ -195,7 +192,7 @@ hound = "3.5"
 name = "RustDesk"
 identifier = "com.afflelou.rustdesk"
 icon = ["res/32x32.png", "res/128x128.png", "res/128x128@2x.png"]
-osx_minimum_system_version = "10.15"
+osx_minimum_system_version = "10.14"
 
 #https://github.com/johnthagen/min-sized-rust
 [profile.release]
