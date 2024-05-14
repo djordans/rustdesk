@@ -769,6 +769,11 @@ abstract class BaseAb {
     p.remove('hash');
   }
 
+  String getPassword(String id) {
+    Peer peerfind = peers.firstWhere((peer) => peer.id == id);
+    return peerfind.password;
+  }
+
   removePassword(Map<String, dynamic> p) {
     p.remove('password');
   }
@@ -1181,7 +1186,6 @@ class LegacyAb extends BaseAb {
     if (data['peers'] is List) {
       for (final peer in data['peers']) {
         peers.add(Peer.fromJson(peer));
-        
       }
     }
     if (isFull()) {
