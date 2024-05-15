@@ -23,7 +23,6 @@ use winapi::{
     },
 };
 
-use winapi::ctypes::c_void;
 
 lazy_static::lazy_static! {
     static ref CPU_USAGE_ONE_MINUTE: Arc<Mutex<Option<(f64, Instant)>>> = Arc::new(Mutex::new(None));
