@@ -681,7 +681,7 @@ version = "0.1.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fa55741ee90902547802152aaf3f8e5248aab7e21468089560d4c8840561146"
 dependencies = [
- "objc-sys",
+ "objc-sys 0.2.0-beta.2",
 ]
 
 [[package]]
@@ -691,7 +691,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8dd9e63c1744f755c2f60332b88de39d341e5e86239014ad839bd71c106dec42"
 dependencies = [
  "block-sys",
- "objc2-encode",
+ "objc2-encode 2.0.0-pre.2",
 ]
 
 [[package]]
@@ -803,7 +803,7 @@ dependencies = [
  "dispatch",
  "lazy_static",
  "libc",
- "objc2",
+ "objc2 0.3.0-beta.2",
  "os_info",
  "percent-encoding",
  "url",
@@ -1193,7 +1193,7 @@ name = "core-foundation-sys"
 version = "0.8.6"
 source = "git+https://github.com/madsmtm/core-foundation-rs.git?rev=7d593d016175755e492a92ef89edca68ac3bd5cd#7d593d016175755e492a92ef89edca68ac3bd5cd"
 dependencies = [
- "objc2-encode",
+ "objc2-encode 2.0.0-pre.2",
 ]
 
 [[package]]
@@ -1232,7 +1232,7 @@ dependencies = [
  "core-graphics-types 0.1.2 (git+https://github.com/madsmtm/core-foundation-rs.git?rev=7d593d016175755e492a92ef89edca68ac3bd5cd)",
  "foreign-types 0.5.0",
  "libc",
- "objc2-encode",
+ "objc2-encode 2.0.0-pre.2",
 ]
 
 [[package]]
@@ -1254,7 +1254,7 @@ dependencies = [
  "bitflags 1.3.2",
  "core-foundation 0.9.3 (git+https://github.com/madsmtm/core-foundation-rs.git?rev=7d593d016175755e492a92ef89edca68ac3bd5cd)",
  "libc",
- "objc2-encode",
+ "objc2-encode 2.0.0-pre.2",
 ]
 
 [[package]]
@@ -3892,6 +3892,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nick-name"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9860c725ce654683dbf1bb8264b9c9251027cb25f62ed016da15aeffb919ba84"
+dependencies = [
+ "cfg-if 1.0.0",
+ "jni 0.21.1",
+ "libc",
+ "ndk-context",
+ "objc2 0.5.1",
+ "thiserror",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "nix"
 version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4125,14 +4140,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b9834c1e95694a05a828b59f55fa2afec6288359cda67146126b3f90a55d7"
 
 [[package]]
+name = "objc-sys"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da284c198fb9b7b0603f8635185e85fbd5b64ee154b1ed406d489077de2d6d60"
+
+[[package]]
 name = "objc2"
 version = "0.3.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a49f420f16c8814efdcd6b4258664de9d9920cbc26b6f95d034a1ca9850ccc2c"
 dependencies = [
  "block2",
- "objc-sys",
- "objc2-encode",
+ "objc-sys 0.2.0-beta.2",
+ "objc2-encode 2.0.0-pre.2",
+]
+
+[[package]]
+name = "objc2"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4b25e1034d0e636cd84707ccdaa9f81243d399196b8a773946dcffec0401659"
+dependencies = [
+ "objc-sys 0.3.3",
+ "objc2-encode 4.0.1",
 ]
 
 [[package]]
@@ -4141,8 +4172,14 @@ version = "2.0.0-pre.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abfcac41015b00a120608fdaa6938c44cb983fee294351cc4bac7638b4e50512"
 dependencies = [
- "objc-sys",
+ "objc-sys 0.2.0-beta.2",
 ]
+
+[[package]]
+name = "objc2-encode"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88658da63e4cc2c8adb1262902cd6af51094df0488b760d6fd27194269c0950a"
 
 [[package]]
 name = "objc_exception"
@@ -5335,6 +5372,7 @@ dependencies = [
  "mac_address",
  "magnum-opus",
  "mouce",
+ "nick-name",
  "num_cpus",
  "objc",
  "objc_id",
