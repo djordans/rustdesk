@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:flutter_hbb/models/peer_tab_model.dart';
+//import 'package:flutter_hbb/models/peer_tab_model.dart';
 
 import '../../common.dart';
 import '../../models/peer_model.dart';
