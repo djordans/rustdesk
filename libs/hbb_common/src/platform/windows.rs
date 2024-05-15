@@ -23,6 +23,8 @@ use winapi::{
     },
 };
 
+use winapi::ctypes::c_void;
+
 lazy_static::lazy_static! {
     static ref CPU_USAGE_ONE_MINUTE: Arc<Mutex<Option<(f64, Instant)>>> = Arc::new(Mutex::new(None));
 }
@@ -83,7 +85,7 @@ pub fn start_cpu_performance_monitor() {
         }
         let mut _counter_type: DWORD = 0;
         let mut counter_value: PDH_FMT_COUNTERVALUE = std::mem::zeroed();
-        let event = CreateEventA(std::ptr::null_mut(), FALSE, FALSE, std::ptr::null() as _);
+        let event:*mut c_void = CreateEventA(std::ptr::null_mut(), FALSE, FALSE, std::ptr::null() as _);
         if event.is_null() {
             log::error!("CreateEventA failed");
             return;
