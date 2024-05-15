@@ -6,7 +6,7 @@ on:
   workflow_call:
 
 env:
-  FLUTTER_VERSION: "3.19.6"
+  FLUTTER_VERSION: "3.16.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503
 
@@ -19,7 +19,7 @@ jobs:
         job:
           - {
               target: x86_64-unknown-linux-gnu,
-              os: ubuntu-22.04,
+              os: ubuntu-20.04,
               extra-build-args: "",
             }
     steps:
@@ -38,8 +38,10 @@ jobs:
             git \
             g++ \
             libclang-10-dev \
+            libclang-dev \
             libgtk-3-dev \
             llvm-10-dev \
+            llvm-dev \
             nasm \
             ninja-build \
             pkg-config \
