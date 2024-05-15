@@ -29,7 +29,7 @@ use crate::{
 
 pub const RENDEZVOUS_TIMEOUT: u64 = 12_000;
 pub const CONNECT_TIMEOUT: u64 = 18_000;
-pub const READ_TIMEOUT: u64 = 1_000;
+pub const READ_TIMEOUT: u64 = 18_000;
 // https://github.com/quic-go/quic-go/issues/525#issuecomment-294531351
 // https://datatracker.ietf.org/doc/html/draft-hamilton-early-deployment-quic-00#section-6.10
 // 15 seconds is recommended by quic, though oneSIP recommend 25 seconds,
@@ -46,7 +46,7 @@ pub const CONFIG_OPTION_ALLOW_LINUX_HEADLESS: &str = "allow-linux-headless";
 
 #[cfg(target_os = "macos")]
 lazy_static::lazy_static! {
-    pub static ref ORG: RwLock<String> = RwLock::new("com.afflelou".to_owned());
+    pub static ref ORG: RwLock<String> = RwLock::new("com.carriez".to_owned());
 }
 
 type Size = (i32, i32, i32, i32);
@@ -1681,12 +1681,6 @@ pub struct AbPeer {
         deserialize_with = "deserialize_string",
         skip_serializing_if = "String::is_empty"
     )]
-    pub password: String,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_string",
-        skip_serializing_if = "String::is_empty"
-    )]
     pub alias: String,
     #[serde(default, deserialize_with = "deserialize_vec_string")]
     pub tags: Vec<String>,
@@ -1816,12 +1810,6 @@ pub struct GroupPeer {
         skip_serializing_if = "String::is_empty"
     )]
     pub platform: String,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_string",
-        skip_serializing_if = "String::is_empty"
-    )]
-    pub password: String,
     #[serde(
         default,
         deserialize_with = "deserialize_string",
