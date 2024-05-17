@@ -206,7 +206,7 @@ class ServiceNotRunningNotification extends StatelessWidget {
                   /*if (gFFI.userModel.userName.value.isEmpty && bind.mainGetLocalOption(key: "show-scam-warning") != "N") {
                     showScamWarning(context, serverModel);
                   } else {*/
-                    serverModel.toggleService();
+                  serverModel.toggleService();
                   /*}*/
                 },
                 label: Text(translate("Start service")))
@@ -552,7 +552,8 @@ class _PermissionCheckerState extends State<PermissionChecker> {
                       gFFI.userModel.userName.value.isEmpty &&
                       bind.mainGetLocalOption(key: "show-scam-warning") != "N"
                   ? () => showScamWarning(context, serverModel)
-                  :*/ serverModel.toggleService),
+                  :*/
+              serverModel.toggleService),
           PermissionRow(translate("Input Control"), serverModel.inputOk,
               serverModel.toggleInput),
           PermissionRow(translate("Transfer file"), serverModel.fileOk,
@@ -588,7 +589,11 @@ class PermissionRow extends StatelessWidget {
         title: Text(name),
         value: isOk,
         onChanged: (bool value) {
-          gFFI.serverModel.clients.isNotEmpty ?  null : onPressed() ;
+          if (value) {
+            onPressed();
+          } else {
+            gFFI.serverModel.clients.isNotEmpty ? null : onPressed();
+          }
         });
   }
 }
