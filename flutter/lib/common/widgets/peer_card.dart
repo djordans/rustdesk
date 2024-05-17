@@ -69,12 +69,14 @@ class _PeerCardState extends State<_PeerCard>
               peerTabModel.select(peer);
             } else {
               if (!isWebDesktop) {
-                connectInPeerTab(context, peer, widget.tab,password: peer.password);
+                connectInPeerTab(context, peer, widget.tab,
+                    password: peer.password);
               }
             }
           },
           onDoubleTap: isWebDesktop
-              ? () => connectInPeerTab(context, peer , password: peer.password, widget.tab)
+              ? () => connectInPeerTab(
+                  context, peer, password: peer.password, widget.tab)
               : null,
           onLongPress: () {
             peerTabModel.select(peer);
@@ -478,7 +480,7 @@ abstract class BasePeerCard extends StatelessWidget {
     String title, {
     bool isFileTransfer = false,
     bool isTcpTunneling = false,
-    bool isRDP = false, 
+    bool isRDP = false,
     String password = '',
   }) {
     return MenuEntryButton<String>(
@@ -519,7 +521,7 @@ abstract class BasePeerCard extends StatelessWidget {
       context,
       translate('Transfer file'),
       isFileTransfer: true,
-      //password: gFFI.abModel.getPeerPassword(id),
+      password: peer.password,
     );
   }
 
@@ -529,7 +531,7 @@ abstract class BasePeerCard extends StatelessWidget {
       context,
       translate('TCP tunneling'),
       isTcpTunneling: true,
-      //password: gFFI.abModel.getPeerPassword(id),
+      password: peer.password,
     );
   }
 
@@ -875,44 +877,44 @@ class RecentPeerCard extends BasePeerCard {
       _connectAction(context),
       if (!isWeb) _transferFileAction(context),
     ];
-    if(gFFI.userModel.isAdmin.isTrue){
+    if (gFFI.userModel.isAdmin.isTrue) {
       final List favs = (await bind.mainGetFav()).toList();
 
-    if (isDesktop && peer.platform != kPeerPlatformAndroid) {
-      menuItems.add(_tcpTunnelingAction(context));
-    }
-    // menuItems.add(await _openNewConnInOptAction(peer.id));
-    if (!isWeb) {
-      menuItems.add(await _forceAlwaysRelayAction(peer.id));
-    }
-    if (isWindows && peer.platform == kPeerPlatformWindows) {
-      menuItems.add(_rdpAction(context, peer.id));
-    }
-    if (isWindows) {
-      menuItems.add(_createShortCutAction(peer.id));
-    }
-    menuItems.add(MenuEntryDivider());
-    if (isDesktop || isWebDesktop) {
-      menuItems.add(_renameAction(peer.id));
-    }
-    if (await bind.mainPeerHasPassword(id: peer.id)) {
-      menuItems.add(_unrememberPasswordAction(peer.id));
-    }
+      if (isDesktop && peer.platform != kPeerPlatformAndroid) {
+        menuItems.add(_tcpTunnelingAction(context));
+      }
+      // menuItems.add(await _openNewConnInOptAction(peer.id));
+      if (!isWeb) {
+        menuItems.add(await _forceAlwaysRelayAction(peer.id));
+      }
+      if (isWindows && peer.platform == kPeerPlatformWindows) {
+        menuItems.add(_rdpAction(context, peer.id));
+      }
+      if (isWindows) {
+        menuItems.add(_createShortCutAction(peer.id));
+      }
+      menuItems.add(MenuEntryDivider());
+      if (isDesktop || isWebDesktop) {
+        menuItems.add(_renameAction(peer.id));
+      }
+      if (await bind.mainPeerHasPassword(id: peer.id)) {
+        menuItems.add(_unrememberPasswordAction(peer.id));
+      }
 
       if (!favs.contains(peer.id)) {
         menuItems.add(_addFavAction(peer.id));
       } else {
         menuItems.add(_rmFavAction(peer.id, () async {}));
       }
-    if (gFFI.userModel.userName.isNotEmpty) {
-      menuItems.add(_addToAb(peer));
-    }
-
-    menuItems.add(MenuEntryDivider());
-    menuItems.add(_removeAction(peer.id));
-     }
-    return menuItems;
+      if (gFFI.userModel.userName.isNotEmpty) {
+        menuItems.add(_addToAb(peer));
       }
+
+      menuItems.add(MenuEntryDivider());
+      menuItems.add(_removeAction(peer.id));
+    }
+    return menuItems;
+  }
 
   @protected
   @override
@@ -987,7 +989,7 @@ class DiscoveredPeerCard extends BasePeerCard {
       _connectAction(context),
       if (!isWeb) _transferFileAction(context),
     ];
-      final List favs = (await bind.mainGetFav()).toList();
+    final List favs = (await bind.mainGetFav()).toList();
 
     if (isDesktop && peer.platform != kPeerPlatformAndroid) {
       menuItems.add(_tcpTunnelingAction(context));
@@ -1004,11 +1006,11 @@ class DiscoveredPeerCard extends BasePeerCard {
       menuItems.add(_createShortCutAction(peer.id));
     }
 
-      if (!favs.contains(peer.id)) {
-        menuItems.add(_addFavAction(peer.id));
-      } else {
-        menuItems.add(_rmFavAction(peer.id, () async {}));
-      }
+    if (!favs.contains(peer.id)) {
+      menuItems.add(_addFavAction(peer.id));
+    } else {
+      menuItems.add(_rmFavAction(peer.id, () async {}));
+    }
 
     if (gFFI.userModel.userName.isNotEmpty) {
       menuItems.add(_addToAb(peer));
@@ -1157,7 +1159,8 @@ class AddressBookPeerCard extends BasePeerCard {
 }
 
 class MyGroupPeerCard extends BasePeerCard {
-  MyGroupPeerCard({required Peer peer, EdgeInsets? menuPadding, Key? key}) : super(
+  MyGroupPeerCard({required Peer peer, EdgeInsets? menuPadding, Key? key})
+      : super(
             peer: peer,
             tab: PeerTabIndex.group,
             menuPadding: menuPadding,
@@ -1390,7 +1393,9 @@ class TagPainter extends CustomPainter {
 void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
     {bool isFileTransfer = false,
     bool isTcpTunneling = false,
-    bool isRDP = false, String password = '', bool isSharedPassword = false}) async {
+    bool isRDP = false,
+    String password = '',
+    bool isSharedPassword = false}) async {
   if (tab == PeerTabIndex.ab) {
     // If recent peer's alias is empty, set it to ab's alias
     // Because the platform is not set, it may not take effect, but it is more important not to display if the connection is not successful
@@ -1408,7 +1413,7 @@ void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
       }
     }
   }
-  
+
   connect(context, peer.id,
       password: password,
       isSharedPassword: isSharedPassword,

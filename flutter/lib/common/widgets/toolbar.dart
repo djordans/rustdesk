@@ -138,7 +138,10 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
     v.add(
       TTextMenu(
           child: Text(translate('Transfer file')),
-          onPressed: () => connect(context, id, isFileTransfer: true)),
+          onPressed: () {
+            String password = gFFI.abModel.getPassword(id);
+            connect(context, id, isFileTransfer: true, password: password);
+          }),
     );
   }
   // tcpTunneling
@@ -146,7 +149,10 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
     v.add(
       TTextMenu(
           child: Text(translate('TCP tunneling')),
-          onPressed: () => connect(context, id, isTcpTunneling: true)),
+          onPressed: () {
+            String password = gFFI.abModel.getPassword(id);
+            connect(context, id, isTcpTunneling: true, password: password);
+          }),
     );
   }
   // note
