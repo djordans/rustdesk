@@ -42,7 +42,7 @@ const ENCRYPT_MAX_LEN: usize = 128;
 
 #[cfg(target_os = "macos")]
 lazy_static::lazy_static! {
-    pub static ref ORG: RwLock<String> = RwLock::new("com.afflelou".to_owned());
+    pub static ref ORG: RwLock<String> = RwLock::new("com.carriez".to_owned());
 }
 
 type Size = (i32, i32, i32, i32);

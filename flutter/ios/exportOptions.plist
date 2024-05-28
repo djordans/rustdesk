@@ -8,7 +8,7 @@
  <string>3VNFEMPM2Z</string>
  <key>provisioningProfiles</key>
  <dict>
- <key>com.afflelou.flutter_hbb</key>
+ <key>com.carriez.flutter_hbb</key>
  <string>rustdesk-ios-prod-app-store</string>
  </dict>
  </dict>
