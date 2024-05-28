@@ -244,7 +244,7 @@ class FfiModel with ChangeNotifier {
     handleMsgBox({
       'type': 'success',
       'title': 'Successful',
-      'text': 'Connected, waiting for image...',
+      'text': kMsgboxTextWaitingForImage,
       'link': '',
     }, sessionId, peerId);
     updatePrivacyMode(data.updatePrivacyMode, sessionId, peerId);
@@ -380,10 +380,20 @@ class FfiModel with ChangeNotifier {
         _handleSyncPeerOption(evt, peerId);
       } else if (name == 'follow_current_display') {
         handleFollowCurrentDisplay(evt, sessionId, peerId);
+      } else if (name == 'use_texture_render') {
+        _handleUseTextureRender(evt, sessionId, peerId);
       } else {
         debugPrint('Unknown event name: $name');
       }
     };
+  }
+
+  _handleUseTextureRender(
+      Map<String, dynamic> evt, SessionID sessionId, String peerId) {
+    parent.target?.imageModel.setUseTextureRender(evt['v'] == 'Y');
+    waitForFirstImage.value = true;
+    showConnectedWaitingForImage(parent.target!.dialogManager, sessionId,
+        'success', 'Successful', kMsgboxTextWaitingForImage);
   }
 
   _handleSyncPeerOption(Map<String, dynamic> evt, String peer) {
@@ -572,7 +582,7 @@ class FfiModel with ChangeNotifier {
       showElevationError(sessionId, type, title, text, dialogManager);
     } else if (type == 'relay-hint' || type == 'relay-hint2') {
       showRelayHintDialog(sessionId, type, title, text, dialogManager, peerId);
-    } else if (text == 'Connected, waiting for image...') {
+    } else if (text == kMsgboxTextWaitingForImage) {
       showConnectedWaitingForImage(dialogManager, sessionId, type, title, text);
     } else if (title == 'Privacy mode') {
       final hasRetry = evt['hasRetry'] == 'true';
@@ -1156,6 +1166,8 @@ class ImageModel with ChangeNotifier {
 
   late final SessionID sessionId;
 
+  bool _useTextureRender = false;
+
   WeakReference<FFI> parent;
 
   final List<Function(String)> callbacksOnFirstImage = [];
@@ -1163,6 +1175,8 @@ class ImageModel with ChangeNotifier {
   ImageModel(this.parent) {
     sessionId = parent.target!.sessionId;
   }
+
+  get useTextureRender => _useTextureRender;
 
   addCallbackOnFirstImage(Function(String) cb) => callbacksOnFirstImage.add(cb);
 
@@ -1208,6 +1222,7 @@ class ImageModel with ChangeNotifier {
         parent.target?.canvasModel.updateViewStyle();
       }
     }
+    _image?.dispose();
     _image = image;
     if (image != null) notifyListeners();
   }
@@ -1230,6 +1245,24 @@ class ImageModel with ChangeNotifier {
     final xscale = size.width / _image!.width;
     final yscale = size.height / _image!.height;
     return min(xscale, yscale) / 1.5;
+  }
+
+  updateUserTextureRender() {
+    final preValue = _useTextureRender;
+    _useTextureRender = isDesktop && bind.mainGetUseTextureRender();
+    if (preValue != _useTextureRender) {
+      notifyListeners();
+    }
+  }
+
+  setUseTextureRender(bool value) {
+    _useTextureRender = value;
+    notifyListeners();
+  }
+
+  void disposeImage() {
+    _image?.dispose();
+    _image = null;
   }
 }
 
@@ -1702,6 +1735,7 @@ class PredefinedCursor {
         final defaultImg = _image2!;
         // This function is called only one time, no need to care about the performance.
         Uint8List data = defaultImg.getBytes(order: img2.ChannelOrder.rgba);
+        _image?.dispose();
         _image = await img.decodeImageFromPixels(
             data, defaultImg.width, defaultImg.height, ui.PixelFormat.rgba8888);
 
@@ -1937,6 +1971,11 @@ class CursorModel with ChangeNotifier {
     notifyListeners();
   }
 
+  disposeImages() {
+    _images.forEach((_, v) => v.item1.dispose());
+    _images.clear();
+  }
+
   updateCursorData(Map<String, dynamic> evt) async {
     final id = int.parse(evt['id']);
     final hotx = double.parse(evt['hotx']);
@@ -1947,7 +1986,11 @@ class CursorModel with ChangeNotifier {
     final rgba = Uint8List.fromList(colors.map((s) => s as int).toList());
     final image = await img.decodeImageFromPixels(
         rgba, width, height, ui.PixelFormat.rgba8888);
+    if (image == null) {
+      return;
+    }
     if (await _updateCache(rgba, image, id, hotx, hoty, width, height)) {
+      _images[id]?.item1.dispose();
       _images[id] = Tuple3(image, hotx, hoty);
     }
 
@@ -2371,7 +2414,7 @@ class FFI {
           sessionId: sessionId, displays: Int32List.fromList(displays));
       ffiModel.pi.currentDisplay = display;
     }
-    if (connType == ConnType.defaultConn && useTextureRender) {
+    if (isDesktop && connType == ConnType.defaultConn) {
       textureModel.updateCurrentDisplay(display ?? 0);
     }
     final stream = bind.sessionStart(sessionId: sessionId, id: id);
@@ -2393,9 +2436,8 @@ class FFI {
       }
     }
 
-    final hasPixelBufferTextureRender = bind.mainHasPixelbufferTextureRender();
+    imageModel.updateUserTextureRender();
     final hasGpuTextureRender = bind.mainHasGpuTextureRender();
-
     final SimpleWrapper<bool> isToNewWindowNotified = SimpleWrapper(false);
     // Preserved for the rgba data.
     stream.listen((message) {
@@ -2444,7 +2486,7 @@ class FFI {
           }
         } else if (message is EventToUI_Rgba) {
           final display = message.field0;
-          if (hasPixelBufferTextureRender) {
+          if (imageModel.useTextureRender) {
             debugPrint("EventToUI_Rgba display:$display");
             textureModel.setTextureType(display: display, gpuTexture: false);
             onEvent2UIRgba();

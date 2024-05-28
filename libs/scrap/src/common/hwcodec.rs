@@ -14,14 +14,16 @@ use hbb_common::{
     serde_json, ResultType,
 };
 use hwcodec::{
-    common::DataFormat,
+    common::{
+        DataFormat,
+        Quality::{self, *},
+        RateControl::{self, *},
+    },
     ffmpeg::AVPixelFormat,
     ffmpeg_ram::{
         decode::{DecodeContext, DecodeFrame, Decoder},
         encode::{EncodeContext, EncodeFrame, Encoder},
         CodecInfo,
-        Quality::{self, *},
-        RateControl::{self, *},
     },
 };
 
@@ -29,10 +31,6 @@ const DEFAULT_PIXFMT: AVPixelFormat = AVPixelFormat::AV_PIX_FMT_NV12;
 pub const DEFAULT_TIME_BASE: [i32; 2] = [1, 30];
 const DEFAULT_GOP: i32 = i32::MAX;
 const DEFAULT_HW_QUALITY: Quality = Quality_Default;
-#[cfg(target_os = "android")]
-const DEFAULT_RC: RateControl = RC_VBR; // android cbr poor quality
-#[cfg(not(target_os = "android"))]
-const DEFAULT_RC: RateControl = RC_CBR;
 
 #[derive(Debug, Clone)]
 pub struct HwRamEncoderConfig {
@@ -46,12 +44,10 @@ pub struct HwRamEncoderConfig {
 
 pub struct HwRamEncoder {
     encoder: Encoder,
-    name: String,
     pub format: DataFormat,
     pub pixfmt: AVPixelFormat,
-    width: u32,
-    height: u32,
     bitrate: u32, //kbs
+    config: HwRamEncoderConfig,
 }
 
 impl EncoderApi for HwRamEncoder {
@@ -61,13 +57,14 @@ impl EncoderApi for HwRamEncoder {
     {
         match cfg {
             EncoderCfg::HWRAM(config) => {
+                let rc = Self::rate_control(&config);
                 let b = Self::convert_quality(&config.name, config.quality);
                 let base_bitrate = base_bitrate(config.width as _, config.height as _);
                 let mut bitrate = base_bitrate * b / 100;
                 if base_bitrate <= 0 {
                     bitrate = base_bitrate;
                 }
-                bitrate = Self::check_bitrate_range(&config.name, bitrate);
+                bitrate = Self::check_bitrate_range(&config, bitrate);
                 let gop = config.keyframe_interval.unwrap_or(DEFAULT_GOP as _) as i32;
                 let ctx = EncodeContext {
                     name: config.name.clone(),
@@ -80,7 +77,8 @@ impl EncoderApi for HwRamEncoder {
                     timebase: DEFAULT_TIME_BASE,
                     gop,
                     quality: DEFAULT_HW_QUALITY,
-                    rc: DEFAULT_RC,
+                    rc,
+                    q: -1,
                     thread_count: codec_thread_num(16) as _, // ffmpeg's thread_count is used for cpu
                 };
                 let format = match Encoder::format_from_name(config.name.clone()) {
@@ -95,12 +93,10 @@ impl EncoderApi for HwRamEncoder {
                 match Encoder::new(ctx.clone()) {
                     Ok(encoder) => Ok(HwRamEncoder {
                         encoder,
-                        name: config.name,
                         format,
                         pixfmt: ctx.pixfmt,
-                        width: ctx.width as _,
-                        height: ctx.height as _,
                         bitrate,
+                        config,
                     }),
                     Err(_) => Err(anyhow!(format!("Failed to create encoder"))),
                 }
@@ -172,13 +168,14 @@ impl EncoderApi for HwRamEncoder {
     }
 
     fn set_quality(&mut self, quality: crate::codec::Quality) -> ResultType<()> {
-        let b = Self::convert_quality(&self.name, quality);
-        let mut bitrate = base_bitrate(self.width as _, self.height as _) * b / 100;
+        let b = Self::convert_quality(&self.config.name, quality);
+        let mut bitrate = base_bitrate(self.config.width as _, self.config.height as _) * b / 100;
         if bitrate > 0 {
-            bitrate = Self::check_bitrate_range(&self.name, bitrate);
+            bitrate = Self::check_bitrate_range(&self.config, self.bitrate);
             self.encoder.set_bitrate(bitrate as _).ok();
             self.bitrate = bitrate;
         }
+        self.config.quality = quality;
         Ok(())
     }
 
@@ -189,17 +186,21 @@ impl EncoderApi for HwRamEncoder {
     fn support_abr(&self) -> bool {
         ["qsv", "vaapi", "mediacodec"]
             .iter()
-            .all(|&x| !self.name.contains(x))
+            .all(|&x| !self.config.name.contains(x))
     }
 
     fn support_changing_quality(&self) -> bool {
         ["vaapi", "mediacodec"]
             .iter()
-            .all(|&x| !self.name.contains(x))
+            .all(|&x| !self.config.name.contains(x))
     }
 
     fn latency_free(&self) -> bool {
-        !self.name.contains("mediacodec")
+        !self.config.name.contains("mediacodec")
+    }
+
+    fn is_hardware(&self) -> bool {
+        true
     }
 }
 
@@ -236,6 +237,14 @@ impl HwRamEncoder {
         }
     }
 
+    fn rate_control(config: &HwRamEncoderConfig) -> RateControl {
+        #[cfg(target_os = "android")]
+        if config.name.contains("mediacodec") {
+            return RC_VBR;
+        }
+        RC_CBR
+    }
+
     pub fn convert_quality(name: &str, quality: crate::codec::Quality) -> u32 {
         use crate::codec::Quality;
         let quality = match quality {
@@ -245,28 +254,31 @@ impl HwRamEncoder {
             Quality::Custom(b) => b,
         };
         let factor = if name.contains("mediacodec") {
-            if name.contains("h264") {
-                6
-            } else {
-                3
-            }
+            // https://stackoverflow.com/questions/26110337/what-are-valid-bit-rates-to-set-for-mediacodec?rq=3
+            5
         } else {
             1
         };
         quality * factor
     }
 
-    pub fn check_bitrate_range(name: &str, bitrate: u32) -> u32 {
+    pub fn check_bitrate_range(config: &HwRamEncoderConfig, bitrate: u32) -> u32 {
         #[cfg(target_os = "android")]
-        if name.contains("mediacodec") {
+        if config.name.contains("mediacodec") {
             let info = crate::android::ffi::get_codec_info();
             if let Some(info) = info {
-                if let Some(codec) = info.codecs.iter().find(|c| c.name == name && c.is_encoder) {
-                    if bitrate > codec.max_bitrate {
-                        return codec.max_bitrate;
-                    }
-                    if bitrate < codec.min_bitrate {
-                        return codec.min_bitrate;
+                if let Some(codec) = info
+                    .codecs
+                    .iter()
+                    .find(|c| Some(c.name.clone()) == config.mc_name && c.is_encoder)
+                {
+                    if codec.max_bitrate > codec.min_bitrate {
+                        if bitrate > codec.max_bitrate {
+                            return codec.max_bitrate;
+                        }
+                        if bitrate < codec.min_bitrate {
+                            return codec.min_bitrate;
+                        }
                     }
                 }
             }
@@ -508,7 +520,8 @@ pub fn check_available_hwcodec() {
         timebase: DEFAULT_TIME_BASE,
         gop: DEFAULT_GOP,
         quality: DEFAULT_HW_QUALITY,
-        rc: DEFAULT_RC,
+        rc: RC_CBR,
+        q: -1,
         thread_count: 4,
     };
     #[cfg(feature = "vram")]
