@@ -60,3 +60,6 @@ resources/RustDeskIddDriver/RustDeskIddDriver.inf
 # ===
 vcpkg_installed
 resources/WindowInjection.dll
+
+flutter/lib/generated_plugin_registrant.dart
+libsciter.dylib
