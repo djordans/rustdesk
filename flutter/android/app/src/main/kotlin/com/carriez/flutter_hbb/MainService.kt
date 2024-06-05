@@ -64,9 +64,9 @@ class MainService : Service() {
 
     @Keep
     @RequiresApi(Build.VERSION_CODES.N)
-    fun rustPointerInput(kind: Int, mask: Int, x: Int, y: Int) {
+    fun rustPointerInput(kind: String, mask: Int, x: Int, y: Int) {
         // turn on screen with LIFT_DOWN when screen off
-        if (!powerManager.isInteractive && (kind == 0 || mask == LIFT_DOWN)) {
+        if (!powerManager.isInteractive && (kind == "touch" || mask == LIFT_DOWN)) {
             if (wakeLock.isHeld) {
                 Log.d(logTag, "Turn on Screen, WakeLock release")
                 wakeLock.release()
@@ -75,10 +75,10 @@ class MainService : Service() {
             wakeLock.acquire(5000)
         } else {
             when (kind) {
-                0 -> { // touch
+                "touch" -> {
                     InputService.ctx?.onTouchInput(mask, x, y)
                 }
-                1 -> { // mouse
+                "mouse" -> {
                     InputService.ctx?.onMouseInput(mask, x, y)
                 }
                 else -> {

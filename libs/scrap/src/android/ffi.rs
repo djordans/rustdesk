@@ -234,13 +234,13 @@ pub fn call_main_service_pointer_input(kind: &str, mask: i32, x: i32, y: i32) ->
         MAIN_SERVICE_CTX.read().unwrap().as_ref(),
     ) {
         let mut env = jvm.attach_current_thread_as_daemon()?;
-        let kind = if kind == "touch" { 0 } else { 1 };
+        let kind = env.new_string(kind)?;
         env.call_method(
             ctx,
             "rustPointerInput",
             "(Ljava/lang/String;III)V",
             &[
-                JValue::Int(kind),
+                JValue::Object(&JObject::from(kind)),
                 JValue::Int(mask),
                 JValue::Int(x),
                 JValue::Int(y),
