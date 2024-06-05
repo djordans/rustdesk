@@ -202,7 +202,7 @@ class ServerModel with ChangeNotifier {
           await bind.mainGetOption(key: kOptionEnableFileTransfer);
       _fileOk = fileOption.isEmpty;
     }
-
+    await checkRequestNotificationPermission();
     notifyListeners();
   }
 
