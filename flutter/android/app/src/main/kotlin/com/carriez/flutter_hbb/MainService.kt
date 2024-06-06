@@ -125,6 +125,7 @@ class MainService : Service() {
                     }
                     if (authorized) {
                         if (!isFileTransfer && !isStart) {
+                            FFI.refreshScreen()
                             startCapture()
                         }
                         onClientAuthorizedNotification(id, type, username, peerId)
