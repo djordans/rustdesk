@@ -112,6 +112,7 @@ class FfiModel with ChangeNotifier {
   RxBool waitForImageDialogShow = true.obs;
   Timer? waitForImageTimer;
   RxBool waitForFirstImage = true.obs;
+  bool isRefreshing = false;
 
   Rect? get rect => _rect;
   bool get isOriginalResolutionSet =>
@@ -392,6 +393,7 @@ class FfiModel with ChangeNotifier {
       Map<String, dynamic> evt, SessionID sessionId, String peerId) {
     parent.target?.imageModel.setUseTextureRender(evt['v'] == 'Y');
     waitForFirstImage.value = true;
+    isRefreshing = true;
     showConnectedWaitingForImage(parent.target!.dialogManager, sessionId,
         'success', 'Successful', kMsgboxTextWaitingForImage);
   }
@@ -677,7 +679,7 @@ class FfiModel with ChangeNotifier {
     );
     waitForImageDialogShow.value = true;
     waitForImageTimer = Timer(Duration(milliseconds: 1500), () {
-      if (waitForFirstImage.isTrue) {
+      if (waitForFirstImage.isTrue && !isRefreshing) {
         bind.sessionInputOsPassword(sessionId: sessionId, value: '');
       }
     });
@@ -795,6 +797,7 @@ class FfiModel with ChangeNotifier {
       if (displays.isNotEmpty) {
         _reconnects = 1;
         waitForFirstImage.value = true;
+        isRefreshing = false;
       }
       Map<String, dynamic> features = json.decode(evt['features']);
       _pi.features.privacyMode = features['privacy_mode'] == 1;
@@ -1216,10 +1219,6 @@ class ImageModel with ChangeNotifier {
       }
       if (parent.target != null) {
         await initializeCursorAndCanvas(parent.target!);
-      }
-      if (parent.target?.ffiModel.isPeerAndroid ?? false) {
-        bind.sessionSetViewStyle(sessionId: sessionId, value: 'adaptive');
-        parent.target?.canvasModel.updateViewStyle();
       }
     }
     _image?.dispose();
@@ -1738,7 +1737,10 @@ class PredefinedCursor {
         _image?.dispose();
         _image = await img.decodeImageFromPixels(
             data, defaultImg.width, defaultImg.height, ui.PixelFormat.rgba8888);
-
+        if (_image == null) {
+          print("decodeImageFromPixels failed, pre-defined cursor $id");
+          return;
+        }
         double scale = 1.0;
         if (isWindows) {
           data = _image2!.getBytes(order: img2.ChannelOrder.bgra);
@@ -2105,7 +2107,7 @@ class CursorModel with ChangeNotifier {
     _x = -10000;
     _x = -10000;
     _image = null;
-    _images.clear();
+    disposeImages();
 
     _clearCache();
     _cache = null;
@@ -2348,6 +2350,7 @@ class FFI {
   /// Mobile reuse FFI
   void mobileReset() {
     ffiModel.waitForFirstImage.value = true;
+    ffiModel.isRefreshing = false;
     ffiModel.waitForImageDialogShow.value = true;
     ffiModel.waitForImageTimer?.cancel();
     ffiModel.waitForImageTimer = null;
