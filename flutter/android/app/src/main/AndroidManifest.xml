@@ -106,6 +106,11 @@ https://developer.android.com/about/versions/12/features/bluetooth-permissions -
             android:name=".MainService"
             android:enabled="true"
             android:foregroundServiceType="mediaProjection" />
+
+        <service
+            android:name=".FloatingWindowService"
+            android:enabled="true" />
+
         <!--
  Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
