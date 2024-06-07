@@ -207,9 +207,9 @@ class InputService : AccessibilityService() {
                 startGesture(mouseX, mouseY)
             }
             TOUCH_PAN_END -> {
-                endGesture(mouseX, mouseY)
                 mouseX = max(0, kotlin.math.min(_x, SCREEN_INFO.width)) * SCREEN_INFO.scale
                 mouseY = max(0, kotlin.math.min(_y, SCREEN_INFO.height)) * SCREEN_INFO.scale
+                endGesture(mouseX, mouseY)
             }
             else -> {}
         }
