@@ -77,8 +77,8 @@ class InputService : AccessibilityService() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     fun onMouseInput(mask: Int, _x: Int, _y: Int) {
-        val x = max(0, min(_x, SCREEN_INFO.width))
-        val y = max(0, min(_y, SCREEN_INFO.height))
+        val x = max(0, kotlin.math.min(_x, SCREEN_INFO.width))
+        val y = max(0, kotlin.math.min(_y, SCREEN_INFO.height))
 
         if (mask == 0 || mask == LIFT_MOVE) {
             val oldX = mouseX
@@ -195,21 +195,21 @@ class InputService : AccessibilityService() {
     fun onTouchInput(mask: Int, _x: Int, _y: Int) {
         when (mask) {
             TOUCH_PAN_UPDATE -> {
-                mouseX -= min(_x, SCREEN_INFO.width) * SCREEN_INFO.scale
-                mouseY -= min(_y, SCREEN_INFO.height) * SCREEN_INFO.scale
+                mouseX -= kotlin.math.min(_x, SCREEN_INFO.width) * SCREEN_INFO.scale
+                mouseY -= kotlin.math.min(_y, SCREEN_INFO.height) * SCREEN_INFO.scale
                 mouseX = max(0, mouseX);
                 mouseY = max(0, mouseY);
                 continueGesture(mouseX, mouseY)
             }
             TOUCH_PAN_START -> {
-                mouseX = max(0, min(_x, SCREEN_INFO.width)) * SCREEN_INFO.scale
-                mouseY = max(0, _y) * SCREEN_INFO.scale
+                mouseX = max(0, kotlin.math.min(_x, SCREEN_INFO.width)) * SCREEN_INFO.scale
+                mouseY = max(0, kotlin.math.min(_y, SCREEN_INFO.height)) * SCREEN_INFO.scale
                 startGesture(mouseX, mouseY)
             }
             TOUCH_PAN_END -> {
                 endGesture(mouseX, mouseY)
-                mouseX = max(0, min(_x, SCREEN_INFO.width)) * SCREEN_INFO.scale
-                mouseY = max(0, min(_y, SCREEN_INFO.height)) * SCREEN_INFO.scale
+                mouseX = max(0, kotlin.math.min(_x, SCREEN_INFO.width)) * SCREEN_INFO.scale
+                mouseY = max(0, kotlin.math.min(_y, SCREEN_INFO.height)) * SCREEN_INFO.scale
             }
             else -> {}
         }
