@@ -525,6 +525,7 @@ fn run(vs: VideoService) -> ResultType<()> {
         #[cfg(all(windows, feature = "vram"))]
         if c.is_gdi() && encoder.input_texture() {
             log::info!("changed to gdi when using vram");
+            VRamEncoder::set_fallback_gdi(display_idx, true);
             bail!("SWITCH");
         }
         check_privacy_mode_changed(&sp, c.privacy_mode_id)?;
@@ -565,6 +566,10 @@ fn run(vs: VideoService) -> ResultType<()> {
                 }
                 #[cfg(windows)]
                 {
+                    #[cfg(feature = "vram")]
+                    if try_gdi == 1 && !c.is_gdi() {
+                        VRamEncoder::set_fallback_gdi(display_idx, false);
+                    }
                     try_gdi = 0;
                 }
                 Ok(())

@@ -2465,19 +2465,20 @@ class _DraggableShowHideState extends State<_DraggableShowHide> {
                 ),
               ),
             )),
-        if (!isMacOS) Obx(() => Offstage(
-              offstage: isFullscreen.isFalse,
-              child: TextButton(
-                onPressed: () => widget.setMinimize(),
-                child: Tooltip(
-                  message: translate('Minimize'),
-                  child: Icon(
-                    Icons.remove,
-                    size: iconSize,
+        if (!isMacOS)
+          Obx(() => Offstage(
+                offstage: isFullscreen.isFalse,
+                child: TextButton(
+                  onPressed: () => widget.setMinimize(),
+                  child: Tooltip(
+                    message: translate('Minimize'),
+                    child: Icon(
+                      Icons.remove,
+                      size: iconSize,
+                    ),
                   ),
                 ),
-              ),
-            )),
+              )),
         TextButton(
           onPressed: () => setState(() {
             widget.show.value = !widget.show.value;

@@ -364,14 +364,11 @@ class MainActivity : FlutterActivity() {
             Log.d(logTag, "onVoiceCallClosed success")
         }
     }
-    private var disableFloatingWindow: Boolean? = null
+
     override fun onStop() {
         super.onStop()
-        if (disableFloatingWindow == null) {
-            disableFloatingWindow = FFI.getLocalOption("disable-floating-window") == "Y"
-            Log.d(logTag, "disableFloatingWindow: $disableFloatingWindow")
-        }
-        if (disableFloatingWindow != true && MainService.isReady) {
+        val disableFloatingWindow = FFI.getLocalOption("disable-floating-window") == "Y"
+        if (!disableFloatingWindow && MainService.isReady) {
             startService(Intent(this, FloatingWindowService::class.java))
         }
     }
