@@ -1435,7 +1435,7 @@ bool option2bool(String option, String value) {
   if (option.startsWith("enable-")) {
     res = value != "N";
   } else if (option.startsWith("allow-") ||
-      option == "stop-service" ||
+      option == kOptionStopService ||
       option == kOptionDirectServer ||
       option == kOptionForceAlwaysRelay) {
     res = value == "Y";
@@ -1451,7 +1451,7 @@ String bool2option(String option, bool b) {
   if (option.startsWith('enable-')) {
     res = b ? defaultOptionYes : 'N';
   } else if (option.startsWith('allow-') ||
-      option == "stop-service" ||
+      option == kOptionStopService ||
       option == kOptionDirectServer ||
       option == kOptionForceAlwaysRelay) {
     res = b ? 'Y' : defaultOptionNo;
@@ -1488,9 +1488,9 @@ bool mainGetPeerBoolOptionSync(String id, String key) {
   return option2bool(key, bind.mainGetPeerOptionSync(id: id, key: key));
 }
 
-mainSetPeerBoolOptionSync(String id, String key, bool v) {
-  bind.mainSetPeerOptionSync(id: id, key: key, value: bool2option(key, v));
-}
+// Don't use `option2bool()` and `bool2option()` to convert the session option.
+// Use `sessionGetToggleOption()` and `sessionToggleOption()` instead.
+// Because all session options use `Y` and `<Empty>` as values.
 
 Future<bool> matchPeer(String searchText, Peer peer) async {
   if (searchText.isEmpty) {
@@ -2866,7 +2866,7 @@ Future<void> start_service(bool is_start) async {
       !isMacOS ||
       await callMainCheckSuperUserPermission();
   if (checked) {
-    bind.mainSetOption(key: "stop-service", value: is_start ? "" : "Y");
+    mainSetBoolOption(kOptionStopService, !is_start);
   }
 }
 
