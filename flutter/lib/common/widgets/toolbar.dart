@@ -602,7 +602,7 @@ Future<List<TToggleMenu>> toolbarDisplayToggle(
         onChanged: (value) {
           if (value == null) return;
           bind.sessionSetDisplaysAsIndividualWindows(
-              sessionId: sessionId, value: value ? 'Y' : '');
+              sessionId: sessionId, value: value ? 'Y' : 'N');
         },
         child: Text(translate('Show displays as individual windows'))));
   }
@@ -619,7 +619,7 @@ Future<List<TToggleMenu>> toolbarDisplayToggle(
         onChanged: (value) {
           if (value == null) return;
           bind.sessionSetUseAllMyDisplaysForTheRemoteSession(
-              sessionId: sessionId, value: value ? 'Y' : '');
+              sessionId: sessionId, value: value ? 'Y' : 'N');
         },
         child: Text(translate('Use all my displays for the remote session'))));
   }
