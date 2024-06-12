@@ -302,11 +302,7 @@ pub fn core_main() -> Option<Vec<String>> {
             }
             return None;
         } else if args[0] == "--get-id" {
-            if crate::platform::is_installed() && is_root() {
-                println!("{}", crate::ipc::get_id());
-            } else {
-                println!("Installation and administrative privileges required!");
-            }
+            println!("{}", crate::ipc::get_id());
             return None;
         } else if args[0] == "--set-id" {
             if args.len() == 2 {
@@ -415,7 +411,7 @@ pub fn core_main() -> Option<Vec<String>> {
             return None;
         } else if args[0] == "--check-hwcodec-config" {
             #[cfg(feature = "hwcodec")]
-            scrap::hwcodec::check_available_hwcodec();
+            crate::ipc::hwcodec_process();
             return None;
         } else if args[0] == "--cm" {
             // call connection manager to establish connections
