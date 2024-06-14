@@ -1705,12 +1705,12 @@ const _defaultCursorPng =
 const kPreForbiddenCursorId = "-2";
 final preForbiddenCursor = PredefinedCursor(
   png: _forbiddenCursorPng,
-  id: -2,
+  id: kPreForbiddenCursorId,
 );
 const kPreDefaultCursorId = "-1";
 final preDefaultCursor = PredefinedCursor(
   png: _defaultCursorPng,
-  id: -1,
+  id: kPreDefaultCursorId,
   hotxGetter: (double w) => w / 2,
   hotyGetter: (double h) => h / 2,
 );
