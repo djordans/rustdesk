@@ -592,7 +592,6 @@ Future<List<TToggleMenu>> toolbarDisplayToggle(
   if (pi.isSupportMultiDisplay &&
       PrivacyModeState.find(id).isEmpty &&
       pi.displaysCount.value > 1 &&
-      bind.mainGetUseTextureRender() &&
       bind.mainGetUserDefaultOption(key: kKeyShowMonitorsToolbar) == 'Y') {
     final value =
         bind.sessionGetDisplaysAsIndividualWindows(sessionId: ffi.sessionId) ==
@@ -608,9 +607,7 @@ Future<List<TToggleMenu>> toolbarDisplayToggle(
   }
 
   final isMultiScreens = !isWeb && (await getScreenRectList()).length > 1;
-  if (bind.mainGetUseTextureRender() &&
-      pi.isSupportMultiDisplay &&
-      isMultiScreens) {
+  if (pi.isSupportMultiDisplay && isMultiScreens) {
     final value = bind.sessionGetUseAllMyDisplaysForTheRemoteSession(
             sessionId: ffi.sessionId) ==
         'Y';

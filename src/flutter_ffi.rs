@@ -102,19 +102,16 @@ pub fn peer_get_default_sessions_count(id: String) -> SyncReturn<usize> {
     SyncReturn(sessions::get_session_count(id, ConnType::DEFAULT_CONN))
 }
 
-pub fn session_add_existed_sync(id: String, session_id: SessionID) -> SyncReturn<String> {
-    if let Err(e) = session_add_existed(id.clone(), session_id) {
+pub fn session_add_existed_sync(
+    id: String,
+    session_id: SessionID,
+    displays: Vec<i32>,
+) -> SyncReturn<String> {
+    if let Err(e) = session_add_existed(id.clone(), session_id, displays) {
         SyncReturn(format!("Failed to add session with id {}, {}", &id, e))
     } else {
         SyncReturn("".to_owned())
     }
-}
-
-pub fn session_try_add_display(session_id: SessionID, displays: Vec<i32>) -> SyncReturn<()> {
-    if let Some(session) = sessions::get_session_by_session_id(&session_id) {
-        session.capture_displays(displays, vec![], vec![]);
-    }
-    SyncReturn(())
 }
 
 pub fn session_add_sync(
@@ -151,6 +148,23 @@ pub fn session_start(
     id: String,
 ) -> ResultType<()> {
     session_start_(&session_id, &id, events2ui)
+}
+
+pub fn session_start_with_displays(
+    events2ui: StreamSink<EventToUI>,
+    session_id: SessionID,
+    id: String,
+    displays: Vec<i32>,
+) -> ResultType<()> {
+    session_start_(&session_id, &id, events2ui)?;
+
+    if let Some(session) = sessions::get_session_by_session_id(&session_id) {
+        session.capture_displays(displays.clone(), vec![], vec![]);
+        for display in displays {
+            session.refresh_video(display as _);
+        }
+    }
+    Ok(())
 }
 
 pub fn session_get_remember(session_id: SessionID) -> Option<bool> {
