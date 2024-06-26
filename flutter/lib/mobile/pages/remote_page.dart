@@ -55,6 +55,9 @@ class _RemotePageState extends State<RemotePage> {
   InputModel get inputModel => gFFI.inputModel;
   SessionID get sessionId => gFFI.sessionId;
 
+  final TextEditingController _textController =
+      TextEditingController(text: initText);
+
   @override
   void initState() {
     super.initState();
@@ -82,13 +85,14 @@ class _RemotePageState extends State<RemotePage> {
         .changeCurrentKey(MessageKey(widget.id, ChatModel.clientModeID));
     gFFI.chatModel.voiceCallStatus.value = VoiceCallStatus.notStarted;
     _blockableOverlayState.applyFfi(gFFI);
+    gFFI.dialogManager.loadMobileActionsOverlayVisible();
   }
 
   @override
   Future<void> dispose() async {
     // https://github.com/flutter/flutter/issues/64935
     super.dispose();
-    gFFI.dialogManager.hideMobileActionsOverlay();
+    gFFI.dialogManager.hideMobileActionsOverlay(store: false);
     gFFI.inputModel.listenToMouse(false);
     gFFI.imageModel.disposeImage();
     gFFI.cursorModel.disposeImages();
@@ -144,37 +148,59 @@ class _RemotePageState extends State<RemotePage> {
     setState(() {});
   }
 
-  // handle mobile virtual keyboard
-  void handleSoftKeyboardInput(String newValue) {
+  void _handleIOSSoftKeyboardInput(String newValue) {
     var oldValue = _value;
     _value = newValue;
-    if (isIOS) {
-      var i = newValue.length - 1;
-      for (; i >= 0 && newValue[i] != '\1'; --i) {}
-      var j = oldValue.length - 1;
-      for (; j >= 0 && oldValue[j] != '\1'; --j) {}
-      if (i < j) j = i;
-      newValue = newValue.substring(j + 1);
-      oldValue = oldValue.substring(j + 1);
-      var common = 0;
-      for (;
-          common < oldValue.length &&
-              common < newValue.length &&
-              newValue[common] == oldValue[common];
-          ++common) {}
-      for (i = 0; i < oldValue.length - common; ++i) {
-        inputModel.inputKey('VK_BACK');
-      }
-      if (newValue.length > common) {
-        var s = newValue.substring(common);
-        if (s.length > 1) {
-          bind.sessionInputString(sessionId: sessionId, value: s);
-        } else {
-          inputChar(s);
-        }
-      }
-      return;
+    var i = newValue.length - 1;
+    for (; i >= 0 && newValue[i] != '\1'; --i) {}
+    var j = oldValue.length - 1;
+    for (; j >= 0 && oldValue[j] != '\1'; --j) {}
+    if (i < j) j = i;
+    var subNewValue = newValue.substring(j + 1);
+    var subOldValue = oldValue.substring(j + 1);
+
+    // get common prefix of subNewValue and subOldValue
+    var common = 0;
+    for (;
+        common < subOldValue.length &&
+            common < subNewValue.length &&
+            subNewValue[common] == subOldValue[common];
+        ++common) {}
+
+    // get newStr from subNewValue
+    var newStr = "";
+    if (subNewValue.length > common) {
+      newStr = subNewValue.substring(common);
     }
+
+    // Set the value to the old value and early return if is still composing. (1 && 2)
+    // 1. The composing range is valid
+    // 2. The new string is shorter than the composing range.
+    if (_textController.value.isComposingRangeValid) {
+      final composingLength = _textController.value.composing.end -
+          _textController.value.composing.start;
+      if (composingLength > newStr.length) {
+        _value = oldValue;
+        return;
+      }
+    }
+
+    // Delete the different part in the old value.
+    for (i = 0; i < subOldValue.length - common; ++i) {
+      inputModel.inputKey('VK_BACK');
+    }
+
+    // Input the new string.
+    if (newStr.length > 1) {
+      bind.sessionInputString(sessionId: sessionId, value: newStr);
+    } else {
+      inputChar(newStr);
+    }
+  }
+
+  void _handleNonIOSSoftKeyboardInput(String newValue) {
+    var oldValue = _value;
+    _value = newValue;
     if (oldValue.isNotEmpty &&
         newValue.isNotEmpty &&
         oldValue[0] == '\1' &&
@@ -213,6 +239,15 @@ class _RemotePageState extends State<RemotePage> {
     }
   }
 
+  // handle mobile virtual keyboard
+  void handleSoftKeyboardInput(String newValue) {
+    if (isIOS) {
+      _handleIOSSoftKeyboardInput(newValue);
+    } else {
+      _handleNonIOSSoftKeyboardInput(newValue);
+    }
+  }
+
   void inputChar(String char) {
     if (char == '\n') {
       char = 'VK_RETURN';
@@ -226,6 +261,7 @@ class _RemotePageState extends State<RemotePage> {
     gFFI.invokeMethod("enable_soft_keyboard", true);
     // destroy first, so that our _value trick can work
     _value = initText;
+    _textController.text = _value;
     setState(() => _showEdit = false);
     _timer?.cancel();
     _timer = Timer(kMobileDelaySoftKeyboard, () {
@@ -418,17 +454,21 @@ class _RemotePageState extends State<RemotePage> {
                   (isWeb
                       ? []
                       : <Widget>[
-                          IconButton(
-                            color: Colors.white,
-                            icon: isAndroid
-                                ? SvgPicture.asset('assets/chat.svg',
-                                    colorFilter: ColorFilter.mode(
-                                        Colors.white, BlendMode.srcIn))
-                                : Icon(Icons.message),
-                            onPressed: () => isAndroid
-                                ? showChatOptions(widget.id)
-                                : onPressedTextChat(widget.id),
-                          )
+                          futureBuilder(
+                              future: gFFI.invokeMethod(
+                                  "get_value", "KEY_IS_SUPPORT_VOICE_CALL"),
+                              hasData: (isSupportVoiceCall) => IconButton(
+                                    color: Colors.white,
+                                    icon: isAndroid && isSupportVoiceCall
+                                        ? SvgPicture.asset('assets/chat.svg',
+                                            colorFilter: ColorFilter.mode(
+                                                Colors.white, BlendMode.srcIn))
+                                        : Icon(Icons.message),
+                                    onPressed: () =>
+                                        isAndroid && isSupportVoiceCall
+                                            ? showChatOptions(widget.id)
+                                            : onPressedTextChat(widget.id),
+                                  ))
                         ]) +
                   [
                     IconButton(
@@ -486,7 +526,7 @@ class _RemotePageState extends State<RemotePage> {
                       autofocus: true,
                       focusNode: _mobileFocusNode,
                       maxLines: null,
-                      initialValue: _value,
+                      controller: _textController,
                       // trick way to make backspace work always
                       keyboardType: TextInputType.multiline,
                       onChanged: handleSoftKeyboardInput,
@@ -564,9 +604,11 @@ class _RemotePageState extends State<RemotePage> {
           child: Text(translate(label), style: labelStyle),
           trailingIcon: Transform.scale(
             scale: (isDesktop || isWebDesktop) ? 0.8 : 1,
-            child: IconButton(
-              onPressed: onPressed,
-              icon: icon,
+            child: IgnorePointer(
+              child: IconButton(
+                onPressed: null,
+                icon: icon,
+              ),
             ),
           ),
           onPressed: onPressed,
@@ -885,7 +927,7 @@ class CursorPaint extends StatelessWidget {
     final m = Provider.of<CursorModel>(context);
     final c = Provider.of<CanvasModel>(context);
     final adjust = gFFI.cursorModel.adjustForKeyboard();
-    var s = c.scale;
+    final s = c.scale;
     double hotx = m.hotx;
     double hoty = m.hoty;
     if (m.image == null) {
@@ -894,12 +936,26 @@ class CursorPaint extends StatelessWidget {
         hoty = preDefaultCursor.image!.height / 2;
       }
     }
+
+    final image = m.image ?? preDefaultCursor.image;
+    if (image == null) {
+      return Offstage();
+    }
+
+    final minSize = 24.0;
+    double mins =
+        minSize / (image.width > image.height ? image.width : image.height);
+    double factor = 1.0;
+    if (s < mins) {
+      factor = s / mins;
+    }
+    final s2 = s < mins ? mins : s;
     return CustomPaint(
       painter: ImagePainter(
-          image: m.image ?? preDefaultCursor.image,
-          x: m.x * s - hotx + c.x,
-          y: m.y * s - hoty + c.y - adjust,
-          scale: 1),
+          image: image,
+          x: (m.x - hotx) * factor + c.x / s2,
+          y: (m.y - hoty) * factor + (c.y - adjust) / s2,
+          scale: s2),
     );
   }
 }
