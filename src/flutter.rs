@@ -44,7 +44,7 @@ pub(crate) const APP_TYPE_CM: &str = "main";
 pub type FlutterSession = Arc<Session<FlutterHandler>>;
 
 lazy_static::lazy_static! {
-    pub(crate) static ref CUR_SESSION_ID: RwLock<SessionID> = Default::default();
+    pub(crate) static ref CUR_SESSION_ID: RwLock<SessionID> = Default::default(); // For desktop only
     static ref GLOBAL_EVENT_STREAM: RwLock<HashMap<String, StreamSink<String>>> = Default::default(); // rust to dart event channel
 }
 
@@ -1069,12 +1069,9 @@ impl FlutterHandler {
         // 1. "display 1" will not send the event.
         // 2. "displays 0&1" will not send the event. Because it uses texutre render for now.
         if !is_sent {
-            self.display_rgbas
-                .write()
-                .unwrap()
-                .get_mut(&display)
-                .unwrap()
-                .valid = false;
+            if let Some(rgba_data) = self.display_rgbas.write().unwrap().get_mut(&display) {
+                rgba_data.valid = false;
+            }
         }
     }
 

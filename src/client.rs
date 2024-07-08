@@ -64,11 +64,11 @@ use crate::{
     ui_session_interface::{InvokeUiSession, Session},
 };
 
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+use crate::clipboard::{check_clipboard, CLIPBOARD_INTERVAL};
 #[cfg(not(feature = "flutter"))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use crate::ui_session_interface::SessionPermissionConfig;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-use crate::{check_clipboard, CLIPBOARD_INTERVAL};
 
 pub use super::lang::*;
 
@@ -136,7 +136,7 @@ lazy_static::lazy_static! {
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 lazy_static::lazy_static! {
     static ref ENIGO: Arc<Mutex<enigo::Enigo>> = Arc::new(Mutex::new(enigo::Enigo::new()));
-    static ref OLD_CLIPBOARD_TEXT: Arc<Mutex<String>> = Default::default();
+    static ref OLD_CLIPBOARD_DATA: Arc<Mutex<crate::clipboard::ClipboardData>> = Default::default();
     static ref TEXT_CLIPBOARD_STATE: Arc<Mutex<TextClipboardState>> = Arc::new(Mutex::new(TextClipboardState::new()));
 }
 
@@ -144,8 +144,8 @@ const PUBLIC_SERVER: &str = "public";
 
 #[inline]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-pub fn get_old_clipboard_text() -> &'static Arc<Mutex<String>> {
-    &OLD_CLIPBOARD_TEXT
+pub fn get_old_clipboard_text() -> Arc<Mutex<crate::clipboard::ClipboardData>> {
+    OLD_CLIPBOARD_DATA.clone()
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -736,10 +736,11 @@ impl Client {
                     break;
                 }
                 if !TEXT_CLIPBOARD_STATE.lock().unwrap().is_required {
+                    std::thread::sleep(Duration::from_millis(CLIPBOARD_INTERVAL));
                     continue;
                 }
 
-                if let Some(msg) = check_clipboard(&mut ctx, Some(&OLD_CLIPBOARD_TEXT)) {
+                if let Some(msg) = check_clipboard(&mut ctx, Some(OLD_CLIPBOARD_DATA.clone())) {
                     #[cfg(feature = "flutter")]
                     crate::flutter::send_text_clipboard_msg(msg);
                     #[cfg(not(feature = "flutter"))]
@@ -765,12 +766,12 @@ impl Client {
 
     #[inline]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    fn get_current_text_clipboard_msg() -> Option<Message> {
-        let txt = &*OLD_CLIPBOARD_TEXT.lock().unwrap();
-        if txt.is_empty() {
+    fn get_current_clipboard_msg() -> Option<Message> {
+        let data = &*OLD_CLIPBOARD_DATA.lock().unwrap();
+        if data.is_empty() {
             None
         } else {
-            Some(crate::create_clipboard_msg(txt.clone()))
+            Some(data.create_msg())
         }
     }
 }
@@ -2018,11 +2019,15 @@ impl LoginConfigHandler {
         } else {
             (my_id, self.id.clone())
         };
+        let mut display_name = LocalConfig::get_option(&config::keys::OPTION_DISPLAY_NAME);
+        if display_name.is_empty() {
+            display_name = crate::username();
+        }
         let mut lr = LoginRequest {
             username: pure_id,
             password: password.into(),
             my_id,
-            my_name: crate::username(),
+            my_name: display_name,
             option: self.get_option_message(true).into(),
             session_id: self.session_id,
             version: crate::VERSION.to_string(),

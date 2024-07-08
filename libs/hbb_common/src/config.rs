@@ -487,7 +487,19 @@ pub fn load_path<T: serde::Serialize + serde::de::DeserializeOwned + Default + s
 
 #[inline]
 pub fn store_path<T: serde::Serialize>(path: PathBuf, cfg: T) -> crate::ResultType<()> {
-    Ok(confy::store_path(path, cfg)?)
+    #[cfg(not(windows))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        Ok(confy::store_path_perms(
+            path,
+            cfg,
+            fs::Permissions::from_mode(0o600),
+        )?)
+    }
+    #[cfg(windows)]
+    {
+        Ok(confy::store_path(path, cfg)?)
+    }
 }
 
 impl Config {
@@ -2087,6 +2099,7 @@ pub mod keys {
     pub const OPTION_ENABLE_DIRECTX_CAPTURE: &str = "enable-directx-capture";
     pub const OPTION_ENABLE_ANDROID_SOFTWARE_ENCODING_HALF_SCALE: &str =
         "enable-android-software-encoding-half-scale";
+    pub const OPTION_DISABLE_UDP: &str = "disable-udp";
 
     // flutter local options
     pub const OPTION_FLUTTER_REMOTE_MENUBAR_STATE: &str = "remoteMenubarState";
@@ -2109,6 +2122,8 @@ pub mod keys {
 
     pub const OPTION_DISABLE_GROUP_PANEL: &str = "disable-group-panel";
     pub const OPTION_PRE_ELEVATE_SERVICE: &str = "pre-elevate-service";
+
+    pub const OPTION_DISPLAY_NAME: &str = "display-name";
 
     // proxy settings
     // The following options are not real keys, they are just used for custom client advanced settings.
@@ -2173,6 +2188,12 @@ pub mod keys {
         OPTION_KEEP_SCREEN_ON,
         OPTION_DISABLE_GROUP_PANEL,
         OPTION_PRE_ELEVATE_SERVICE,
+        OPTION_DISPLAY_NAME,
+        "remove-preset-password-warning",
+        "hide-security-settings",
+        "hide-network-settings",
+        "hide-server-settings",
+        "hide-proxy-settings",
     ];
     // DEFAULT_SETTINGS, OVERWRITE_SETTINGS
     pub const KEYS_SETTINGS: &[&str] = &[
@@ -2211,6 +2232,7 @@ pub mod keys {
         OPTION_PRESET_ADDRESS_BOOK_TAG,
         OPTION_ENABLE_DIRECTX_CAPTURE,
         OPTION_ENABLE_ANDROID_SOFTWARE_ENCODING_HALF_SCALE,
+        OPTION_DISABLE_UDP,
     ];
 }
 
@@ -2469,6 +2491,28 @@ mod tests {
                 HashMap::from([("0".to_string(), Resolution { w: 1920, h: 1080 })]);
             let cfg = toml::from_str::<PeerConfig>(wrong_field_str);
             assert_eq!(cfg, Ok(cfg_to_compare), "Failed to test wrong_field_str");
+        }
+    }
+
+    #[test]
+    fn test_store_load() {
+        let peerconfig_id = "123456789";
+        let cfg: PeerConfig = Default::default();
+        cfg.store(&peerconfig_id);
+        assert_eq!(PeerConfig::load(&peerconfig_id), cfg);
+
+        #[cfg(not(windows))]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                // ignore file type information by masking with 0o777 (see https://stackoverflow.com/a/50045872)
+                fs::metadata(PeerConfig::path(&peerconfig_id))
+                    .expect("reading metadata failed")
+                    .permissions()
+                    .mode()
+                    & 0o777,
+                0o600
+            );
         }
     }
 }
