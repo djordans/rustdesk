@@ -1691,7 +1691,7 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330c60081dcc4c72131f8eb70510f1ac07223e5d4163db481a04a0befcffa412"
 dependencies = [
- "libloading 0.7.4",
+ "libloading 0.8.4",
 ]
 
 [[package]]
@@ -4011,6 +4011,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nick-name"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9860c725ce654683dbf1bb8264b9c9251027cb25f62ed016da15aeffb919ba84"
+dependencies = [
+ "cfg-if 1.0.0",
+ "jni 0.21.1",
+ "libc",
+ "ndk-context",
+ "objc2 0.5.2",
+ "thiserror",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "nix"
 version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5619,6 +5634,7 @@ dependencies = [
  "mac_address",
  "magnum-opus",
  "mouce",
+ "nick-name",
  "num_cpus",
  "objc",
  "objc_id",
