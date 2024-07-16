@@ -448,7 +448,7 @@ impl VideoRenderer {
                     rgba.raw.len() as _,
                     rgba.w as _,
                     rgba.h as _,
-                    rgba.stride() as _,
+                    rgba.align() as _,
                 )
             };
         }

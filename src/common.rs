@@ -805,12 +805,9 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
 }
 
 pub fn check_software_update() {
-    log::info!(
-        "Ignore check software update"
-    );
-    //std::thread::spawn(move || allow_err!(check_software_update_()));
+    std::thread::spawn(move || allow_err!(check_software_update_()));
 }
-/*
+
 #[tokio::main(flavor = "current_thread")]
 async fn check_software_update_() -> hbb_common::ResultType<()> {
     let url = "https://github.com/rustdesk/rustdesk/releases/latest";
@@ -820,17 +817,16 @@ async fn check_software_update_() -> hbb_common::ResultType<()> {
         .path()
         .rsplit('/')
         .next()
-        .unwrap();
+        .unwrap_or_default();
 
-    let (mut socket, rendezvous_server) =
-        socket_client::new_udp_for(&rendezvous_server, CONNECT_TIMEOUT).await?;
+    let response_url = latest_release_response.url().to_string();
 
     if get_version_number(&latest_release_version) > get_version_number(crate::VERSION) {
         *SOFTWARE_UPDATE_URL.lock().unwrap() = response_url;
     }
-    Ok(()) 
+    Ok(())
 }
-*/
+
 #[inline]
 pub fn get_app_name() -> String {
     hbb_common::config::APP_NAME.read().unwrap().clone()

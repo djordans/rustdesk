@@ -2,7 +2,7 @@ use crate::{
     client::file_trait::FileManager,
     common::{is_keyboard_mode_supported, make_fd_to_json},
     flutter::{
-        self, session_add, session_add_existed, session_start_, sessions, try_sync_peer_option, FlutterHandler,
+        self, session_add, session_add_existed, session_start_, sessions, try_sync_peer_option,
     },
     input::*,
     ui_interface::{self, *},
@@ -1948,6 +1948,10 @@ pub fn is_disable_account() -> SyncReturn<bool> {
     SyncReturn(config::is_disable_account())
 }
 
+pub fn is_disable_group_panel() -> SyncReturn<bool> {
+    SyncReturn(LocalConfig::get_option("disable-group-panel") == "Y")
+}
+
 // windows only
 pub fn is_disable_installation() -> SyncReturn<bool> {
     SyncReturn(config::is_disable_installation())
@@ -2190,32 +2194,15 @@ pub fn main_supported_input_source() -> SyncReturn<String> {
 }
 
 pub fn main_generate2fa() -> String {
-    #[cfg(any(target_os = "android", target_os = "ios"))]
-    {
-        "".to_string()
-    }
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-   { generate2fa()}
+    generate2fa()
 }
 
 pub fn main_verify2fa(code: String) -> bool {
-    #[cfg(any(target_os = "android", target_os = "ios"))]
-    {
-       false
-    }
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {verify2fa(code)}
-    
+    verify2fa(code)
 }
 
 pub fn main_has_valid_2fa_sync() -> SyncReturn<bool> {
-    #[cfg(any(target_os = "android", target_os = "ios"))]
-    {
-        SyncReturn(false)
-    }
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {SyncReturn(has_valid_2fa())}
-    
+    SyncReturn(has_valid_2fa())
 }
 
 pub fn main_verify_bot(token: String) -> String {
