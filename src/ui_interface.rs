@@ -1382,17 +1382,15 @@ pub fn support_remove_wallpaper() -> bool {
     return false;
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn has_valid_2fa() -> bool {
     let raw = get_option("2fa");
     crate::auth_2fa::get_2fa(Some(raw)).is_some()
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn generate2fa() -> String {
     crate::auth_2fa::generate2fa()
 }
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+
 pub fn verify2fa(code: String) -> bool {
     let res = crate::auth_2fa::verify2fa(code);
     if res {
