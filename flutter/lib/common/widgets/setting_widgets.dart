@@ -185,10 +185,16 @@ List<Widget> ServerConfigImportExportWidgets(
   List<TextEditingController> controllers,
   List<RxString> errMsgs,
 ) {
-  import() {
-    Clipboard.getData(Clipboard.kTextPlain).then((value) {
-      importConfig(controllers, errMsgs, value?.text);
-    });
+  import() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      importConfig(controllers, errMsgs, file.readAsStringSync());
+    } else {
+      Clipboard.getData(Clipboard.kTextPlain).then((value) {
+        importConfig(controllers, errMsgs, value?.text);
+      });
+    }
   }
 
   export() async {
