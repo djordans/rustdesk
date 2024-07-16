@@ -500,7 +500,7 @@ class _GeneralState extends State<_General> {
       return const Offstage();
     }
 
-    return AudioInput(builder: (devices, currentDevice, setDevice) {
+    builder(devices, currentDevice, setDevice) {
       return _Card(title: 'Audio Input Device', children: [
         ...devices.map((device) => _Radio<String>(context,
                 value: device,
@@ -511,7 +511,9 @@ class _GeneralState extends State<_General> {
               setState(() {});
             }))
       ]);
-    });
+    }
+
+    return AudioInput(builder: builder, isCm: false, isVoiceCall: false);
   }
 
   Widget record(BuildContext context) {
@@ -1277,9 +1279,9 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
     bool enabled = !locked;
     final scrollController = ScrollController();
     final hideServer =
-        bind.mainGetLocalOption(key: "hide-server-settings") == 'Y';
+        bind.mainGetLocalOption(key: kOptionHideServerSetting) == 'Y';
     final hideProxy =
-        bind.mainGetLocalOption(key: "hide-proxy-settings") == 'Y';
+        bind.mainGetLocalOption(key: kOptionHideProxySetting) == 'Y';
     return DesktopScrollWrapper(
         scrollController: scrollController,
         child: ListView(
@@ -2354,35 +2356,40 @@ void changeSocks5Proxy() async {
           children: [
             Row(
               children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 140),
-                  child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        children: [
-                          Text(
-                            translate('Server'),
-                          ).marginOnly(right: 4),
-                          Tooltip(
-                            waitDuration: Duration(milliseconds: 0),
-                            message: translate("default_proxy_tip"),
-                            child: Icon(
-                              Icons.help_outline_outlined,
-                              size: 16,
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.color
-                                  ?.withOpacity(0.5),
+                if (!isMobile)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 140),
+                    child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          children: [
+                            Text(
+                              translate('Server'),
+                            ).marginOnly(right: 4),
+                            Tooltip(
+                              waitDuration: Duration(milliseconds: 0),
+                              message: translate("default_proxy_tip"),
+                              child: Icon(
+                                Icons.help_outline_outlined,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.color
+                                    ?.withOpacity(0.5),
+                              ),
                             ),
-                          ),
-                        ],
-                      )).marginOnly(right: 10),
-                ),
+                          ],
+                        )).marginOnly(right: 10),
+                  ),
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
                       errorText: proxyMsg.isNotEmpty ? proxyMsg : null,
+                      labelText: isMobile ? translate('Server') : null,
+                      helperText:
+                          isMobile ? translate("default_proxy_tip") : null,
+                      helperMaxLines: isMobile ? 3 : null,
                     ),
                     controller: proxyController,
                     autofocus: true,
@@ -2393,15 +2400,19 @@ void changeSocks5Proxy() async {
             ).marginOnly(bottom: 8),
             Row(
               children: [
-                ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 140),
-                    child: Text(
-                      '${translate("Username")}:',
-                      textAlign: TextAlign.right,
-                    ).marginOnly(right: 10)),
+                if (!isMobile)
+                  ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 140),
+                      child: Text(
+                        '${translate("Username")}:',
+                        textAlign: TextAlign.right,
+                      ).marginOnly(right: 10)),
                 Expanded(
                   child: TextField(
                     controller: userController,
+                    decoration: InputDecoration(
+                      labelText: isMobile ? translate('Username') : null,
+                    ),
                     enabled: !isOptFixed,
                   ),
                 ),
@@ -2409,16 +2420,18 @@ void changeSocks5Proxy() async {
             ).marginOnly(bottom: 8),
             Row(
               children: [
-                ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 140),
-                    child: Text(
-                      '${translate("Password")}:',
-                      textAlign: TextAlign.right,
-                    ).marginOnly(right: 10)),
+                if (!isMobile)
+                  ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 140),
+                      child: Text(
+                        '${translate("Password")}:',
+                        textAlign: TextAlign.right,
+                      ).marginOnly(right: 10)),
                 Expanded(
                   child: Obx(() => TextField(
                         obscureText: obscure.value,
                         decoration: InputDecoration(
+                            labelText: isMobile ? translate('Password') : null,
                             suffixIcon: IconButton(
                                 onPressed: () => obscure.value = !obscure.value,
                                 icon: Icon(obscure.value

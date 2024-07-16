@@ -416,6 +416,10 @@ class _RemotePageState extends State<RemotePage>
   }
 
   void leaveView(PointerExitEvent evt) {
+    if (isMacOS) {
+      DesktopMultiWindow.hideShow();
+    }
+
     if (_ffi.ffiModel.keyboard) {
       _ffi.inputModel.tryMoveEdgeOnExit(evt.position);
     }
@@ -507,12 +511,13 @@ class _RemotePageState extends State<RemotePage>
     ];
 
     if (!_ffi.canvasModel.cursorEmbedded) {
-      paints.add(Obx(() => Offstage(
-          offstage: _showRemoteCursor.isFalse || _remoteCursorMoved.isFalse,
-          child: CursorPaint(
-            id: widget.id,
-            zoomCursor: _zoomCursor,
-          ))));
+      paints
+          .add(Obx(() => _showRemoteCursor.isFalse || _remoteCursorMoved.isFalse
+              ? Offstage()
+              : CursorPaint(
+                  id: widget.id,
+                  zoomCursor: _zoomCursor,
+                )));
     }
     paints.add(
       Positioned(

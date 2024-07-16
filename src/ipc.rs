@@ -308,7 +308,7 @@ pub async fn new_listener(postfix: &str) -> ResultType<Incoming> {
     }
 }
 
-pub struct CheckIfRestart(String, Vec<String>, String);
+pub struct CheckIfRestart(String, Vec<String>, String, String);
 
 impl CheckIfRestart {
     pub fn new() -> CheckIfRestart {
@@ -316,6 +316,7 @@ impl CheckIfRestart {
             Config::get_option("stop-service"),
             Config::get_rendezvous_servers(),
             Config::get_option("audio-input"),
+            Config::get_option("voice-call-input"),
         )
     }
 }
@@ -328,6 +329,12 @@ impl Drop for CheckIfRestart {
         }
         if self.2 != Config::get_option("audio-input") {
             crate::audio_service::restart();
+        }
+        if self.3 != Config::get_option("voice-call-input") {
+            crate::audio_service::set_voice_call_input_device(
+                Some(Config::get_option("voice-call-input")),
+                true,
+            )
         }
     }
 }
@@ -457,6 +464,8 @@ async fn handle(data: Data, stream: &mut Connection) {
                     } else {
                         None
                     };
+                } else if name == "voice-call-input" {
+                    value = crate::audio_service::get_voice_call_input_device();
                 } else {
                     value = None;
                 }
@@ -472,6 +481,8 @@ async fn handle(data: Data, stream: &mut Connection) {
                     Config::set_permanent_password(&value);
                 } else if name == "salt" {
                     Config::set_salt(&value);
+                } else if name == "voice-call-input" {
+                    crate::audio_service::set_voice_call_input_device(Some(value), true);
                 } else {
                     return;
                 }
@@ -488,12 +499,7 @@ async fn handle(data: Data, stream: &mut Connection) {
                 if let Some(v) = value.get("privacy-mode-impl-key") {
                     crate::privacy_mode::switch(v);
                 }
-                let pre_opts = Config::get_options();
-                let new_audio_input = pre_opts.get("audio-input");
                 Config::set_options(value);
-                if new_audio_input != pre_opts.get("audio-input") {
-                    crate::audio_service::restart();
-                }
                 allow_err!(stream.send(&Data::Options(None)).await);
             }
         },
@@ -553,12 +559,12 @@ async fn handle(data: Data, stream: &mut Connection) {
             );
         }
         #[cfg(feature = "hwcodec")]
-        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         Data::CheckHwcodec => {
             scrap::hwcodec::start_check_process();
         }
         #[cfg(feature = "hwcodec")]
-        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         Data::HwCodecConfig(c) => {
             match c {
                 None => {
@@ -1047,7 +1053,7 @@ pub async fn notify_server_to_check_hwcodec() -> ResultType<()> {
 }
 
 #[cfg(feature = "hwcodec")]
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 #[tokio::main(flavor = "current_thread")]
 pub async fn get_hwcodec_config_from_server() -> ResultType<()> {
     if !scrap::codec::enable_hwcodec_option() || scrap::hwcodec::HwCodecConfig::already_set() {
@@ -1070,7 +1076,7 @@ pub async fn get_hwcodec_config_from_server() -> ResultType<()> {
 }
 
 #[cfg(feature = "hwcodec")]
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn client_get_hwcodec_config_thread(wait_sec: u64) {
     static ONCE: std::sync::Once = std::sync::Once::new();
     if !crate::platform::is_installed()

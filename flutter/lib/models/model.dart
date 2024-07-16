@@ -192,7 +192,7 @@ class FfiModel with ChangeNotifier {
       _permissions[k] = v == 'true';
     });
     // Only inited at remote page
-    if (desktopType == DesktopType.remote) {
+    if (parent.target?.connType == ConnType.defaultConn) {
       KeyboardEnabledState.find(id).value = _permissions['keyboard'] != false;
     }
     debugPrint('updatePermission: $_permissions');
@@ -1725,6 +1725,11 @@ class PredefinedCursor {
   init() {
     _image2 = img2.decodePng(base64Decode(png));
     if (_image2 != null) {
+      // The png type of forbidden cursor image is `PngColorType.indexed`.
+      if (id == kPreForbiddenCursorId) {
+        _image2 = _image2!.convert(format: img2.Format.uint8, numChannels: 4);
+      }
+
       () async {
         final defaultImg = _image2!;
         // This function is called only one time, no need to care about the performance.

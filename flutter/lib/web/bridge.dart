@@ -1610,5 +1610,13 @@ class RustdeskImpl {
     throw UnimplementedError();
   }
 
+  bool mainHasValidBotSync({dynamic hint}) {
+    throw UnimplementedError();
+  }
+
+  Future<String> mainVerifyBot({required String token, dynamic hint}) {
+    throw UnimplementedError();
+  }
+
   void dispose() {}
 }

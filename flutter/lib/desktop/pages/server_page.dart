@@ -104,7 +104,20 @@ class ConnectionManager extends StatefulWidget {
   State<StatefulWidget> createState() => ConnectionManagerState();
 }
 
-class ConnectionManagerState extends State<ConnectionManager> {
+class ConnectionManagerState extends State<ConnectionManager>
+    with WidgetsBindingObserver {
+  final RxBool _block = false.obs;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      if (!allowRemoteCMModification()) {
+        shouldBeBlocked(_block, null);
+      }
+    }
+  }
+
   @override
   void initState() {
     gFFI.serverModel.updateClientState();
@@ -127,7 +140,14 @@ class ConnectionManagerState extends State<ConnectionManager> {
       }
     };
     gFFI.chatModel.isConnManager = true;
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -165,6 +185,7 @@ class ConnectionManagerState extends State<ConnectionManager> {
               selectedBorderColor: MyTheme.accent,
               maxLabelWidth: 100,
               tail: null, //buildScrollJumper(),
+              blockTab: allowRemoteCMModification() ? null : _block,
               selectedTabBackgroundColor:
                   Theme.of(context).hintColor.withOpacity(0),
               tabBuilder: (key, icon, label, themeConf) {
@@ -207,15 +228,12 @@ class ConnectionManagerState extends State<ConnectionManager> {
                       Consumer<ChatModel>(
                           builder: (_, model, child) => SizedBox(
                                 width: realChatPageWidth,
-                                child: buildRemoteBlock(
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                          border: Border(
-                                              right: BorderSide(
-                                                  color: Theme.of(context)
-                                                      .dividerColor))),
-                                      child: buildSidePage()),
-                                ),
+                                child: allowRemoteCMModification()
+                                    ? buildSidePage()
+                                    : buildRemoteBlock(
+                                        child: buildSidePage(),
+                                        block: _block,
+                                        mask: true),
                               )),
                     SizedBox(
                         width: realClosedWidth,
@@ -714,7 +732,7 @@ class _CmControlPanel extends StatelessWidget {
                 child: buildButton(context,
                     color: MyTheme.accent,
                     onClick: null, onTapDown: (details) async {
-                  final devicesInfo = await AudioInput.getDevicesInfo();
+                  final devicesInfo = await AudioInput.getDevicesInfo(true, true);
                   List<String> devices = devicesInfo['devices'] as List<String>;
                   if (devices.isEmpty) {
                     msgBox(
@@ -740,13 +758,13 @@ class _CmControlPanel extends StatelessWidget {
                               value: d,
                               height: 18,
                               padding: EdgeInsets.zero,
-                              onTap: () => AudioInput.setDevice(d),
+                              onTap: () => AudioInput.setDevice(d, true, true),
                               child: IgnorePointer(
                                   child: RadioMenuButton(
                                 value: d,
                                 groupValue: currentDevice,
                                 onChanged: (v) {
-                                  if (v != null) AudioInput.setDevice(v);
+                                  if (v != null) AudioInput.setDevice(v, true, true);
                                 },
                                 child: Container(
                                   child: Text(
@@ -1043,12 +1061,21 @@ class _CmControlPanel extends StatelessWidget {
 }
 
 void checkClickTime(int id, Function() callback) async {
+  if (allowRemoteCMModification()) {
+    callback();
+    return;
+  }
   var clickCallbackTime = DateTime.now().millisecondsSinceEpoch;
   await bind.cmCheckClickTime(connId: id);
   Timer(const Duration(milliseconds: 120), () async {
     var d = clickCallbackTime - await bind.cmGetClickTime();
     if (d > 120) callback();
   });
+}
+
+bool allowRemoteCMModification() {
+  return option2bool(kOptionAllowRemoteCmModification,
+      bind.mainGetLocalOption(key: kOptionAllowRemoteCmModification));
 }
 
 class _FileTransferLogPage extends StatefulWidget {
