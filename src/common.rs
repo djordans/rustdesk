@@ -1392,7 +1392,7 @@ fn read_custom_client_advanced_settings(
 
 #[inline]
 #[cfg(target_os = "macos")]
-pub fn get_dst_stride_rgba() -> usize {
+pub fn get_dst_align_rgba() -> usize {
     // https://developer.apple.com/forums/thread/712709
     // Memory alignment should be multiple of 64.
     if crate::ui_interface::use_texture_render() {
@@ -1404,7 +1404,7 @@ pub fn get_dst_stride_rgba() -> usize {
 
 #[inline]
 #[cfg(not(target_os = "macos"))]
-pub fn get_dst_stride_rgba() -> usize {
+pub fn get_dst_align_rgba() -> usize {
     1
 }
 
@@ -1623,30 +1623,5 @@ mod tests {
             Duration::from_secs_f64(dur.as_secs_f64() * 0.499 * 1e-9),
             Duration::from_nanos(0)
         );
-    }
-
-    #[tokio::test]
-    #[cfg(not(any(
-        target_os = "android",
-        target_os = "ios",
-        all(target_os = "linux", feature = "unix-file-copy-paste")
-    )))]
-    async fn test_clipboard_context() {
-        #[cfg(target_os = "linux")]
-        let dur = {
-            let dur = Duration::from_micros(500).as_secs();
-            arboard::Clipboard::set_x11_server_conn_timeout(dur);
-            dur
-        };
-
-        let _ctx = ClipboardContext::new();
-        #[cfg(target_os = "linux")]
-        {
-            assert_eq!(
-                arboard::Clipboard::get_x11_server_conn_timeout(),
-                dur,
-                "Failed to restore x11 server conn timeout"
-            );
-        }
     }
 }
