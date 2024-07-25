@@ -778,7 +778,6 @@ impl<T: InvokeUiSession> Session<T> {
         }
     }
 
-    // flutter only TODO new input
     pub fn input_string(&self, value: &str) {
         let mut key_event = KeyEvent::new();
         key_event.set_seq(value.to_owned());
@@ -1017,7 +1016,7 @@ impl<T: InvokeUiSession> Session<T> {
             }
         }
 
-        let (x, y) = if mask == MOUSE_TYPE_WHEEL {
+        let (x, y) = if mask == MOUSE_TYPE_WHEEL || mask == MOUSE_TYPE_TRACKPAD {
             self.get_scroll_xy((x, y))
         } else {
             (x, y)

@@ -12,7 +12,10 @@ use uuid::Uuid;
 use hbb_common::{
     allow_err,
     anyhow::{self, bail},
-    config::{self, Config, CONNECT_TIMEOUT, READ_TIMEOUT, REG_INTERVAL, RENDEZVOUS_PORT},
+    config::{
+        self, keys::*, option2bool, Config, CONNECT_TIMEOUT, READ_TIMEOUT, REG_INTERVAL,
+        RENDEZVOUS_PORT,
+    },
     futures::future::join_all,
     log,
     protobuf::Message as _,
@@ -29,6 +32,7 @@ use hbb_common::{
 use crate::{
     check_port,
     server::{check_zombie, new as new_server, ServerPtr},
+    ui_interface::get_buildin_option,
 };
 
 type Message = RendezvousMessage;
@@ -387,7 +391,7 @@ impl RendezvousMediator {
         };
         if (cfg!(debug_assertions) && option_env!("TEST_TCP").is_some())
             || is_http_proxy
-            || Config::get_option(config::keys::OPTION_DISABLE_UDP) == "Y"
+            || get_buildin_option(config::keys::OPTION_DISABLE_UDP) == "Y"
         {
             Self::start_tcp(server, host).await
         } else {
@@ -636,8 +640,10 @@ async fn direct_server(server: ServerPtr) {
     let mut listener = None;
     let mut port = 0;
     loop {
-        let disabled = Config::get_option("direct-server").is_empty()
-            || !Config::get_option("stop-service").is_empty();
+        let disabled = !option2bool(
+            OPTION_DIRECT_SERVER,
+            &Config::get_option(OPTION_DIRECT_SERVER),
+        ) || option2bool("stop-service", &Config::get_option("stop-service"));
         if !disabled && listener.is_none() {
             port = get_direct_port();
             match hbb_common::tcp::listen_any(port as _).await {

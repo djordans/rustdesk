@@ -2,7 +2,7 @@ use hbb_common::{bail, platform::windows::is_windows_version_or_greater, ResultT
 use std::sync::atomic;
 
 // This string is defined here.
-//  https://github.com/fufesou/RustDeskIddDriver/blob/b370aad3f50028b039aad211df60c8051c4a64d6/RustDeskIddDriver/RustDeskIddDriver.inf#LL73C1-L73C40
+//  https://github.com/rustdesk-org/RustDeskIddDriver/blob/b370aad3f50028b039aad211df60c8051c4a64d6/RustDeskIddDriver/RustDeskIddDriver.inf#LL73C1-L73C40
 pub const RUSTDESK_IDD_DEVICE_STRING: &'static str = "RustDeskIddDriver Device\0";
 pub const AMYUNI_IDD_DEVICE_STRING: &'static str = "USB Mobile Monitor Virtual Display\0";
 
@@ -405,7 +405,6 @@ pub mod amyuni_idd {
     use crate::platform::win_device;
     use hbb_common::{bail, lazy_static, log, tokio::time::Instant, ResultType};
     use std::{
-        ops::Sub,
         ptr::null_mut,
         sync::{Arc, Mutex},
         time::Duration,
