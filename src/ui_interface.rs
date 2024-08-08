@@ -206,8 +206,8 @@ pub fn get_hard_option(key: String) -> String {
 }
 
 #[inline]
-pub fn get_buildin_option(key: &str) -> String {
-    config::BUILDIN_SETTINGS
+pub fn get_builtin_option(key: &str) -> String {
+    config::BUILTIN_SETTINGS
         .read()
         .unwrap()
         .get(key)
@@ -424,6 +424,14 @@ pub fn install_path() -> String {
     return crate::platform::windows::get_install_info().1;
     #[cfg(not(windows))]
     return "".to_owned();
+}
+
+#[inline]
+pub fn install_options() -> String {
+    #[cfg(windows)]
+    return crate::platform::windows::get_install_options();
+    #[cfg(not(windows))]
+    return "{}".to_owned();
 }
 
 #[inline]
@@ -781,6 +789,7 @@ pub fn http_request(url: String, method: String, body: Option<String>, header: S
         current_request.lock().unwrap().insert(url, res);
     });
 }
+
 #[inline]
 pub fn get_async_http_status(url: String) -> Option<String> {
     match ASYNC_HTTP_STATUS.lock().unwrap().get(&url) {
@@ -1441,5 +1450,24 @@ pub fn check_hwcodec() {
                 scrap::hwcodec::start_check_process();
             }
         })
+    }
+}
+
+#[cfg(feature = "flutter")]
+pub fn get_unlock_pin() -> String {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return String::default();
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    return ipc::get_unlock_pin();
+}
+
+#[cfg(feature = "flutter")]
+pub fn set_unlock_pin(pin: String) -> String {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return String::default();
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    match ipc::set_unlock_pin(pin, true) {
+        Ok(_) => String::default(),
+        Err(err) => err.to_string(),
     }
 }

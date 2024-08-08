@@ -430,7 +430,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("length>=8", "8文字以上"),
         ("Weak", "脆弱"),
         ("Medium", "普通"),
-        ("Strong", "協力"),
+        ("Strong", "強力"),
         ("Switch Sides", "接続方向の切り替え"),
         ("Please confirm if you want to share your desktop?", "デスクトップの共有を許可しますか？"),
         ("Display", "ディスプレイ"),
@@ -631,5 +631,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("cancel-bot-confirm-tip", "本当にTelegram Botをキャンセルしますか？"),
         ("About RustDesk", "RustDeskについて"),
         ("Send clipboard keystrokes", ""),
+        ("network_error_tip", ""),
+        ("Unlock with PIN", ""),
+        ("Requires at least {} characters", ""),
+        ("Wrong PIN", ""),
+        ("Set PIN", ""),
     ].iter().cloned().collect();
 }

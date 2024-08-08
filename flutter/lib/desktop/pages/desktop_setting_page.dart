@@ -515,16 +515,16 @@ class _GeneralState extends State<_General> {
     }
 
     builder(devices, currentDevice, setDevice) {
-      return _Card(title: 'Audio Input Device', children: [
-        ...devices.map((device) => _Radio<String>(context,
-                value: device,
-                groupValue: currentDevice,
-                autoNewLine: false,
-                label: device, onChanged: (value) {
-              setDevice(value);
-              setState(() {});
-            }))
-      ]);
+      final child = ComboBox(
+        keys: devices,
+        values: devices,
+        initialKey: currentDevice,
+        onChanged: (key) async {
+          setDevice(key);
+          setState(() {});
+        },
+      ).marginOnly(left: _kContentHMargin);
+      return _Card(title: 'Audio Input Device', children: [child]);
     }
 
     return AudioInput(builder: builder, isCm: false, isVoiceCall: false);
@@ -1023,6 +1023,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         _OptionCheckBox(context, 'allow-only-conn-window-open-tip',
             'allow-only-conn-window-open',
             reverse: false, enabled: enabled),
+      if (bind.mainIsInstalled()) unlockPin()
     ]);
   }
 
@@ -1269,6 +1270,40 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
         );
       }(),
     ];
+  }
+
+  Widget unlockPin() {
+    bool enabled = !locked;
+    RxString unlockPin = bind.mainGetUnlockPin().obs;
+    update() async {
+      unlockPin.value = bind.mainGetUnlockPin();
+    }
+
+    onChanged(bool? checked) async {
+      changeUnlockPinDialog(unlockPin.value, update);
+    }
+
+    final isOptFixed = isOptionFixed(kOptionWhitelist);
+    return GestureDetector(
+      child: Obx(() => Row(
+            children: [
+              Checkbox(
+                      value: unlockPin.isNotEmpty,
+                      onChanged: enabled && !isOptFixed ? onChanged : null)
+                  .marginOnly(right: 5),
+              Expanded(
+                  child: Text(
+                translate('Unlock with PIN'),
+                style: TextStyle(color: disabledTextColor(context, enabled)),
+              ))
+            ],
+          )),
+      onTap: enabled
+          ? () {
+              onChanged(!unlockPin.isNotEmpty);
+            }
+          : null,
+    ).marginOnly(left: _kCheckBoxLeftMargin);
   }
 }
 
@@ -2186,9 +2221,14 @@ Widget _lock(
                             Text(translate(label)).marginOnly(left: 5),
                           ]).marginSymmetric(vertical: 2)),
                   onPressed: () async {
-                    bool checked = await callMainCheckSuperUserPermission();
-                    if (checked) {
-                      onUnlock();
+                    final unlockPin = bind.mainGetUnlockPin();
+                    if (unlockPin.isEmpty) {
+                      bool checked = await callMainCheckSuperUserPermission();
+                      if (checked) {
+                        onUnlock();
+                      }
+                    } else {
+                      checkUnlockPinDialog(unlockPin, onUnlock);
                     }
                   },
                 ).marginSymmetric(horizontal: 2, vertical: 4),

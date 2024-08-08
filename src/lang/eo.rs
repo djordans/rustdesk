@@ -631,5 +631,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("cancel-bot-confirm-tip", ""),
         ("About RustDesk", ""),
         ("Send clipboard keystrokes", ""),
+        ("network_error_tip", ""),
+        ("Unlock with PIN", ""),
+        ("Requires at least {} characters", ""),
+        ("Wrong PIN", ""),
+        ("Set PIN", ""),
     ].iter().cloned().collect();
 }

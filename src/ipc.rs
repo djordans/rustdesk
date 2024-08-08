@@ -1,10 +1,3 @@
-use std::{
-    collections::HashMap,
-    sync::atomic::{AtomicBool, Ordering},
-};
-#[cfg(not(windows))]
-use std::{fs::File, io::prelude::*};
-
 use crate::{
     privacy_mode::PrivacyModeState,
     ui_interface::{get_local_option, set_local_option},
@@ -14,6 +7,12 @@ use parity_tokio_ipc::{
     Connection as Conn, ConnectionClient as ConnClient, Endpoint, Incoming, SecurityAttributes,
 };
 use serde_derive::{Deserialize, Serialize};
+use std::{
+    collections::HashMap,
+    sync::atomic::{AtomicBool, Ordering},
+};
+#[cfg(not(windows))]
+use std::{fs::File, io::prelude::*};
 
 #[cfg(all(feature = "flutter", feature = "plugin_framework"))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -26,8 +25,11 @@ use hbb_common::{
     config::{self, Config, Config2},
     futures::StreamExt as _,
     futures_util::sink::SinkExt,
-    log, password_security as password, timeout, tokio,
-    tokio::io::{AsyncRead, AsyncWrite},
+    log, password_security as password, timeout,
+    tokio::{
+        self,
+        io::{AsyncRead, AsyncWrite},
+    },
     tokio_util::codec::Framed,
     ResultType,
 };
@@ -98,6 +100,20 @@ pub enum FS {
         last_modified: u64,
         is_upload: bool,
     },
+}
+
+#[cfg(target_os = "windows")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(tag = "t")]
+pub struct ClipboardNonFile {
+    pub compress: bool,
+    pub content: bytes::Bytes,
+    pub content_len: usize,
+    pub next_raw: bool,
+    pub width: i32,
+    pub height: i32,
+    // message.proto: ClipboardFormat
+    pub format: i32,
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -207,6 +223,8 @@ pub enum Data {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     ClipboardFile(ClipboardFile),
     ClipboardFileEnabled(bool),
+    #[cfg(target_os = "windows")]
+    ClipboardNonFile(Option<(String, Vec<ClipboardNonFile>)>),
     PrivacyModeState((i32, PrivacyModeState, String)),
     TestRendezvousServer,
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -466,6 +484,8 @@ async fn handle(data: Data, stream: &mut Connection) {
                     };
                 } else if name == "voice-call-input" {
                     value = crate::audio_service::get_voice_call_input_device();
+                } else if name == "unlock-pin" {
+                    value = Some(Config::get_unlock_pin());
                 } else {
                     value = None;
                 }
@@ -483,6 +503,8 @@ async fn handle(data: Data, stream: &mut Connection) {
                     Config::set_salt(&value);
                 } else if name == "voice-call-input" {
                     crate::audio_service::set_voice_call_input_device(Some(value), true);
+                } else if name == "unlock-pin" {
+                    Config::set_unlock_pin(&value);
                 } else {
                     return;
                 }
@@ -871,6 +893,37 @@ pub fn get_fingerprint() -> String {
 pub fn set_permanent_password(v: String) -> ResultType<()> {
     Config::set_permanent_password(&v);
     set_config("permanent-password", v)
+}
+
+#[cfg(feature = "flutter")]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub fn set_unlock_pin(v: String, translate: bool) -> ResultType<()> {
+    let v = v.trim().to_owned();
+    let min_len = 4;
+    if !v.is_empty() && v.len() < min_len {
+        let err = if translate {
+            crate::lang::translate(
+                "Requires at least {".to_string() + &format!("{min_len}") + "} characters",
+            )
+        } else {
+            // Sometimes, translated can't show normally in command line
+            format!("Requires at least {} characters", min_len)
+        };
+        bail!(err);
+    }
+    Config::set_unlock_pin(&v);
+    set_config("unlock-pin", v)
+}
+
+#[cfg(feature = "flutter")]
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub fn get_unlock_pin() -> String {
+    if let Ok(Some(v)) = get_config("unlock-pin") {
+        Config::set_unlock_pin(&v);
+        v
+    } else {
+        Config::get_unlock_pin()
+    }
 }
 
 pub fn get_id() -> String {

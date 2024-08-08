@@ -723,6 +723,8 @@ class FfiModel with ChangeNotifier {
 
   /// Handle the peer info event based on [evt].
   handlePeerInfo(Map<String, dynamic> evt, String peerId, bool isCache) async {
+    parent.target?.chatModel.voiceCallStatus.value = VoiceCallStatus.notStarted;
+
     // This call is to ensuer the keyboard mode is updated depending on the peer version.
     parent.target?.inputModel.updateKeyboardMode();
 
@@ -1175,26 +1177,26 @@ class ImageModel with ChangeNotifier {
 
   clearImage() => _image = null;
 
-  onRgba(int display, Uint8List rgba) {
+  onRgba(int display, Uint8List rgba) async {
+    try {
+      await decodeAndUpdate(display, rgba);
+    } catch (e) {
+      debugPrint('onRgba error: $e');
+    }
+    platformFFI.nextRgba(sessionId, display);
+  }
+
+  decodeAndUpdate(int display, Uint8List rgba) async {
     final pid = parent.target?.id;
     final rect = parent.target?.ffiModel.pi.getDisplayRect(display);
-    img.decodeImageFromPixels(
-        rgba,
-        rect?.width.toInt() ?? 0,
-        rect?.height.toInt() ?? 0,
-        isWeb ? ui.PixelFormat.rgba8888 : ui.PixelFormat.bgra8888,
-        onPixelsCopied: () {
-      // Unlock the rgba memory from rust codes.
-      platformFFI.nextRgba(sessionId, display);
-    }).then((image) {
-      if (parent.target?.id != pid) return;
-      try {
-        // my throw exception, because the listener maybe already dispose
-        update(image);
-      } catch (e) {
-        debugPrint('update image: $e');
-      }
-    });
+    final image = await img.decodeImageFromPixels(
+      rgba,
+      rect?.width.toInt() ?? 0,
+      rect?.height.toInt() ?? 0,
+      isWeb ? ui.PixelFormat.rgba8888 : ui.PixelFormat.bgra8888,
+    );
+    if (parent.target?.id != pid) return;
+    await update(image);
   }
 
   update(ui.Image? image) async {
@@ -2558,7 +2560,7 @@ class FFI {
           final rgba = platformFFI.getRgba(sessionId, display, sz);
           if (rgba != null) {
             onEvent2UIRgba();
-            imageModel.onRgba(display, rgba);
+            await imageModel.onRgba(display, rgba);
           } else {
             platformFFI.nextRgba(sessionId, display);
           }
@@ -2626,7 +2628,7 @@ class FFI {
           canvasModel.scale,
           ffiModel.pi.currentDisplay);
     }
-    imageModel.update(null);
+    await imageModel.update(null);
     cursorModel.clear();
     ffiModel.clear();
     canvasModel.clear();

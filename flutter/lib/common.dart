@@ -634,10 +634,30 @@ List<Locale> supportedLocales = const [
   Locale('da'),
   Locale('eo'),
   Locale('tr'),
-  Locale('vi'),
-  Locale('pl'),
   Locale('kz'),
   Locale('es'),
+  Locale('nl'),
+  Locale('nb'),
+  Locale('et'),
+  Locale('eu'),
+  Locale('bg'),
+  Locale('be'),
+  Locale('vn'),
+  Locale('uk'),
+  Locale('fa'),
+  Locale('ca'),
+  Locale('el'),
+  Locale('sv'),
+  Locale('sq'),
+  Locale('sr'),
+  Locale('th'),
+  Locale('sl'),
+  Locale('ro'),
+  Locale('lt'),
+  Locale('lv'),
+  Locale('ar'),
+  Locale('he'),
+  Locale('hr'),
 ];
 
 String formatDurationToTime(Duration duration) {
@@ -1062,6 +1082,49 @@ class CustomAlertDialog extends StatelessWidget {
   }
 }
 
+Widget createDialogContent(String text) {
+  final RegExp linkRegExp = RegExp(r'(https?://[^\s]+)');
+  final List<TextSpan> spans = [];
+  int start = 0;
+  bool hasLink = false;
+
+  linkRegExp.allMatches(text).forEach((match) {
+    hasLink = true;
+    if (match.start > start) {
+      spans.add(TextSpan(text: text.substring(start, match.start)));
+    }
+    spans.add(TextSpan(
+      text: match.group(0) ?? '',
+      style: TextStyle(
+        color: Colors.blue,
+        decoration: TextDecoration.underline,
+      ),
+      recognizer: TapGestureRecognizer()
+        ..onTap = () {
+          String linkText = match.group(0) ?? '';
+          linkText = linkText.replaceAll(RegExp(r'[.,;!?]+$'), '');
+          launchUrl(Uri.parse(linkText));
+        },
+    ));
+    start = match.end;
+  });
+
+  if (start < text.length) {
+    spans.add(TextSpan(text: text.substring(start)));
+  }
+
+  if (!hasLink) {
+    return SelectableText(text, style: const TextStyle(fontSize: 15));
+  }
+
+  return SelectableText.rich(
+    TextSpan(
+      style: TextStyle(color: Colors.black, fontSize: 15),
+      children: spans,
+    ),
+  );
+}
+
 void msgBox(SessionID sessionId, String type, String title, String text,
     String link, OverlayDialogManager dialogManager,
     {bool? hasCancel, ReconnectHandle? reconnect, int? reconnectTimeout}) {
@@ -1219,7 +1282,7 @@ Widget msgboxContent(String type, String title, String text) {
               translate(title),
               style: TextStyle(fontSize: 21),
             ).marginOnly(bottom: 10),
-            Text(translateText(text), style: const TextStyle(fontSize: 15)),
+            createDialogContent(translateText(text)),
           ],
         ),
       ),
@@ -1414,14 +1477,10 @@ class AndroidPermissionManager {
   }
 }
 
-// TODO move this to mobile/widgets.
-// Used only for mobile, pages remote, settings, dialog
-// TODO remove argument contentPadding, it’s not used, getToggle() has not
 RadioListTile<T> getRadio<T>(
     Widget title, T toValue, T curValue, ValueChanged<T?>? onChange,
-    {EdgeInsetsGeometry? contentPadding, bool? dense}) {
+    {bool? dense}) {
   return RadioListTile<T>(
-    contentPadding: contentPadding ?? EdgeInsets.zero,
     visualDensity: VisualDensity.compact,
     controlAffinity: ListTileControlAffinity.trailing,
     title: title,
@@ -3013,7 +3072,7 @@ Widget buildErrorBanner(BuildContext context,
                     alignment: Alignment.centerLeft,
                     child: Tooltip(
                       message: translate(err.value),
-                      child: Text(
+                      child: SelectableText(
                         translate(err.value),
                       ),
                     )).marginSymmetric(vertical: 2),
@@ -3177,11 +3236,15 @@ openMonitorInNewTabOrWindow(int i, String peerId, PeerInfo pi,
       kMainWindowId, kWindowEventOpenMonitorSession, jsonEncode(args));
 }
 
-setNewConnectWindowFrame(
-    int windowId, String peerId, int? display, Rect? screenRect) async {
+setNewConnectWindowFrame(int windowId, String peerId, int preSessionCount,
+    int? display, Rect? screenRect) async {
   if (screenRect == null) {
-    await restoreWindowPosition(WindowType.RemoteDesktop,
-        windowId: windowId, display: display, peerId: peerId);
+    // Do not restore window position to new connection if there's a pre-session.
+    // https://github.com/rustdesk/rustdesk/discussions/8825
+    if (preSessionCount == 0) {
+      await restoreWindowPosition(WindowType.RemoteDesktop,
+          windowId: windowId, display: display, peerId: peerId);
+    }
   } else {
     await tryMoveToScreenAndSetFullscreen(screenRect);
   }
@@ -3697,4 +3760,21 @@ disableWindowMovable(int? windowId) {
   } else {
     WindowController.fromWindowId(windowId).setMovable(false);
   }
+}
+
+Widget netWorkErrorWidget() {
+  return Center(
+      child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Text(translate("network_error_tip")),
+      ElevatedButton(
+              onPressed: gFFI.userModel.refreshCurrentUser,
+              child: Text(translate("Retry")))
+          .marginSymmetric(vertical: 16),
+      SelectableText(gFFI.userModel.networkError.value,
+          style: TextStyle(fontSize: 11, color: Colors.red)),
+    ],
+  ));
 }

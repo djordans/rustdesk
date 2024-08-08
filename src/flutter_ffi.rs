@@ -1621,6 +1621,14 @@ pub fn main_check_super_user_permission() -> bool {
     check_super_user_permission()
 }
 
+pub fn main_get_unlock_pin() -> SyncReturn<String> {
+    SyncReturn(get_unlock_pin())
+}
+
+pub fn main_set_unlock_pin(pin: String) -> SyncReturn<String> {
+    SyncReturn(set_unlock_pin(pin))
+}
+
 pub fn main_check_mouse_time() {
     check_mouse_time();
 }
@@ -1843,6 +1851,10 @@ pub fn install_install_me(options: String, path: String) {
 
 pub fn install_install_path() -> SyncReturn<String> {
     SyncReturn(install_path())
+}
+
+pub fn install_install_options() -> SyncReturn<String> {
+    SyncReturn(install_options())
 }
 
 pub fn main_account_auth(op: String, remember_me: bool) {
@@ -2224,7 +2236,7 @@ pub fn main_get_hard_option(key: String) -> SyncReturn<String> {
 }
 
 pub fn main_get_buildin_option(key: String) -> SyncReturn<String> {
-    SyncReturn(get_buildin_option(&key))
+    SyncReturn(get_builtin_option(&key))
 }
 
 pub fn main_check_hwcodec() {

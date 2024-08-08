@@ -9,10 +9,23 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 pub fn start_tray() {
+    if crate::ui_interface::get_builtin_option(hbb_common::config::keys::OPTION_HIDE_TRAY) == "Y" {
+        #[cfg(target_os = "macos")]
+        {
+            crate::platform::macos::hide_dock();
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            return;
+        }
+    }
     allow_err!(make_tray());
 }
 
-pub fn make_tray() -> hbb_common::ResultType<()> {
+fn make_tray() -> hbb_common::ResultType<()> {
     // https://github.com/tauri-apps/tray-icon/blob/dev/examples/tao.rs
     use hbb_common::anyhow::Context;
     use tao::event_loop::{ControlFlow, EventLoopBuilder};
