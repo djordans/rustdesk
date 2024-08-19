@@ -890,7 +890,7 @@ fn check_privacy_mode_changed(
             sp.send_to_others(msg_out, privacy_mode_id_2);
         }
         log::info!("switch due to privacy mode changed");
-        try_broadcast_display_changed(&sp, display_idx, ci, true).ok();
+        try_broadcast_display_changed(&sp, display_idx, ci).ok();
         bail!("SWITCH");
     }
     Ok(())
