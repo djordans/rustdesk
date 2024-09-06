@@ -874,6 +874,7 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
     // SpecialCharacterValidationRule(),
     MinCharactersValidationRule(8),
   ];
+  final maxLength = bind.mainMaxEncryptLen();
 
   gFFI.dialogManager.show((setState, close, context) {
     submit() {
@@ -932,6 +933,7 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
                         errMsg0 = '';
                       });
                     },
+                    maxLength: maxLength,
                   ),
                 ),
               ],
@@ -958,6 +960,7 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
                         errMsg1 = '';
                       });
                     },
+                    maxLength: maxLength,
                   ),
                 ),
               ],

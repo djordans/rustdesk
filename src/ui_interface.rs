@@ -692,7 +692,6 @@ pub fn create_shortcut(_id: String) {
 #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
 #[inline]
 pub fn discover() {
-    #[cfg(not(any(target_os = "ios")))]
     std::thread::spawn(move || {
         allow_err!(crate::lan::discover());
     });
@@ -1495,4 +1494,9 @@ pub fn clear_trusted_devices() {
     Config::clear_trusted_devices();
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     ipc::clear_trusted_devices();
+}
+
+#[cfg(feature = "flutter")]
+pub fn max_encrypt_len() -> usize {
+    hbb_common::config::ENCRYPT_MAX_LEN
 }
