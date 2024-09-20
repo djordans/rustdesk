@@ -89,6 +89,7 @@ class _PeersViewState extends State<_PeersView>
   var _lastChangeTime = DateTime.now();
   var _lastQueryPeers = <String>{};
   var _lastQueryTime = DateTime.now();
+  var _lastWindowRestoreTime = DateTime.now();
   var _queryCount = 0;
   var _exit = false;
   bool _isActive = true;
@@ -117,11 +118,37 @@ class _PeersViewState extends State<_PeersView>
   @override
   void onWindowFocus() {
     _queryCount = 0;
+    _isActive = true;
+  }
+
+  @override
+  void onWindowBlur() {
+    // We need this comparison because window restore (on Windows) also triggers `onWindowBlur()`.
+    // Maybe it's a bug of the window manager, but the source code seems to be correct.
+    //
+    // Although `onWindowRestore()` is called after `onWindowBlur()` in my test,
+    // we need the following comparison to ensure that `_isActive` is true in the end.
+    if (isWindows && DateTime.now().difference(_lastWindowRestoreTime) <
+        const Duration(milliseconds: 300)) {
+      return;
+    }
+    _queryCount = _maxQueryCount;
+    _isActive = false;
+  }
+
+  @override
+  void onWindowRestore() {
+    // Window restore (on MacOS and Linux) also triggers `onWindowFocus()`.
+    // But on Windows, it triggers `onWindowBlur()`, mybe it's a bug of the window manager.
+    if (!isWindows) return;
+    _queryCount = 0;
+    _isActive = true;
+    _lastWindowRestoreTime = DateTime.now();
   }
 
   @override
   void onWindowMinimize() {
-    _queryCount = _maxQueryCount;
+    // Window minimize also triggers `onWindowBlur()`.
   }
 
   // This function is required for mobile.
@@ -140,6 +167,9 @@ class _PeersViewState extends State<_PeersView>
 
   @override
   Widget build(BuildContext context) {
+    // We should avoid too many rebuilds. MacOS(m1, 14.6.1) on Flutter 3.19.6.
+    // Continious rebuilds of `ChangeNotifierProvider` will cause memory leak.
+    // Simple demo can reproduce this issue.
     return ChangeNotifierProvider<Peers>(
       create: (context) => widget.peers,
       child: Consumer<Peers>(builder: (context, peers, child) {
@@ -218,6 +248,9 @@ class _PeersViewState extends State<_PeersView>
                   : Container(child: visibilityChild);
             }
 
+            // We should avoid too many rebuilds. Win10(Some machines) on Flutter 3.19.6.
+            // Continious rebuilds of `ListView.builder` will cause memory leak.
+            // Simple demo can reproduce this issue.
             final Widget child = Obx(() => stateGlobal.isPortrait.isTrue
                 ? ListView.builder(
                     itemCount: peers.length,
@@ -234,10 +267,11 @@ class _PeersViewState extends State<_PeersView>
                             physics: DraggableNeverScrollableScrollPhysics(),
                             itemCount: peers.length,
                             itemBuilder: (BuildContext context, int index) {
-                              return buildOnePeer(peers[index], false).marginOnly(
-                                  right: space,
-                                  top: index == 0 ? 0 : space / 2,
-                                  bottom: space / 2);
+                              return buildOnePeer(peers[index], false)
+                                  .marginOnly(
+                                      right: space,
+                                      top: index == 0 ? 0 : space / 2,
+                                      bottom: space / 2);
                             }),
                       )
                     : DesktopScrollWrapper(
