@@ -107,6 +107,7 @@ dependencies:
   permission_handler: ^10.2.0
   flutter_blue_plus: ^1.31.8  
   extended_text: 13.0.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   icons_launcher: ^2.0.4

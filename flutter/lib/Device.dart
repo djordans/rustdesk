@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:crypto/crypto.dart';
-import 'package:flutter_hbb/common.dart';
-
 
 // Device Manager
 class Device {
@@ -17,22 +14,22 @@ class Device {
   ///
   /// Refer[Unity deviceUniqueIdentifier](https://docs.unity3d.com/ScriptReference/SystemInfo-deviceUniqueIdentifier.html)
   static Future<String> uniqueIdentifier() async {
-
-    // fetch ids in windows 
+    // fetch ids in windows
     final baseBoardID = await _winBaseBoardID();
     final biosID = await _winBiosID();
     final processorID = await _winProcessorID();
     final diskDriveID = await _winDiskDrive();
     //final osNumber = await _winOSNumber();
     // md5 generates a unique id, using String.hashCode directly is too easy to collide
-    final all = baseBoardID + biosID + processorID + diskDriveID;// + osNumber;
+    final all = baseBoardID + biosID + processorID + diskDriveID; // + osNumber;
     final uID = md5.convert(utf8.encode(all)).toString();
     debugPrint('baseBoard: $baseBoardID biosID: $biosID '
         'processorID: $processorID diskDriveID: $diskDriveID '
         'uID: $uID');
-    
+
     return uID;
   }
+
   /// windows `Win32_BaseBoard::SerialNumber`
   ///
   /// cmd: `wmic baseboard get SerialNumber`
@@ -87,6 +84,7 @@ class Device {
       'serialnumber',
     );
   }
+
   /// fetch windows id by cmd line
   static Future<String> _fetchWinID(
     String executable,
