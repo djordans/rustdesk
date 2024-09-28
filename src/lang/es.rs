@@ -644,8 +644,9 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Parent directory", "Directorio superior"),
         ("Resume", "Continuar"),
         ("Invalid file name", "Nombre de archivo no válido"),
-        ("one-way-file-transfer-tip", ""),
-        ("Authentication Required", ""),
-        ("Authenticate", ""),
+        ("one-way-file-transfer-tip", "La transferencia en un sentido está habilitada en el lado controlado."),
+        ("Authentication Required", "Se requiere autenticación"),
+        ("Authenticate", "Autenticar"),
+        ("web_id_input_tip", ""),
     ].iter().cloned().collect();
 }

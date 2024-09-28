@@ -201,7 +201,7 @@ const double kMinFps = 5;
 const double kDefaultFps = 30;
 const double kMaxFps = 120;
 
-const double kMinQuality = 10;
+const double kMinQuality = 5;
 const double kDefaultQuality = 50;
 const double kMaxQuality = 100;
 const double kMaxMoreQuality = 2000;
@@ -570,3 +570,5 @@ enum WindowsTarget {
 extension WindowsTargetExt on int {
   WindowsTarget get windowsVersion => getWindowsTarget(this);
 }
+
+const kCheckSoftwareUpdateFinish = 'check_software_update_finish';
