@@ -685,10 +685,12 @@ closeConnection({String? id}) {
           overlays: SystemUiOverlay.values);
       gFFI.chatModel.hideChatOverlay();
       Navigator.popUntil(globalKey.currentContext!, ModalRoute.withName("/"));
+      stateGlobal.isInMainPage = true;
     }();
   } else {
     if (isWeb) {
       Navigator.popUntil(globalKey.currentContext!, ModalRoute.withName("/"));
+      stateGlobal.isInMainPage = true;
     } else {
       final controller = Get.find<DesktopTabController>();
       controller.closeBy(id);
@@ -2419,6 +2421,7 @@ connect(BuildContext context, String id,
         );
       }
     }
+    stateGlobal.isInMainPage = false;
   }
 
   FocusScopeNode currentFocus = FocusScope.of(context);
