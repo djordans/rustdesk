@@ -63,11 +63,4 @@ resources/WindowInjection.dll
 
 flutter/lib/generated_plugin_registrant.dart
 libsciter.dylib
-flutter/web/usbmmidd_v2.zip
-usbmmidd_v2/idd_instructions.txt
-usbmmidd_v2/License.txt
-usbmmidd_v2/usbmmidd.bat
-usbmmidd_v2/usbmmidd.cat
-usbmmidd_v2/usbmmIdd.inf
-usbmmidd_v2/Win32/usbmmIdd.dll
-usbmmidd_v2/x64/usbmmIdd.dll
+flutter/web/

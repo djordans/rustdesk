@@ -1468,26 +1468,13 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
             Column(
               children: [
                 Obx(() => _LabeledTextField(context, 'ID Server', idController,
-                    idErrMsg.value, enabled, secure, TextCapitalization.none)),
-                if (!isWeb)
-                  Obx(() => _LabeledTextField(
-                      context,
-                      'Relay Server',
-                      relayController,
-                      relayErrMsg.value,
-                      enabled,
-                      secure,
-                      TextCapitalization.none)),
-                Obx(() => _LabeledTextField(
-                    context,
-                    'API Server',
-                    apiController,
-                    apiErrMsg.value,
-                    enabled,
-                    secure,
-                    TextCapitalization.none)),
-                _LabeledTextField(context, 'Key', keyController, '', enabled,
-                    secure, TextCapitalization.none),
+                    idErrMsg.value, enabled, secure)),
+                Obx(() => _LabeledTextField(context, 'Relay Server',
+                    relayController, relayErrMsg.value, enabled, secure)),
+                Obx(() => _LabeledTextField(context, 'API Server',
+                    apiController, apiErrMsg.value, enabled, secure)),
+                _LabeledTextField(
+                    context, 'Key', keyController, '', enabled, secure),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [_Button('Apply', submit, enabled: enabled)],
