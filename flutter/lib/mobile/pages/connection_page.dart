@@ -48,6 +48,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
   bool isPeersLoaded = false;
   StreamSubscription? _uniLinksSubscription;
 
+  // https://github.com/flutter/flutter/issues/157244
+  Iterable<Peer> _autocompleteOpts = [];
+
   _ConnectionPageState() {
     if (!isWeb) _uniLinksSubscription = listenUniLinks();
     _idController.addListener(() {
@@ -185,7 +188,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   child: Autocomplete<Peer>(
                     optionsBuilder: (TextEditingValue textEditingValue) {
                       if (textEditingValue.text == '') {
-                        return const Iterable<Peer>.empty();
+                        _autocompleteOpts = const Iterable<Peer>.empty();
                       } else if (peers.isEmpty && !isPeersLoaded) {
                         Peer emptyPeer = Peer(
                           id: '',
@@ -201,7 +204,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           rdpUsername: '',
                           loginName: '',
                         );
-                        return [emptyPeer];
+                        _autocompleteOpts = [emptyPeer];
                       } else {
                         String textWithoutSpaces =
                             textEditingValue.text.replaceAll(" ", "");
@@ -213,7 +216,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         }
                         String textToFind = textEditingValue.text.toLowerCase();
 
-                        return peers
+                        _autocompleteOpts = peers
                             .where((peer) =>
                                 peer.id.toLowerCase().contains(textToFind) ||
                                 peer.username
@@ -225,12 +228,15 @@ class _ConnectionPageState extends State<ConnectionPage> {
                                 peer.alias.toLowerCase().contains(textToFind))
                             .toList();
                       }
+                      return _autocompleteOpts;
                     },
                     fieldViewBuilder: (BuildContext context,
                         TextEditingController fieldTextEditingController,
                         FocusNode fieldFocusNode,
                         VoidCallback onFieldSubmitted) {
                       fieldTextEditingController.text = _idController.text;
+                      Get.put<TextEditingController>(
+                          fieldTextEditingController);
                       fieldFocusNode.addListener(() async {
                         _idEmpty.value =
                             fieldTextEditingController.text.isEmpty;
@@ -291,6 +297,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     optionsViewBuilder: (BuildContext context,
                         AutocompleteOnSelected<Peer> onSelected,
                         Iterable<Peer> options) {
+                      options = _autocompleteOpts;
                       double maxHeight = options.length * 50;
                       if (options.length == 1) {
                         maxHeight = 52;
@@ -386,6 +393,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
     _idController.dispose();
     if (Get.isRegistered<IDTextEditingController>()) {
       Get.delete<IDTextEditingController>();
+    }
+    if (Get.isRegistered<TextEditingController>()) {
+      Get.delete<TextEditingController>();
     }
     if (!bind.isCustomClient()) {
       platformFFI.unregisterEventHandler(

@@ -272,10 +272,21 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   buildPasswordBoard(BuildContext context) {
-    final model = gFFI.serverModel;
+    return ChangeNotifierProvider.value(
+        value: gFFI.serverModel,
+        child: Consumer<ServerModel>(
+          builder: (context, model, child) {
+            return buildPasswordBoard2(context, model);
+          },
+        ));
+  }
+
+  buildPasswordBoard2(BuildContext context, ServerModel model) {
     RxBool refreshHover = false.obs;
     RxBool editHover = false.obs;
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
+    final showOneTime = model.approveMode != 'click' &&
+        model.verificationMethod != kUsePermanentPassword;
     return Container(
       margin: EdgeInsets.only(left: 20.0, right: 16, top: 13, bottom: 13),
       child: Row(
@@ -304,8 +315,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       Expanded(
                         child: GestureDetector(
                           onDoubleTap: () {
-                            if (model.verificationMethod !=
-                                kUsePermanentPassword) {
+                            if (showOneTime) {
                               Clipboard.setData(
                                   ClipboardData(text: model.serverPasswd.text));
                               showToast(translate("Copied"));
@@ -323,25 +333,23 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           ),
                         ),
                       ),
-                      AnimatedRotationWidget(
-                        onPressed: () {
-                          bind.mainUpdateTemporaryPassword();
-                          gFFI.userModel.refreshCurrentUser();
-                        } ,
-                        child: Tooltip(
-                          message: translate('Refresh Password'),
-                          child: Obx(() => RotatedBox(
-                              quarterTurns: 2,
-                              child: Icon(
-                                Icons.refresh,
-                                color: refreshHover.value
-                                    ? textColor
-                                    : Color(0xFFDDDDDD),
-                                size: 22,
-                              ))),
-                        ),
-                        onHover: (value) => refreshHover.value = value,
-                      ).marginOnly(right: 8, top: 4),
+                      if (showOneTime)
+                        AnimatedRotationWidget(
+                          onPressed: () => bind.mainUpdateTemporaryPassword(),
+                          child: Tooltip(
+                            message: translate('Refresh Password'),
+                            child: Obx(() => RotatedBox(
+                                quarterTurns: 2,
+                                child: Icon(
+                                  Icons.refresh,
+                                  color: refreshHover.value
+                                      ? textColor
+                                      : Color(0xFFDDDDDD),
+                                  size: 22,
+                                ))),
+                          ),
+                          onHover: (value) => refreshHover.value = value,
+                        ).marginOnly(right: 8, top: 4),
                       if (!bind.isDisableSettings())
                         InkWell(
                           child: Tooltip(
@@ -450,7 +458,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             "Status", "Your installation is lower version.", "Click to upgrade",
             () async {
           await rustDeskWinManager.closeAllSubWindows();
-         bind.mainUpdateMe(path: '');
+          bind.mainUpdateMe(path: '');
         });
       }
     } else if (isMacOS) {
@@ -668,7 +676,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             ),
           ),
       ],
-                      
     );
   }
 
@@ -691,7 +698,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     }
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
-      final url = await GetUpdate();//bind.mainGetSoftwareUpdateUrl();
+      final url = await GetUpdate(); //bind.mainGetSoftwareUpdateUrl();
       if (updateUrl != url) {
         updateUrl = url;
         setState(() {});
@@ -791,6 +798,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           isRDP: call.arguments['isRDP'],
           password: call.arguments['password'],
           forceRelay: call.arguments['forceRelay'],
+          connToken: call.arguments['connToken'],
         );
       } else if (call.method == kWindowEventMoveTabToNewWindow) {
         final args = call.arguments.split(',');

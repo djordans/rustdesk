@@ -369,8 +369,8 @@ class _GeneralState extends State<_General> {
 
   Widget theme() {
     final current = MyTheme.getThemeModePreference().toShortString();
-    onChanged(String value) {
-      MyTheme.changeDarkMode(MyTheme.themeModeFromString(value));
+    onChanged(String value) async {
+      await MyTheme.changeDarkMode(MyTheme.themeModeFromString(value));
       setState(() {});
     }
 
@@ -575,12 +575,18 @@ class _GeneralState extends State<_General> {
       bool root_dir_exists = map['root_dir_exists']!;
       bool user_dir_exists = map['user_dir_exists']!;
       return _Card(title: 'Recording', children: [
-        _OptionCheckBox(context, 'Automatically record incoming sessions',
-            kOptionAllowAutoRecordIncoming),
-        if (showRootDir)
+        if (!bind.isOutgoingOnly())
+          _OptionCheckBox(context, 'Automatically record incoming sessions',
+              kOptionAllowAutoRecordIncoming),
+        if (!bind.isIncomingOnly())
+          _OptionCheckBox(context, 'Automatically record outgoing sessions',
+              kOptionAllowAutoRecordOutgoing,
+              isServer: false),
+        if (showRootDir && !bind.isOutgoingOnly())
           Row(
             children: [
-              Text('${translate("Incoming")}:'),
+              Text(
+                  '${translate(bind.isIncomingOnly() ? "Directory" : "Incoming")}:'),
               Expanded(
                 child: GestureDetector(
                     onTap: root_dir_exists
@@ -597,45 +603,49 @@ class _GeneralState extends State<_General> {
               ),
             ],
           ).marginOnly(left: _kContentHMargin),
-        Row(
-          children: [
-            Text('${translate(showRootDir ? "Outgoing" : "Directory")}:'),
-            Expanded(
-              child: GestureDetector(
-                  onTap: user_dir_exists
-                      ? () => launchUrl(Uri.file(user_dir))
-                      : null,
-                  child: Text(
-                    user_dir,
-                    softWrap: true,
-                    style: user_dir_exists
-                        ? const TextStyle(decoration: TextDecoration.underline)
+        if (!(showRootDir && bind.isIncomingOnly()))
+          Row(
+            children: [
+              Text(
+                  '${translate((showRootDir && !bind.isOutgoingOnly()) ? "Outgoing" : "Directory")}:'),
+              Expanded(
+                child: GestureDetector(
+                    onTap: user_dir_exists
+                        ? () => launchUrl(Uri.file(user_dir))
                         : null,
-                  )).marginOnly(left: 10),
-            ),
-            ElevatedButton(
-                    onPressed: isOptionFixed(kOptionVideoSaveDirectory)
-                        ? null
-                        : () async {
-                            String? initialDirectory;
-                            if (await Directory.fromUri(Uri.directory(user_dir))
-                                .exists()) {
-                              initialDirectory = user_dir;
-                            }
-                            String? selectedDirectory =
-                                await FilePicker.platform.getDirectoryPath(
-                                    initialDirectory: initialDirectory);
-                            if (selectedDirectory != null) {
-                              await bind.mainSetOption(
-                                  key: kOptionVideoSaveDirectory,
-                                  value: selectedDirectory);
-                              setState(() {});
-                            }
-                          },
-                    child: Text(translate('Change')))
-                .marginOnly(left: 5),
-          ],
-        ).marginOnly(left: _kContentHMargin),
+                    child: Text(
+                      user_dir,
+                      softWrap: true,
+                      style: user_dir_exists
+                          ? const TextStyle(
+                              decoration: TextDecoration.underline)
+                          : null,
+                    )).marginOnly(left: 10),
+              ),
+              ElevatedButton(
+                      onPressed: isOptionFixed(kOptionVideoSaveDirectory)
+                          ? null
+                          : () async {
+                              String? initialDirectory;
+                              if (await Directory.fromUri(
+                                      Uri.directory(user_dir))
+                                  .exists()) {
+                                initialDirectory = user_dir;
+                              }
+                              String? selectedDirectory =
+                                  await FilePicker.platform.getDirectoryPath(
+                                      initialDirectory: initialDirectory);
+                              if (selectedDirectory != null) {
+                                await bind.mainSetLocalOption(
+                                    key: kOptionVideoSaveDirectory,
+                                    value: selectedDirectory);
+                                setState(() {});
+                              }
+                            },
+                      child: Text(translate('Change')))
+                  .marginOnly(left: 5),
+            ],
+          ).marginOnly(left: _kContentHMargin),
       ]);
     });
   }
@@ -1024,7 +1034,9 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
             translate('Accept sessions via both'),
           ];
           var modeInitialKey = model.approveMode;
-          if (!modeKeys.contains(modeInitialKey)) modeInitialKey = '';
+          if (!modeKeys.contains(modeInitialKey)) {
+            modeInitialKey = defaultOptionApproveMode;
+          }
           final usePassword = model.approveMode != 'click';
 
           final isApproveModeFixed = isOptionFixed(kOptionApproveMode);
@@ -1457,14 +1469,15 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
               children: [
                 Obx(() => _LabeledTextField(context, 'ID Server', idController,
                     idErrMsg.value, enabled, secure, TextCapitalization.none)),
-                Obx(() => _LabeledTextField(
-                    context,
-                    'Relay Server',
-                    relayController,
-                    relayErrMsg.value,
-                    enabled,
-                    secure,
-                    TextCapitalization.none)),
+                if (!isWeb)
+                  Obx(() => _LabeledTextField(
+                      context,
+                      'Relay Server',
+                      relayController,
+                      relayErrMsg.value,
+                      enabled,
+                      secure,
+                      TextCapitalization.none)),
                 Obx(() => _LabeledTextField(
                     context,
                     'API Server',

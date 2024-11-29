@@ -143,6 +143,12 @@ def make_parser():
         "--package",
         type=str
     )
+    if osx:
+        parser.add_argument(
+            '--screencapturekit',
+            action='store_true',
+            help='Enable feature screencapturekit'
+        )
     return parser
 
 
@@ -274,6 +280,9 @@ def get_features(args):
         features.append('flutter')
     if args.unix_file_copy_paste:
         features.append('unix-file-copy-paste')
+    if osx:
+        if args.screencapturekit:
+            features.append('screencapturekit')
     print("features:", features)
     return features
 
@@ -283,6 +292,8 @@ def generate_control_file(version):
     system2('/bin/rm -rf %s' % control_file_path)
 
     content = """Package: rustdesk
+Section: net
+Priority: optional
 Version: %s
 Architecture: %s
 Maintainer: rustdesk <info@rustdesk.com>

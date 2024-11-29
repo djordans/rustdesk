@@ -212,7 +212,7 @@ pub fn get_builtin_option(key: &str) -> String {
 
 #[inline]
 pub fn set_local_option(key: String, value: String) {
-    LocalConfig::set_option(key, value);
+    LocalConfig::set_option(key.clone(), value.clone());
 }
 
 #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
@@ -321,6 +321,8 @@ pub fn get_sound_inputs() -> Vec<String> {
         fn get_sound_inputs_() -> Vec<String> {
             let mut out = Vec::new();
             use cpal::traits::{DeviceTrait, HostTrait};
+            // Do not use `cpal::host_from_id(cpal::HostId::ScreenCaptureKit)` for feature = "screencapturekit"
+            // Because we explicitly handle the "System Sound" device.
             let host = cpal::default_host();
             if let Ok(devices) = host.devices() {
                 for device in devices {
@@ -844,7 +846,11 @@ pub fn video_save_directory(root: bool) -> String {
             return dir.to_string_lossy().to_string();
         }
     }
-    let dir = Config::get_option("video-save-directory");
+    // Get directory from config file otherwise --server will use the old value from global var.
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    let dir = LocalConfig::get_option_from_file(OPTION_VIDEO_SAVE_DIRECTORY);
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    let dir = LocalConfig::get_option(OPTION_VIDEO_SAVE_DIRECTORY);
     if !dir.is_empty() {
         return dir;
     }
