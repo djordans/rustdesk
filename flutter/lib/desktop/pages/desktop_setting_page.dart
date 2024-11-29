@@ -210,7 +210,7 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Row(
         children: <Widget>[
           SizedBox(
@@ -1922,7 +1922,7 @@ class _AboutState extends State<_About> {
             controller: scrollController,
             physics: DraggableNeverScrollableScrollPhysics(),
             child: _Card(
-                title: translate('About RustDesk') + '-' + bind.getDeviceName(),
+                title: '${translate('About RustDesk')}-${bind.getDeviceName()}',
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2197,7 +2197,7 @@ class _WaylandCardState extends State<WaylandCard> {
       showConfirmMsgBox,
       tip: 'clear_Wayland_screen_selection_tip',
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all<Color>(
+        backgroundColor: WidgetStateProperty.all<Color>(
             Theme.of(context).colorScheme.error.withOpacity(0.75)),
       ),
     );

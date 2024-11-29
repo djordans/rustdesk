@@ -107,7 +107,7 @@ class _DesktopTabPageState extends State<DesktopTabPage>
   Widget build(BuildContext context) {
     final tabWidget = Container(
         child: Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             body: DesktopTab(
               controller: tabController,
               tail: Offstage(
