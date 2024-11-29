@@ -215,10 +215,6 @@ class ServerModel with ChangeNotifier {
     // clipboard
     final clipOption = await bind.mainGetOption(key: kOptionEnableClipboard);
     _clipboardOk = clipOption != 'N';
-
-    // clipboard
-    final clipOption = await bind.mainGetOption(key: kOptionEnableClipboard);
-    _clipboardOk = clipOption != 'N';
     await checkRequestNotificationPermission();
     notifyListeners();
   }
