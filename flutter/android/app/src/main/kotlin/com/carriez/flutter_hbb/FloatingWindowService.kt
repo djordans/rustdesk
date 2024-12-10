@@ -318,7 +318,7 @@ class FloatingWindowService : Service(), View.OnTouchListener {
                      openMainActivity()
                      true
                  }
-                 idStopService -> {
+                 /*idStopService -> {
                      stopMainService()
                      true
                  }*/
