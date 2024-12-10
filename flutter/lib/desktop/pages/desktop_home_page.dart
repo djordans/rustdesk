@@ -424,7 +424,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   Widget buildHelpCards(String updateUrl) {
-    if (!bind.isCustomClient() &&
+    /*if (!bind.isCustomClient() &&
         updateUrl.isNotEmpty &&
         !isCardClosed &&
         bind.mainUriPrefixSync().contains('rustdesk')) {
@@ -434,15 +434,14 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           "Click to download", () async {
         //final Uri url = Uri.parse('$urlapi$updateUrl/download');
         setState(() {
-         isInProgress = true;
+          isInProgress = true;
         });
         await AutoUpgrade(updateUrl);
         setState(() {
-         isInProgress = true;
+          isInProgress = true;
         });
         //await launchUrl(url);
-      },
-      closeButton: true);
+      }, closeButton: true);
     }*/
     if (systemError.isNotEmpty) {
       return buildInstallCard("", systemError, "", () {});
@@ -687,11 +686,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     super.initState();
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
-      final url = await GetUpdate(); //bind.mainGetSoftwareUpdateUrl();
+      /*final url = await GetUpdate(); //bind.mainGetSoftwareUpdateUrl();
       if (updateUrl != url) {
         updateUrl = url;
         setState(() {});
-      }
+      }*/
       final error = await bind.mainGetError();
       if (systemError != error) {
         systemError = error;

@@ -78,12 +78,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
     Provider.of<FfiModel>(context);
     return CustomScrollView(
       slivers: [
-        SliverList(
+        /*SliverList(
             delegate: SliverChildListDelegate([
           if (!bind.isCustomClient())
             Obx(() => _buildUpdateUI(stateGlobal.updateUrl.value)),
           _buildRemoteIDTextField(),
-        ])),
+        ])),*/
         SliverFillRemaining(
           hasScrollBody: true,
           child: PeerTabPage(),
@@ -102,7 +102,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
 
   /// UI for software update.
   /// If _updateUrl] is not empty, shows a button to update the software.
-  Widget _buildUpdateUI(String updateUrl) {
+  /*Widget _buildUpdateUI(String updateUrl) {
     return updateUrl.isEmpty
         ? const SizedBox(height: 0)
         : InkWell(
@@ -116,9 +116,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
               // 2. `<action android:name="android.support.customtabs.action.CustomTabsService" />` in AndroidManifest.xml
               //
               // But it is better to add the check.
-              if (await canLaunchUrl(Uri.parse(url))) {
-                await launchUrl(Uri.parse(url));
-              }
+              //if (await canLaunchUrl(Uri.parse(url))) {
+                //await launchUrl(Uri.parse(url));
+              //}
             },
             child: Container(
                 alignment: AlignmentDirectional.center,
@@ -132,7 +132,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   Offstage(
                       offstage: !isInProgress, child: LinearProgressIndicator())
                 ])));
-  }
+  }*/
 
   Future<void> _fetchPeers() async {
     setState(() {
