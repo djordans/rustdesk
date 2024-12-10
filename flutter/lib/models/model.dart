@@ -401,6 +401,10 @@ class FfiModel with ChangeNotifier {
         if (isWeb) {
           parent.target?.fileModel.onSelectedFiles(evt);
         }
+      } else if (name == "send_emptry_dirs") {
+        if (isWeb) {
+          parent.target?.fileModel.sendEmptyDirs(evt);
+        }
       } else if (name == "record_status") {
         if (desktopType == DesktopType.remote || isMobile) {
           parent.target?.recordingModel.updateStatus(evt['start'] == 'true');
@@ -1267,7 +1271,9 @@ class ImageModel with ChangeNotifier {
       rgba,
       rect?.width.toInt() ?? 0,
       rect?.height.toInt() ?? 0,
-      isWeb ? ui.PixelFormat.rgba8888 : ui.PixelFormat.bgra8888,
+      isWeb | isWindows | isLinux
+          ? ui.PixelFormat.rgba8888
+          : ui.PixelFormat.bgra8888,
     );
     if (parent.target?.id != pid) return;
     await update(image);
@@ -2183,7 +2189,7 @@ class CursorModel with ChangeNotifier {
 
     if (dx == 0 && dy == 0) return;
 
-    Point? newPos;
+    Point<double>? newPos;
     final rect = parent.target?.ffiModel.rect;
     if (rect == null) {
       // unreachable
@@ -2194,8 +2200,8 @@ class CursorModel with ChangeNotifier {
         parent.target?.ffiModel.pi.platform,
         kPointerEventKindMouse,
         kMouseEventTypeDefault,
-        (_x + dx).toInt(),
-        (_y + dy).toInt(),
+        _x + dx,
+        _y + dy,
         rect,
         buttons: kPrimaryButton);
     if (newPos == null) {
@@ -2203,8 +2209,8 @@ class CursorModel with ChangeNotifier {
     }
     dx = newPos.x - _x;
     dy = newPos.y - _y;
-    _x = newPos.x.toDouble();
-    _y = newPos.y.toDouble();
+    _x = newPos.x;
+    _y = newPos.y;
     if (tryMoveCanvasX && dx != 0) {
       parent.target?.canvasModel.panX(-dx * scale);
     }

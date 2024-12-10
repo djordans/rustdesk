@@ -124,6 +124,7 @@ Future<void> initEnv(String appType) async {
 void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
+  checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
   if (startService) {
@@ -161,12 +162,13 @@ void runMainApp(bool startService) async {
 
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
+  checkUpdate();
   await bind.mainCheckConnectStatus();
   //gFFI.userModel.refreshCurrentUser();
   if (isAndroid) {
     androidChannelInit();
     platformFFI.syncAndroidServiceAppDirConfigPath();
-  draggablePositions.load();
+    draggablePositions.load();
     /*await [
       Permission.notification,
       Permission.accessNotificationPolicy,
