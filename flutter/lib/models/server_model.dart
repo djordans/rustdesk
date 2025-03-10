@@ -798,6 +798,7 @@ class ServerModel with ChangeNotifier {
 enum ClientType {
   remote,
   file,
+  camera,
   portForward,
 }
 
@@ -805,6 +806,7 @@ class Client {
   int id = 0; // client connections inner count id
   bool authorized = false;
   bool isFileTransfer = false;
+  bool isViewCamera = false;
   String portForward = "";
   String name = "";
   String peerId = ""; // peer user's id,show at app
@@ -822,13 +824,15 @@ class Client {
 
   RxInt unreadChatMessageCount = 0.obs;
 
-  Client(this.id, this.authorized, this.isFileTransfer, this.name, this.peerId,
+  Client(this.id, this.authorized, this.isFileTransfer, this.isViewCamera, this.name, this.peerId,
       this.keyboard, this.clipboard, this.audio);
 
   Client.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     authorized = json['authorized'];
     isFileTransfer = json['is_file_transfer'];
+    // TODO: no entry then default.
+    isViewCamera = json['is_view_camera'];
     portForward = json['port_forward'];
     name = json['name'];
     peerId = json['peer_id'];
@@ -850,6 +854,7 @@ class Client {
     data['id'] = id;
     data['authorized'] = authorized;
     data['is_file_transfer'] = isFileTransfer;
+    data['is_view_camera'] = isViewCamera;
     data['port_forward'] = portForward;
     data['name'] = name;
     data['peer_id'] = peerId;
@@ -870,6 +875,8 @@ class Client {
   ClientType type_() {
     if (isFileTransfer) {
       return ClientType.file;
+    } else if (isViewCamera) {
+      return ClientType.camera;
     } else if (portForward.isNotEmpty) {
       return ClientType.portForward;
     } else {

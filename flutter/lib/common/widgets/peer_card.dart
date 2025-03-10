@@ -488,6 +488,7 @@ abstract class BasePeerCard extends StatelessWidget {
     BuildContext context,
     String title, {
     bool isFileTransfer = false,
+    bool isViewCamera = false,
     bool isTcpTunneling = false,
     bool isRDP = false,
     String password = '',
@@ -503,6 +504,7 @@ abstract class BasePeerCard extends StatelessWidget {
           peer,
           tab,
           isFileTransfer: isFileTransfer,
+          isViewCamera: isViewCamera,
           isTcpTunneling: isTcpTunneling,
           isRDP: isRDP,
           password: password,
@@ -531,6 +533,15 @@ abstract class BasePeerCard extends StatelessWidget {
       translate('Transfer file'),
       isFileTransfer: true,
       password: peer.password,
+    );
+  }
+
+  @protected
+  MenuEntryBase<String> _viewCameraAction(BuildContext context) {
+    return _connectCommonAction(
+      context,
+      translate('View camera'),
+      isViewCamera: true,
     );
   }
 
@@ -885,6 +896,7 @@ class RecentPeerCard extends BasePeerCard {
     final List<MenuEntryBase<String>> menuItems = [
       _connectAction(context),
       _transferFileAction(context),
+      _viewCameraAction(context),
     ];
     if (gFFI.userModel.isAdmin.isTrue) {
       final List favs = (await bind.mainGetFav()).toList();
@@ -944,6 +956,7 @@ class FavoritePeerCard extends BasePeerCard {
     final List<MenuEntryBase<String>> menuItems = [
       _connectAction(context),
       _transferFileAction(context),
+      _viewCameraAction(context),
     ];
     if (isDesktop && peer.platform != kPeerPlatformAndroid) {
       menuItems.add(_tcpTunnelingAction(context));
@@ -997,6 +1010,7 @@ class DiscoveredPeerCard extends BasePeerCard {
     final List<MenuEntryBase<String>> menuItems = [
       _connectAction(context),
       _transferFileAction(context),
+      _viewCameraAction(context),
     ];
     final List favs = (await bind.mainGetFav()).toList();
 
@@ -1049,6 +1063,7 @@ class AddressBookPeerCard extends BasePeerCard {
     final List<MenuEntryBase<String>> menuItems = [
       _connectAction(context),
       _transferFileAction(context),
+      _viewCameraAction(context),
     ];
     if (isDesktop && peer.platform != kPeerPlatformAndroid) {
       menuItems.add(_tcpTunnelingAction(context));
@@ -1181,6 +1196,7 @@ class MyGroupPeerCard extends BasePeerCard {
     final List<MenuEntryBase<String>> menuItems = [
       _connectAction(context),
       _transferFileAction(context),
+      _viewCameraAction(context),
     ];
     if (isDesktop && peer.platform != kPeerPlatformAndroid) {
       menuItems.add(_tcpTunnelingAction(context));
@@ -1402,6 +1418,7 @@ class TagPainter extends CustomPainter {
 
 void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
     {bool isFileTransfer = false,
+    bool isViewCamera = false,
     bool isTcpTunneling = false,
     bool isRDP = false,
     String password = '',
@@ -1428,6 +1445,7 @@ void connectInPeerTab(BuildContext context, Peer peer, PeerTabIndex tab,
       password: password,
       isSharedPassword: isSharedPassword,
       isFileTransfer: isFileTransfer,
+      isViewCamera: isViewCamera,
       isTcpTunneling: isTcpTunneling,
       isRDP: isRDP);
 }
