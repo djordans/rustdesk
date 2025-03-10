@@ -106,6 +106,8 @@ enum DesktopType {
 class IconFont {
   static const _family1 = 'Tabbar';
   static const _family2 = 'PeerSearchbar';
+  static const _family3 = 'AddressBook';
+  static const _family4 = 'DeviceGroup';
   IconFont._();
 
   static const IconData max = IconData(0xe606, fontFamily: _family1);
@@ -116,8 +118,11 @@ class IconFont {
   static const IconData menu = IconData(0xe628, fontFamily: _family1);
   static const IconData search = IconData(0xe6a4, fontFamily: _family2);
   static const IconData roundClose = IconData(0xe6ed, fontFamily: _family2);
-  static const IconData addressBook =
-      IconData(0xe602, fontFamily: "AddressBook");
+  static const IconData addressBook = IconData(0xe602, fontFamily: _family3);
+  static const IconData deviceGroupOutline =
+      IconData(0xe623, fontFamily: _family4);
+  static const IconData deviceGroupFill =
+      IconData(0xe748, fontFamily: _family4);
 }
 
 class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
@@ -822,7 +827,11 @@ class OverlayDialogManager {
 
     close([res]) {
       _dialogs.remove(dialogTag);
-      dialog.complete(res);
+      try {
+        dialog.complete(res);
+      } catch (e) {
+        debugPrint("Dialog complete catch error: $e");
+      }
       BackButtonInterceptor.removeByName(dialogTag);
     }
 
@@ -2581,6 +2590,8 @@ bool get kUseCompatibleUiMode =>
     isWindows &&
     const [WindowsTarget.w7].contains(windowsBuildNumber.windowsVersion);
 
+bool get isWin10 => windowsBuildNumber.windowsVersion == WindowsTarget.w10;
+
 class ServerConfig {
   late String idServer;
   late String relayServer;
@@ -3814,7 +3825,7 @@ void earlyAssert() {
 }
 
 void checkUpdate() {
-  if (isDesktop || isAndroid) {
+  if (!isWeb) {
     if (!bind.isCustomClient()) {
       platformFFI.registerEventHandler(
           kCheckSoftwareUpdateFinish, kCheckSoftwareUpdateFinish,
@@ -3827,5 +3838,89 @@ void checkUpdate() {
         bind.mainGetSoftwareUpdateUrl();
       });
     }
+  }
+}
+
+// https://github.com/flutter/flutter/issues/153560#issuecomment-2497160535
+// For TextField, TextFormField
+extension WorkaroundFreezeLinuxMint on Widget {
+  Widget workaroundFreezeLinuxMint() {
+    // No need to check if is Linux Mint, because this workaround is harmless on other platforms.
+    if (isLinux) {
+      return ExcludeSemantics(child: this);
+    } else {
+      return this;
+    }
+  }
+}
+
+// Don't use `extension` here, the border looks weird if using `extension` in my test.
+Widget workaroundWindowBorder(BuildContext context, Widget child) {
+  if (!isWin10) {
+    return child;
+  }
+
+  final isLight = Theme.of(context).brightness == Brightness.light;
+  final borderColor = isLight ? Colors.black87 : Colors.grey;
+  final width = isLight ? 0.5 : 0.1;
+
+  getBorderWidget(Widget child) {
+    return Obx(() =>
+        (stateGlobal.isMaximized.isTrue || stateGlobal.fullscreen.isTrue)
+            ? Offstage()
+            : child);
+  }
+
+  final List<Widget> borders = [
+    getBorderWidget(Container(
+      color: borderColor,
+      height: width + 0.1,
+    ))
+  ];
+  if (kWindowType == WindowType.Main && !isLight) {
+    borders.addAll([
+      getBorderWidget(Align(
+        alignment: Alignment.topLeft,
+        child: Container(
+          color: borderColor,
+          width: width,
+        ),
+      )),
+      getBorderWidget(Align(
+        alignment: Alignment.topRight,
+        child: Container(
+          color: borderColor,
+          width: width,
+        ),
+      )),
+      getBorderWidget(Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          color: borderColor,
+          height: width,
+        ),
+      )),
+    ]);
+  }
+  return Stack(
+    children: [
+      child,
+      ...borders,
+    ],
+  );
+}
+
+void updateTextAndPreserveSelection(
+    TextEditingController controller, String text) {
+  // Only care about select all for now.
+  final isSelected = controller.selection.isValid &&
+      controller.selection.end > controller.selection.start;
+
+  // Set text will make the selection invalid.
+  controller.text = text;
+
+  if (isSelected) {
+    controller.selection = TextSelection(
+        baseOffset: 0, extentOffset: controller.value.text.length);
   }
 }

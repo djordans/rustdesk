@@ -72,6 +72,7 @@ class PeerPayload {
   int? status;
   String user = '';
   String user_name = '';
+  String? device_group_name;
   String note = '';
 
   PeerPayload.fromJson(Map<String, dynamic> json)
@@ -80,6 +81,7 @@ class PeerPayload {
         status = json['status'],
         user = json['user'] ?? '',
         user_name = json['user_name'] ?? '',
+        device_group_name = json['device_group_name'] ?? '',
         note = json['note'] ?? '';
 
   static Peer toPeer(PeerPayload p) {
@@ -89,6 +91,7 @@ class PeerPayload {
       "username": p.info['username'] ?? '',
       "platform": _platform(p.info['os']),
       "hostname": p.info['device_name'],
+      "device_group_name": p.device_group_name,
     });
   }
 
@@ -279,4 +282,20 @@ class AbTag {
   AbTag.fromJson(Map<String, dynamic> json)
       : name = json['name'] ?? '',
         color = json['color'] ?? '';
+}
+
+class DeviceGroupPayload {
+  String name;
+
+  DeviceGroupPayload(this.name);
+
+  DeviceGroupPayload.fromJson(Map<String, dynamic> json)
+      : name = json['name'] ?? '';
+
+  Map<String, dynamic> toGroupCacheJson() {
+    final Map<String, dynamic> map = {
+      'name': name,
+    };
+    return map;
+  }
 }

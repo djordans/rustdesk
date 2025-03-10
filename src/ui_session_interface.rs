@@ -162,6 +162,13 @@ impl SessionPermissionConfig {
             && *self.server_keyboard_enabled.read().unwrap()
             && !self.lc.read().unwrap().disable_clipboard.v
     }
+
+    #[cfg(feature = "unix-file-copy-paste")]
+    pub fn is_file_clipboard_required(&self) -> bool {
+        *self.server_keyboard_enabled.read().unwrap()
+            && *self.server_file_transfer_enabled.read().unwrap()
+            && self.lc.read().unwrap().enable_file_copy_paste.v
+    }
 }
 
 impl<T: InvokeUiSession> Session<T> {
@@ -324,7 +331,7 @@ impl<T: InvokeUiSession> Session<T> {
 
     pub fn toggle_option(&self, name: String) {
         let msg = self.lc.write().unwrap().toggle_option(name.clone());
-        #[cfg(not(feature = "flutter"))]
+        #[cfg(all(target_os = "windows", not(feature = "flutter")))]
         if name == hbb_common::config::keys::OPTION_ENABLE_FILE_COPY_PASTE {
             self.send(Data::ToggleClipboardFile);
         }
@@ -361,6 +368,13 @@ impl<T: InvokeUiSession> Session<T> {
             && !self.lc.read().unwrap().disable_clipboard.v
     }
 
+    #[cfg(any(target_os = "windows", feature = "unix-file-copy-paste"))]
+    pub fn is_file_clipboard_required(&self) -> bool {
+        *self.server_keyboard_enabled.read().unwrap()
+            && *self.server_file_transfer_enabled.read().unwrap()
+            && self.lc.read().unwrap().enable_file_copy_paste.v
+    }
+
     #[cfg(feature = "flutter")]
     pub fn refresh_video(&self, display: i32) {
         if crate::common::is_support_multi_ui_session_num(self.lc.read().unwrap().version) {
@@ -390,16 +404,11 @@ impl<T: InvokeUiSession> Session<T> {
     }
 
     pub fn record_screen(&self, start: bool) {
-        let mut misc = Misc::new();
-        misc.set_client_record_status(start);
-        let mut msg = Message::new();
-        msg.set_misc(misc);
-        self.send(Data::Message(msg));
         self.send(Data::RecordScreen(start));
     }
 
     pub fn is_recording(&self) -> bool {
-        self.lc.read().unwrap().record
+        self.lc.read().unwrap().record_state
     }
 
     pub fn save_custom_image_quality(&self, custom_image_quality: i32) {
@@ -1743,18 +1752,6 @@ impl<T: InvokeUiSession> Session<T> {
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn io_loop<T: InvokeUiSession>(handler: Session<T>, round: u32) {
-    // It is ok to call this function multiple times.
-    #[cfg(any(
-        target_os = "windows",
-        all(
-            any(target_os = "linux", target_os = "macos"),
-            feature = "unix-file-copy-paste"
-        )
-    ))]
-    if !handler.is_file_transfer() && !handler.is_port_forward() {
-        clipboard::ContextSend::enable(true);
-    }
-
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let (sender, receiver) = mpsc::unbounded_channel::<Data>();
     #[cfg(not(any(target_os = "android", target_os = "ios")))]

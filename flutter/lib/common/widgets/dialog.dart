@@ -70,7 +70,7 @@ void changeIdDialog() {
   final rules = [
     RegexValidationRule('starts with a letter', RegExp(r'^[a-zA-Z]')),
     LengthRangeValidationRule(6, 16),
-    RegexValidationRule('allowed characters', RegExp(r'^\w*$'))
+    RegexValidationRule('allowed characters', RegExp(r'^[\w-]*$'))
   ];
 
   gFFI.dialogManager.show((setState, close, context) {
@@ -139,7 +139,7 @@ void changeIdDialog() {
                 msg = '';
               });
             },
-          ),
+          ).workaroundFreezeLinuxMint(),
           const SizedBox(
             height: 8.0,
           ),
@@ -200,13 +200,14 @@ void changeWhiteList({Function()? callback}) async {
             children: [
               Expanded(
                 child: TextField(
-                    maxLines: null,
-                    decoration: InputDecoration(
-                      errorText: msg.isEmpty ? null : translate(msg),
-                    ),
-                    controller: controller,
-                    enabled: !isOptFixed,
-                    autofocus: true),
+                        maxLines: null,
+                        decoration: InputDecoration(
+                          errorText: msg.isEmpty ? null : translate(msg),
+                        ),
+                        controller: controller,
+                        enabled: !isOptFixed,
+                        autofocus: true)
+                    .workaroundFreezeLinuxMint(),
               ),
             ],
           ),
@@ -286,22 +287,23 @@ Future<String> changeDirectAccessPort(
             children: [
               Expanded(
                 child: TextField(
-                    maxLines: null,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                        hintText: '21118',
-                        isCollapsed: true,
-                        prefix: Text('$currentIP : '),
-                        suffix: IconButton(
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.clear, size: 16),
-                            onPressed: () => controller.clear())),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(
-                          r'^([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')),
-                    ],
-                    controller: controller,
-                    autofocus: true),
+                        maxLines: null,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                            hintText: '21118',
+                            isCollapsed: true,
+                            prefix: Text('$currentIP : '),
+                            suffix: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.clear, size: 16),
+                                onPressed: () => controller.clear())),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(
+                              r'^([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')),
+                        ],
+                        controller: controller,
+                        autofocus: true)
+                    .workaroundFreezeLinuxMint(),
               ),
             ],
           ),
@@ -334,21 +336,22 @@ Future<String> changeAutoDisconnectTimeout(String old) async {
             children: [
               Expanded(
                 child: TextField(
-                    maxLines: null,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                        hintText: '10',
-                        isCollapsed: true,
-                        suffix: IconButton(
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.clear, size: 16),
-                            onPressed: () => controller.clear())),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(
-                          r'^([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')),
-                    ],
-                    controller: controller,
-                    autofocus: true),
+                        maxLines: null,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                            hintText: '10',
+                            isCollapsed: true,
+                            suffix: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.clear, size: 16),
+                                onPressed: () => controller.clear())),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(
+                              r'^([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$')),
+                        ],
+                        controller: controller,
+                        autofocus: true)
+                    .workaroundFreezeLinuxMint(),
               ),
             ],
           ),
@@ -426,7 +429,7 @@ class DialogTextField extends StatelessWidget {
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
             maxLength: maxLength,
-          ),
+          ).workaroundFreezeLinuxMint(),
         ),
       ],
     ).paddingSymmetric(vertical: 4.0);
@@ -1500,7 +1503,7 @@ showAuditDialog(FFI ffi) async {
             maxLength: 256,
             controller: controller,
             focusNode: focusNode,
-          )),
+          ).workaroundFreezeLinuxMint()),
       actions: [
         dialogButton('Cancel', onPressed: close, isOutline: true),
         dialogButton('OK', onPressed: submit)
@@ -1747,7 +1750,7 @@ void renameDialog(
                 autofocus: true,
                 decoration: InputDecoration(labelText: translate('Name')),
                 validator: validator,
-              ),
+              ).workaroundFreezeLinuxMint(),
             ),
           ),
           // NOT use Offstage to wrap LinearProgressIndicator
@@ -1807,7 +1810,7 @@ void changeBot({Function()? callback}) async {
       decoration: InputDecoration(
         hintText: translate('Token'),
       ),
-    );
+    ).workaroundFreezeLinuxMint();
 
     return CustomAlertDialog(
       title: Text(translate("Telegram bot")),
@@ -2177,7 +2180,7 @@ void setSharedAbPasswordDialog(String abName, Peer peer) {
                   },
                 ),
               ),
-            ),
+            ).workaroundFreezeLinuxMint(),
             if (!gFFI.abModel.current.isPersonal())
               Row(children: [
                 Icon(Icons.info, color: Colors.amber).marginOnly(right: 4),

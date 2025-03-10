@@ -721,18 +721,18 @@ abstract class BasePeerCard extends StatelessWidget {
           switch (tab) {
             case PeerTabIndex.recent:
               await bind.mainRemovePeer(id: id);
-              await bind.mainLoadRecentPeers();
+              bind.mainLoadRecentPeers();
               break;
             case PeerTabIndex.fav:
               final favs = (await bind.mainGetFav()).toList();
               if (favs.remove(id)) {
                 await bind.mainStoreFav(favs: favs);
-                await bind.mainLoadFavPeers();
+                bind.mainLoadFavPeers();
               }
               break;
             case PeerTabIndex.lan:
               await bind.mainRemoveDiscovered(id: id);
-              await bind.mainLoadLanPeers();
+              bind.mainLoadLanPeers();
               break;
             case PeerTabIndex.ab:
               await gFFI.abModel.deletePeers([id]);
@@ -1261,7 +1261,7 @@ void _rdpDialog(String id) async {
                         hintText: '3389'),
                     controller: portController,
                     autofocus: true,
-                  ),
+                  ).workaroundFreezeLinuxMint(),
                 ),
               ],
             ).marginOnly(bottom: isDesktop ? 8 : 0),
@@ -1281,7 +1281,7 @@ void _rdpDialog(String id) async {
                             labelText:
                                 isDesktop ? null : translate('Username')),
                         controller: userController,
-                      ),
+                      ).workaroundFreezeLinuxMint(),
                     ),
                   ],
                 ).marginOnly(bottom: stateGlobal.isPortrait.isFalse ? 8 : 0)),
@@ -1309,7 +1309,7 @@ void _rdpDialog(String id) async {
                                         ? Icons.visibility_off
                                         : Icons.visibility))),
                             controller: passwordController,
-                          )),
+                          ).workaroundFreezeLinuxMint()),
                     ),
                   ],
                 ))

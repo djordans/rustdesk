@@ -118,11 +118,13 @@ class _PortForwardTabPageState extends State<PortForwardTabPage> {
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 body: child),
           )
-        : Container(
-            decoration: BoxDecoration(
-                border: Border.all(color: MyTheme.color(context).border!)),
-            child: child,
-          );
+        : workaroundWindowBorder(
+            context,
+            Container(
+              decoration: BoxDecoration(
+                  border: Border.all(color: MyTheme.color(context).border!)),
+              child: child,
+            ));
     return isMacOS || kUseCompatibleUiMode
         ? tabWidget
         : Obx(
