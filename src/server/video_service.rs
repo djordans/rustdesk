@@ -626,7 +626,7 @@ fn run(vs: VideoService) -> ResultType<()> {
             last_check_displays = now;
             // This check may be redundant, but it is better to be safe.
             // The previous check in `sp.is_option_true(OPTION_REFRESH)` block may be enough.
-            try_broadcast_display_changed(&sp, display_idx, &c)?;
+            try_broadcast_display_changed(&sp, display_idx, &c, false)?;
         }
 
         frame_controller.reset();
@@ -715,8 +715,6 @@ fn run(vs: VideoService) -> ResultType<()> {
                 }
             }
             Err(err) => {
-                // Get display information again immediately after error.
-                crate::display_service::check_displays_changed().ok();
                 // This check may be redundant, but it is better to be safe.
                 // The previous check in `sp.is_option_true(OPTION_REFRESH)` block may be enough.
                 if vs.source.is_monitor() {
@@ -976,7 +974,7 @@ fn check_privacy_mode_changed(
             sp.send_to_others(msg_out, privacy_mode_id_2);
         }
         log::info!("switch due to privacy mode changed");
-        try_broadcast_display_changed(&sp, display_idx, ci).ok();
+        try_broadcast_display_changed(&sp, display_idx, ci, true).ok();
         bail!("SWITCH");
     }
     Ok(())
@@ -1085,7 +1083,12 @@ fn try_broadcast_display_changed(
     sp: &GenericService,
     display_idx: usize,
     cap: &CapturerInfo,
+    refresh: bool,
 ) -> ResultType<()> {
+    if refresh {
+        // Get display information immediately.
+        crate::display_service::check_displays_changed().ok();
+    }
     if let Some(display) = check_display_changed(
         cap.ndisplay,
         cap.current,
